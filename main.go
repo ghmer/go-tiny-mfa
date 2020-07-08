@@ -1,29 +1,38 @@
 package main
 
 import (
-	"encoding/base32"
 	"fmt"
-	"go-tiny-mfa/core"
 	"go-tiny-mfa/middleware"
+	"go-tiny-mfa/router"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
+func cleanup() {
+	fmt.Println("Cleanup called")
+}
 func main() {
-	db := middleware.CreateConnection()
+	var connURL string = os.Args[1]
+	var port string = os.Args[2]
+
+	db := middleware.CreateConnection(connURL)
 	defer middleware.CloseConnection(db)
-	//ts := time.Now().Unix()
-	ts := int64(1592485571800)
-	keyStr := "NOU4XWWCB4ZJOPNZRF6WRTFRMQ======"
 
-	key, err := base32.StdEncoding.DecodeString(keyStr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		middleware.CloseConnection(db)
+		os.Exit(1)
+	}()
 
-	token, err := core.GenerateValidToken(ts, key, core.OffsetTypePresent)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(token)
-
+	r := router.Router()
+	// fs := http.FileServer(http.Dir("build"))
+	// http.Handle("/", fs)
+	fmt.Println(fmt.Sprintf("Start serving on port %s", port))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
