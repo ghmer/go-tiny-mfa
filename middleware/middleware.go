@@ -2,15 +2,17 @@ package middleware
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	// SQL Driver package
 	_ "github.com/lib/pq"
 )
 
 // CreateConnection creates a connection to a postgres DB
-func CreateConnection() *sql.DB {
-	db, err := sql.Open("postgres", "postgres://postgres:SidN1bP.@localhost/tinymfadb?sslmode=disable")
+func CreateConnection(connectionURL string) *sql.DB {
+	db, err := sql.Open("postgres", connectionURL)
 	if err != nil {
 		panic(err)
 	}
@@ -29,4 +31,13 @@ func CreateConnection() *sql.DB {
 func CloseConnection(db *sql.DB) error {
 	fmt.Println("closing connection!")
 	return db.Close()
+}
+
+// Welcome will return a single Hello World
+func Welcome(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// send the response
+	json.NewEncoder(w).Encode("Hello, World")
 }
