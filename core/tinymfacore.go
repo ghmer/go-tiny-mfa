@@ -1,0 +1,147 @@
+package core
+
+import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha1"
+	"encoding/binary"
+	"fmt"
+	"math"
+	"time"
+)
+
+// OffsetTypePresent can be used to indicate that no offset (= present time) should be used when calculating a token
+const OffsetTypePresent int8 = 0
+
+// OffsetTypeFuture can be used to indicate that a future offset (+30 seconds) should be used when calculating a token
+const OffsetTypeFuture int8 = 1
+
+// OffsetTypePast can be used to indicate that a past offset (-30 seconds) should be used when calculating a token
+const OffsetTypePast int8 = 2
+
+// OffsetPresent is the offset to add when the OffsetTypePresent was used
+const OffsetPresent int = 0
+
+// OffsetFuture is the offset to add when the OffsetTypeFuture was used
+const OffsetFuture int = 30000
+
+// OffsetPast is the offset to add when the OffsetTypePast was used
+const OffsetPast int = -30000
+
+// KeySize is the size of the SecretKey
+const KeySize int = 16
+
+// GenerateSecretKey returns 16bytes to be used as a secret key
+func GenerateSecretKey() ([]byte, error) {
+	key := make([]byte, KeySize)
+	res, err := rand.Read(key)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	fmt.Println(res)
+
+	return key, nil
+}
+
+// GenerateMessageBytes takes in a int64 number and turns it to a BigEndian byte array
+func GenerateMessageBytes(message int64) ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	err := binary.Write(buffer, binary.BigEndian, message)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+// CalculateRFC2104HMAC calculates the hmac-sha1 value for a given message and key
+func CalculateRFC2104HMAC(message []byte, key []byte) []byte {
+	mac := hmac.New(sha1.New, key)
+	mac.Write(message)
+
+	return mac.Sum(nil)
+}
+
+// GenerateMessage takes in a Unix Timestamp and an offsetType of 0,1,2
+// offsetTypes: 0=No Offset; 1=Future Offset; 2=Past Offset
+func GenerateMessage(timestamp int64, offsetType int8) int64 {
+	var offset int
+
+	switch offsetType {
+	case OffsetTypePresent:
+		offset = OffsetPresent
+	case OffsetTypeFuture:
+		offset = OffsetFuture
+	case OffsetTypePast:
+		offset = OffsetPast
+	}
+
+	alignedTimestamp := timestamp + int64(offset)
+	myts := alignedTimestamp - (alignedTimestamp % 30)
+
+	message := math.Floor(float64(myts / 30000))
+
+	return int64(message)
+}
+
+// GenerateValidToken takes a Unix Timestamp and a secret key and calculates a valid TOTP token
+func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, error) {
+	message, err := GenerateMessageBytes(GenerateMessage(unixTimestamp, offsetType))
+	if err != nil {
+		return 0, err
+	}
+	rfc2104hmac := CalculateRFC2104HMAC(message, key)
+
+	var offset int = int(rfc2104hmac[(len(rfc2104hmac)-1)] & 0xF)
+	var truncResult int64
+	for i := 0; i < 4; i++ {
+		truncResult <<= 8
+		truncResult |= int64(rfc2104hmac[offset+i] & 0xFF)
+	}
+	// setting the most significant bit to 0
+	truncResult &= 0x7FFFFFFF
+	// making sure we get the right amount of numbers
+	truncResult %= 1000000
+
+	token := int(truncResult)
+
+	return token, nil
+}
+
+// ValidateToken takes a submitted token and a secret key and validates whether the token is valid
+func ValidateToken(token int, key []byte) (bool, error) {
+	var result bool = false
+	unixTimestamp := time.Now().Unix()
+	generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePresent)
+	if err != nil {
+		return false, err
+	}
+	if generatedToken == token {
+		result = true
+	}
+
+	if result == false {
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePast)
+		if err != nil {
+			return false, err
+		}
+		if generatedToken == token {
+			result = true
+		}
+	}
+
+	if result == false {
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypeFuture)
+		if err != nil {
+			return false, err
+		}
+		if generatedToken == token {
+			result = true
+		}
+	}
+
+	return result, nil
+}
