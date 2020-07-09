@@ -11,26 +11,28 @@ import (
 	"time"
 )
 
-// OffsetTypePresent can be used to indicate that no offset (= present time) should be used when calculating a token
-const OffsetTypePresent int8 = 0
+const (
+	// Present can be used as an Offset Type
+	Present int8 = iota
+	// Future can be used as an Offset Type
+	Future
+	// Past can be used as an Offset Type
+	Past
+)
 
-// OffsetTypeFuture can be used to indicate that a future offset (+30 seconds) should be used when calculating a token
-const OffsetTypeFuture int8 = 1
+const (
+	// OffsetPresent is the offset to add when the OffsetTypePresent was used
+	OffsetPresent int = 0
 
-// OffsetTypePast can be used to indicate that a past offset (-30 seconds) should be used when calculating a token
-const OffsetTypePast int8 = 2
+	// OffsetFuture is the offset to add when the OffsetTypeFuture was used
+	OffsetFuture int = 30000
 
-// OffsetPresent is the offset to add when the OffsetTypePresent was used
-const OffsetPresent int = 0
+	// OffsetPast is the offset to add when the OffsetTypePast was used
+	OffsetPast int = -30000
 
-// OffsetFuture is the offset to add when the OffsetTypeFuture was used
-const OffsetFuture int = 30000
-
-// OffsetPast is the offset to add when the OffsetTypePast was used
-const OffsetPast int = -30000
-
-// KeySize is the size of the SecretKey
-const KeySize int = 16
+	// KeySize is the size of the SecretKey
+	KeySize int8 = 16
+)
 
 // GenerateSecretKey returns 16bytes to be used as a secret key
 func GenerateSecretKey() ([]byte, error) {
@@ -72,11 +74,11 @@ func GenerateMessage(timestamp int64, offsetType int8) int64 {
 
 	// based on offsetType, we are applying different offsets to the timestamp
 	switch offsetType {
-	case OffsetTypePresent: // standard case, no offset is added to the timestamp
+	case Present: // standard case, no offset is added to the timestamp
 		offset = OffsetPresent
-	case OffsetTypeFuture: // setting an offset of 30 seconds into the future
+	case Future: // setting an offset of 30 seconds into the future
 		offset = OffsetFuture
-	case OffsetTypePast: // removing an offset of 30 seconds
+	case Past: // removing an offset of 30 seconds
 		offset = OffsetPast
 	}
 
@@ -127,7 +129,7 @@ func ValidateToken(token int, key []byte) (bool, error) {
 	// validating against a token that was generated with a current timestamp
 	// usually, the clocks of server and client should be synchronized, so this
 	// should be the most common case
-	generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePresent)
+	generatedToken, err := GenerateValidToken(unixTimestamp, key, Present)
 	if err != nil {
 		return false, err
 	}
@@ -139,7 +141,7 @@ func ValidateToken(token int, key []byte) (bool, error) {
 	// user missed the timewindow for that token. Verifying it against a token
 	// that was valid up to 30 seconds ago
 	if result == false {
-		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePast)
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, Past)
 		if err != nil {
 			return false, err
 		}
@@ -151,7 +153,7 @@ func ValidateToken(token int, key []byte) (bool, error) {
 	// we still could not verify the token. Doing a last check against the token
 	// that becomes valid in the next window.
 	if result == false {
-		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypeFuture)
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, Future)
 		if err != nil {
 			return false, err
 		}
