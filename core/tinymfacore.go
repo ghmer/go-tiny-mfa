@@ -70,19 +70,21 @@ func CalculateRFC2104HMAC(message []byte, key []byte) []byte {
 func GenerateMessage(timestamp int64, offsetType int8) int64 {
 	var offset int
 
+	// based on offsetType, we are applying different offsets to the timestamp
 	switch offsetType {
-	case OffsetTypePresent:
+	case OffsetTypePresent: // standard case, no offset is added to the timestamp
 		offset = OffsetPresent
-	case OffsetTypeFuture:
+	case OffsetTypeFuture: // setting an offset of 30 seconds into the future
 		offset = OffsetFuture
-	case OffsetTypePast:
+	case OffsetTypePast: // removing an offset of 30 seconds
 		offset = OffsetPast
 	}
 
+	// apply the chosen offset
 	alignedTimestamp := timestamp + int64(offset)
-	myts := alignedTimestamp - (alignedTimestamp % 30)
+	flattenedTimestamp := alignedTimestamp - (alignedTimestamp % 30)
 
-	message := math.Floor(float64(myts / 30000))
+	message := math.Floor(float64(flattenedTimestamp / 30000)) // 30.000 milliseconds or 30 seconds
 
 	return int64(message)
 }
@@ -95,10 +97,17 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 	}
 	rfc2104hmac := CalculateRFC2104HMAC(message, key)
 
+	// the offset is the numerical representation of the last byte of the hmac-sha1 message.
+	// i.E if the last byte was 4 (in its decimal representation), we will derive the dynamic
+	// trunacted result, starting at the 4th index of the byte array
 	var offset int = int(rfc2104hmac[(len(rfc2104hmac)-1)] & 0xF)
+	// probably a huge number. Making room for it
 	var truncResult int64
 	for i := 0; i < 4; i++ {
+		// shift 8bit to the left to make room for the next byte
 		truncResult <<= 8
+		// perform a bitwise inclusive OR on the next offset
+		// this adds the next digit to the truncated result
 		truncResult |= int64(rfc2104hmac[offset+i] & 0xFF)
 	}
 	// setting the most significant bit to 0
@@ -115,6 +124,9 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 func ValidateToken(token int, key []byte) (bool, error) {
 	var result bool = false
 	unixTimestamp := time.Now().Unix()
+	// validating against a token that was generated with a current timestamp
+	// usually, the clocks of server and client should be synchronized, so this
+	// should be the most common case
 	generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePresent)
 	if err != nil {
 		return false, err
@@ -123,6 +135,9 @@ func ValidateToken(token int, key []byte) (bool, error) {
 		result = true
 	}
 
+	// the token could not be verified with a current timestamp, but maybe the
+	// user missed the timewindow for that token. Verifying it against a token
+	// that was valid up to 30 seconds ago
 	if result == false {
 		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypePast)
 		if err != nil {
@@ -133,6 +148,8 @@ func ValidateToken(token int, key []byte) (bool, error) {
 		}
 	}
 
+	// we still could not verify the token. Doing a last check against the token
+	// that becomes valid in the next window.
 	if result == false {
 		generatedToken, err := GenerateValidToken(unixTimestamp, key, OffsetTypeFuture)
 		if err != nil {
@@ -143,5 +160,6 @@ func ValidateToken(token int, key []byte) (bool, error) {
 		}
 	}
 
+	// returning the outcome of our checks
 	return result, nil
 }
