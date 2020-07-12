@@ -83,10 +83,12 @@ func GenerateMessage(timestamp int64, offsetType int8) int64 {
 	}
 
 	// apply the chosen offset
-	alignedTimestamp := timestamp + int64(offset)
-	flattenedTimestamp := alignedTimestamp - (alignedTimestamp % 30)
+	timestamp = timestamp + int64(offset)
+	// flatten the timestamp by removing the overlapping seconds
+	timestamp = timestamp - (timestamp % 30)
 
-	message := math.Floor(float64(flattenedTimestamp / 30000)) // 30.000 milliseconds or 30 seconds
+	// finally, generating the message by dividing the flattened timestamp by 30
+	message := math.Floor(float64(timestamp / 30000)) // 30.000 milliseconds or 30 seconds
 
 	return int64(message)
 }
