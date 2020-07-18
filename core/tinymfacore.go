@@ -24,10 +24,10 @@ const (
 	OffsetPresent int = 0
 
 	// OffsetFuture is the offset to add when the OffsetTypeFuture was used
-	OffsetFuture int = 30000
+	OffsetFuture int = 30
 
 	// OffsetPast is the offset to add when the OffsetTypePast was used
-	OffsetPast int = -30000
+	OffsetPast int = -30
 
 	// KeySizeStandard is the default size of the SecretKey (128bit)
 	KeySizeStandard int8 = 16
@@ -97,7 +97,7 @@ func GenerateMessage(timestamp int64, offsetType int8) int64 {
 	timestamp = timestamp - (timestamp % 30)
 
 	// finally, generating the message by dividing the flattened timestamp by 30
-	message := math.Floor(float64(timestamp / 30000)) // 30.000 milliseconds or 30 seconds
+	message := math.Floor(float64(timestamp / 30))
 
 	return int64(message)
 }
