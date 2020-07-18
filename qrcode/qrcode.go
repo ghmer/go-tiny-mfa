@@ -17,3 +17,11 @@ func GenerateQrCode(issuer, username, secret string) ([]byte, error) {
 
 	return png, err
 }
+
+//WriteQrCodeImage saves the QrCode image to a file
+func WriteQrCodeImage(issuer, username, secret, filePath string) error {
+	otpauthURL := fmt.Sprintf(FormatString, issuer, username, issuer, issuer, secret)
+	err := qrcode.WriteFile(otpauthURL, qrcode.Medium, 256, filePath)
+
+	return err
+}
