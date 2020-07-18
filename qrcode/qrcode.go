@@ -2,6 +2,7 @@ package qrcode
 
 import (
 	"fmt"
+	"strings"
 
 	qrcode "github.com/skip2/go-qrcode"
 )
@@ -12,7 +13,7 @@ const FormatString string = "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=6&iss
 // GenerateQrCode Generates a QRCode of the totp url
 func GenerateQrCode(issuer, username, secret string) ([]byte, error) {
 	var png []byte
-	otpauthURL := fmt.Sprintf(FormatString, issuer, username, issuer, issuer, secret)
+	otpauthURL := buildPayload(issuer, username, secret)
 	png, err := qrcode.Encode(otpauthURL, qrcode.Medium, 256)
 
 	return png, err
@@ -20,8 +21,19 @@ func GenerateQrCode(issuer, username, secret string) ([]byte, error) {
 
 //WriteQrCodeImage saves the QrCode image to a file
 func WriteQrCodeImage(issuer, username, secret, filePath string) error {
-	otpauthURL := fmt.Sprintf(FormatString, issuer, username, issuer, issuer, secret)
+	otpauthURL := buildPayload(issuer, username, secret)
 	err := qrcode.WriteFile(otpauthURL, qrcode.Medium, 256, filePath)
 
 	return err
+}
+
+func buildPayload(issuer, username, secret string) string {
+	index := strings.Index(secret, "=")
+	mySecret := secret
+	if index != -1 {
+		mySecret = secret[:index]
+	}
+	otpauthURL := fmt.Sprintf(FormatString, issuer, username, issuer, issuer, mySecret)
+
+	return otpauthURL
 }
