@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
-	"fmt"
 	"math"
 	"time"
 )
@@ -30,20 +29,30 @@ const (
 	// OffsetPast is the offset to add when the OffsetTypePast was used
 	OffsetPast int = -30000
 
-	// KeySize is the size of the SecretKey
-	KeySize int8 = 16
+	// KeySizeStandard is the default size of the SecretKey (128bit)
+	KeySizeStandard int8 = 16
+
+	// KeySizeExtended is the extended size of the SecretKey (256bit)
+	KeySizeExtended int8 = 32
 )
 
-// GenerateSecretKey returns 16bytes to be used as a secret key
-func GenerateSecretKey() ([]byte, error) {
-	key := make([]byte, KeySize)
-	res, err := rand.Read(key)
+// GenerateStandardSecretKey returns 16bytes to be used as a secret key
+func GenerateStandardSecretKey() ([]byte, error) {
+	return generateSecretKey(KeySizeStandard)
+}
+
+// GenerateExtendedSecretKey returns 32bytes to be used as a secret key
+func GenerateExtendedSecretKey() ([]byte, error) {
+	return generateSecretKey(KeySizeExtended)
+}
+
+// generateSecretKey returns size bytes to be used as a secret key
+func generateSecretKey(size int8) ([]byte, error) {
+	key := make([]byte, size)
+	_, err := rand.Read(key)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-
-	fmt.Println(res)
 
 	return key, nil
 }
@@ -124,10 +133,14 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 	return token, nil
 }
 
-// ValidateToken takes a submitted token and a secret key and validates whether the token is valid
-func ValidateToken(token int, key []byte) (bool, error) {
+// ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
+func ValidateTokenCurrentTimestamp(token int, key []byte) (bool, error) {
+	return ValidateToken(token, key, time.Now().Unix())
+}
+
+// ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid
+func ValidateToken(token int, key []byte, unixTimestamp int64) (bool, error) {
 	var result bool = false
-	unixTimestamp := time.Now().Unix()
 	// validating against a token that was generated with a current timestamp
 	// usually, the clocks of server and client should be synchronized, so this
 	// should be the most common case
