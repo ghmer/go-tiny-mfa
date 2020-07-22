@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go-tiny-mfa/core"
 	"go-tiny-mfa/qrcode"
-	"strings"
+	"go-tiny-mfa/structs"
 	"time"
 )
 
@@ -58,20 +58,18 @@ func main() {
 			KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====
 	*/
 
-	key, err := base32.StdEncoding.DecodeString("D5WZMKC5I3FDIW7FXG6P2KSVGA======")
+	key, err := base32.StdEncoding.DecodeString("KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====")
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fmt.Printf("% x\n", key)
 
-	qrcode.WriteQrCodeImage("issuer.net", "mario", "D5WZMKC5I3FDIW7FXG6P2KSVGA", "/tmp/image.png")
+	user := structs.User{Username: "mario", Issuer: "issuer.net", Base32Key: key}
 
-	fmt.Println(core.GenerateValidToken(time.Now().Unix(), key, 0))
-	fmt.Println(core.ValidateTokenCurrentTimestamp(248440, key))
+	qrcode.WriteQrCodeImage(user, "/tmp/image.png")
 
-	result := strings.Index("D5WZMKC5I3FDIW7FXG6P2KSVGA======", "=")
-	
-	fmt.Println(result)
-	fmt.Println("D5WZMKC5I3FDIW7FXG6P2KSVGA======"[:result])
+	fmt.Println(core.GenerateValidToken(time.Now().Unix(), user.Base32Key, 0))
+	fmt.Println(core.ValidateTokenCurrentTimestamp(248440, user.Base32Key))
+
 }
