@@ -2,6 +2,7 @@ package qrcode
 
 import (
 	"fmt"
+	"go-tiny-mfa/structs"
 	"strings"
 
 	qrcode "github.com/skip2/go-qrcode"
@@ -19,8 +20,12 @@ func GenerateQrCode(issuer, username, secret string) ([]byte, error) {
 	return png, err
 }
 
-//WriteQrCodeImage saves the QrCode image to a file
-func WriteQrCodeImage(issuer, username, secret, filePath string) error {
+// WriteQrCodeImage writes a png to the filesystem
+func WriteQrCodeImage(user structs.User, filePath string) error {
+	return writeQrCodeImage(user.Issuer, user.Username, string(user.Base32Key), filePath)
+}
+
+func writeQrCodeImage(issuer, username, secret, filePath string) error {
 	otpauthURL := buildPayload(issuer, username, secret)
 	err := qrcode.WriteFile(otpauthURL, qrcode.Medium, 256, filePath)
 
