@@ -29,6 +29,15 @@ func Encrypt(data, passphrase []byte) []byte {
 	return ciphertext
 }
 
+//EncryptFile takes a filePath as a string and a passphrase as a byte array.
+//The file found at filePath is then Encrypted using the Encrypt Method
+//and then wrote back to the original filePath
+func EncryptFile(filePath string, data, passphrase []byte) {
+	f, _ := os.Create(filePath)
+	defer f.Close()
+	f.Write(Encrypt(data, passphrase))
+}
+
 func decrypt(data, passphrase []byte) []byte {
 	block, err := aes.NewCipher(passphrase)
 	if err != nil {
@@ -45,12 +54,6 @@ func decrypt(data, passphrase []byte) []byte {
 		panic(err.Error())
 	}
 	return plaintext
-}
-
-func encryptFile(filename string, data, passphrase []byte) {
-	f, _ := os.Create(filename)
-	defer f.Close()
-	f.Write(Encrypt(data, passphrase))
 }
 
 func decryptFile(filename string, passphrase []byte) []byte {
