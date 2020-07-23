@@ -38,7 +38,12 @@ func EncryptFile(filePath string, data, passphrase []byte) {
 	f.Write(Encrypt(data, passphrase))
 }
 
-func decrypt(data, passphrase []byte) []byte {
+//Decrypt takes in two byte arrays. The former one is the encrypted data,
+//the second one is the passphrase that shall be used.
+//The method returns the decrypted data in another byte array
+//Attention: It is assumed that a nonce is appended to the encrypted
+//byte array!
+func Decrypt(data, passphrase []byte) []byte {
 	block, err := aes.NewCipher(passphrase)
 	if err != nil {
 		panic(err.Error())
@@ -58,7 +63,7 @@ func decrypt(data, passphrase []byte) []byte {
 
 func decryptFile(filename string, passphrase []byte) []byte {
 	data, _ := ioutil.ReadFile(filename)
-	return decrypt(data, passphrase)
+	return Decrypt(data, passphrase)
 }
 
 func createMd5Hash(key string) string {
