@@ -6,5 +6,5 @@ type User struct {
 	Username         string
 	Issuer           string
 	CryptedBase32Key string
-	enabled          bool
+	Enabled          bool
 }

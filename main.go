@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/base32"
 	"fmt"
+	"go-tiny-mfa/core"
 	"go-tiny-mfa/middleware"
+	"go-tiny-mfa/structs"
+	"go-tiny-mfa/utils"
 	"os"
 	"os/signal"
 	"syscall"
@@ -87,4 +91,12 @@ func main() {
 		os.Exit(1)
 	}()
 
+	passphrase, _ := core.GenerateStandardSecretKey()
+	mykey, _ := core.GenerateExtendedSecretKey()
+	var base32key []byte = make([]byte, base32.StdEncoding.EncodedLen(len(mykey)))
+	base32.StdEncoding.Encode(base32key, mykey)
+	cryptedBase32Key := base32.StdEncoding.EncodeToString(utils.Encrypt(base32key, passphrase))
+	user := structs.User{Username: "mario", Issuer: "issuer.net", Enabled: true, CryptedBase32Key: cryptedBase32Key}
+
+	fmt.Println(user)
 }
