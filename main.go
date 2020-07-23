@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/google/uuid"
 )
 
 func cleanup() {
@@ -96,7 +98,8 @@ func main() {
 	var base32key []byte = make([]byte, base32.StdEncoding.EncodedLen(len(mykey)))
 	base32.StdEncoding.Encode(base32key, mykey)
 	cryptedBase32Key := base32.StdEncoding.EncodeToString(utils.Encrypt(base32key, passphrase))
-	user := structs.User{Username: "mario", Issuer: "issuer.net", Enabled: true, CryptedBase32Key: cryptedBase32Key}
+	user := structs.User{Username: "mario", Issuer: "issuer.net", Enabled: true, CryptedBase32Key: cryptedBase32Key, ID: uuid.New().String()}
 
+	middleware.InsertUser(user, db)
 	fmt.Println(user)
 }
