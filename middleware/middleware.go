@@ -23,6 +23,7 @@ func CreateConnection(connectionURL string) *sql.DB {
 	}
 
 	fmt.Println("Successfully connected!")
+	initializeDatabase(db)
 	// return the connection
 	return db
 }
@@ -31,6 +32,23 @@ func CreateConnection(connectionURL string) *sql.DB {
 func CloseConnection(db *sql.DB) error {
 	fmt.Println("closing connection!")
 	return db.Close()
+}
+
+func initializeDatabase(db *sql.DB) {
+	createstring := `CREATE TABLE IF NOT EXISTS accounts (
+						id varchar(45) NOT NULL,
+						username varchar(32) NOT NULL,
+						issuer varchar(48) NOT NULL,
+						key varchar(64) NOT NULL,
+						enabled boolean DEFAULT '1',
+						PRIMARY KEY (id)
+					);`
+	_, err := db.Exec(createstring)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("Initial database 'tinymfa' was just created!")
 }
 
 // Welcome will return a single Hello World
