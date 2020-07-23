@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
-	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,6 +14,12 @@ import (
 //encrypts the data using the AES cipher and returns the encrypted data (also as byte array)
 //please note that the nonce needed to encrypt the data using AES GCM is appended to the byte array
 func Encrypt(data, passphrase []byte) []byte {
+	// a passphrase must have a certain size (128/256bit)
+	// therefore, if this condition is not met, we are going to create
+	// a md5 hash of the passphrase that happens to be 128bit
+	if len(passphrase) != 16 || len(passphrase) != 32 {
+		passphrase = createMd5Hash(passphrase)
+	}
 	block, _ := aes.NewCipher(passphrase)
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
@@ -44,6 +49,12 @@ func EncryptFile(filePath string, data, passphrase []byte) {
 //Attention: It is assumed that a nonce is appended to the encrypted
 //byte array!
 func Decrypt(data, passphrase []byte) []byte {
+	// a passphrase must have a certain size (128/256bit)
+	// therefore, if this condition is not met, we are going to create
+	// a md5 hash of the passphrase that happens to be 128bit
+	if len(passphrase) != 16 || len(passphrase) != 32 {
+		passphrase = createMd5Hash(passphrase)
+	}
 	block, err := aes.NewCipher(passphrase)
 	if err != nil {
 		panic(err.Error())
@@ -69,8 +80,10 @@ func DecryptFile(filePath string, passphrase []byte) []byte {
 	return Decrypt(data, passphrase)
 }
 
-func createMd5Hash(key string) string {
+func createMd5Hash(key []byte) []byte {
 	hasher := md5.New()
-	hasher.Write([]byte(key))
-	return hex.EncodeToString(hasher.Sum(nil))
+	hasher.Write(key)
+
+	//return hex.EncodeToString(hasher.Sum(nil))
+	return hasher.Sum(nil)
 }
