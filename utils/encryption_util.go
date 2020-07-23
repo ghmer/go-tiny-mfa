@@ -11,7 +11,10 @@ import (
 	"os"
 )
 
-func encrypt(data, passphrase []byte) []byte {
+//Encrypt takes in a byte array as data and another byte array as the passphrase,
+//encrypts the data using the AES cipher and returns the encrypted data (also as byte array)
+//please note that the nonce needed to encrypt the data using AES GCM is appended to the byte array
+func Encrypt(data, passphrase []byte) []byte {
 	block, _ := aes.NewCipher(passphrase)
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
@@ -47,7 +50,7 @@ func decrypt(data, passphrase []byte) []byte {
 func encryptFile(filename string, data, passphrase []byte) {
 	f, _ := os.Create(filename)
 	defer f.Close()
-	f.Write(encrypt(data, passphrase))
+	f.Write(Encrypt(data, passphrase))
 }
 
 func decryptFile(filename string, passphrase []byte) []byte {
