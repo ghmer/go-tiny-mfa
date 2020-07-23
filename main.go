@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/base32"
 	"fmt"
-	"go-tiny-mfa/core"
-	"go-tiny-mfa/qrcode"
-	"go-tiny-mfa/structs"
-	"time"
+	"go-tiny-mfa/middleware"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func cleanup() {
@@ -58,18 +57,34 @@ func main() {
 			KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====
 	*/
 
-	key, err := base32.StdEncoding.DecodeString("KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====")
-	if err != nil {
-		fmt.Println(err)
-	}
+	/*
+		key, err := base32.StdEncoding.DecodeString("KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====")
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	fmt.Printf("% x\n", key)
+		fmt.Printf("% x\n", key)
 
-	user := structs.User{Username: "mario", Issuer: "issuer.net", Base32Key: key}
+		user := structs.User{Username: "mario", Issuer: "issuer.net", Base32Key: key}
 
-	qrcode.WriteQrCodeImage(user, "/tmp/image.png")
+		qrcode.WriteQrCodeImage(user, "/tmp/image.png")
 
-	fmt.Println(core.GenerateValidToken(time.Now().Unix(), user.Base32Key, 0))
-	fmt.Println(core.ValidateTokenCurrentTimestamp(248440, user.Base32Key))
+		fmt.Println(core.GenerateValidToken(time.Now().Unix(), user.Base32Key, 0))
+		fmt.Println(core.ValidateTokenCurrentTimestamp(248440, user.Base32Key))
+
+	*/
+
+	connURL := "postgres://postgres:postgres@localhost/tinymfa?sslmode=disable"
+	db := middleware.CreateConnection(connURL)
+	defer middleware.CloseConnection(db)
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		middleware.CloseConnection(db)
+		os.Exit(1)
+	}()
 
 }
