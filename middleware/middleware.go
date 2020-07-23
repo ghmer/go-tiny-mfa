@@ -38,7 +38,7 @@ func CloseConnection(db *sql.DB) error {
 func initializeDatabase(db *sql.DB) {
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
 						id varchar(45) NOT NULL,
-						username varchar(32) NOT NULL,
+						username varchar(32) NOT NULL UNIQUE,
 						issuer varchar(48) NOT NULL,
 						key varchar(255) NOT NULL,
 						enabled boolean DEFAULT '1',
