@@ -47,8 +47,6 @@ func initializeDatabase(db *sql.DB) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Println("Initial database 'tinymfa' was just created!")
 }
 
 // Welcome will return a single Hello World
