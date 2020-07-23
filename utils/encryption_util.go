@@ -61,8 +61,11 @@ func Decrypt(data, passphrase []byte) []byte {
 	return plaintext
 }
 
-func decryptFile(filename string, passphrase []byte) []byte {
-	data, _ := ioutil.ReadFile(filename)
+//DecryptFile takes a filePath as a string and a passphrase as a byte array.
+//The file found at filePath is then decrypted using the Decrypt Method
+//and then wrote back to the original filePath
+func DecryptFile(filePath string, passphrase []byte) []byte {
+	data, _ := ioutil.ReadFile(filePath)
 	return Decrypt(data, passphrase)
 }
 
