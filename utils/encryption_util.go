@@ -5,6 +5,8 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
+	"encoding/base32"
+	"go-tiny-mfa/structs"
 	"io"
 	"io/ioutil"
 	"os"
@@ -86,4 +88,16 @@ func createMd5Hash(key []byte) []byte {
 
 	//return hex.EncodeToString(hasher.Sum(nil))
 	return hasher.Sum(nil)
+}
+
+//DecryptUserKey takes a User struct and a passphrase and returns the unencrypted secret key
+func DecryptUserKey(user structs.User, passphrase []byte) ([]byte, error) {
+	outerData, err := base32.StdEncoding.DecodeString(user.CryptedBase32Key)
+	if err != nil {
+		return nil, err
+	}
+
+	innerData := Decrypt(outerData, passphrase)
+
+	return innerData, nil
 }
