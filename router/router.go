@@ -2,6 +2,8 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
+	"go-tiny-mfa/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,10 +14,16 @@ func Router() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("GET").Methods("POST").Methods("DELETE")
+	router.HandleFunc("/api/v1/issuer", ListAllIssuers).Methods("GET")
+	router.HandleFunc("/api/v1/issuer", ListAllIssuers).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("DELETE")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("GET").Methods("POST").Methods("DELETE")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users", Welcome).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("DELETE")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/validate/{token}", Welcome).Methods("GET")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/recreate", Welcome).Methods("GET")
 
@@ -29,6 +37,19 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 
 	// send the response
 	json.NewEncoder(w).Encode("Hello, World")
+}
+
+func ListAllIssuers(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("list all issuers")
+	w.Header().Set("Context-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	issuers, err := middleware.GetIssuers()
+	if err != nil {
+		json.NewEncoder(w).Encode(err)
+	}
+	// send the response
+	json.NewEncoder(w).Encode(issuers)
 }
 
 /*
