@@ -2,9 +2,7 @@ package middleware
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	// SQL Driver package
 	_ "github.com/lib/pq"
@@ -49,13 +47,4 @@ func initializeDatabase(db *sql.DB) {
 	}
 
 	fmt.Println("Initial database 'tinymfa' was just created!")
-}
-
-// Welcome will return a single Hello World
-func Welcome(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Context-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	// send the response
-	json.NewEncoder(w).Encode("Hello, World")
 }
