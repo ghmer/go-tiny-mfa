@@ -1,17 +1,10 @@
 package main
 
 import (
-	"encoding/base32"
 	"fmt"
-	"go-tiny-mfa/core"
-	"go-tiny-mfa/middleware"
-	"go-tiny-mfa/structs"
-	"go-tiny-mfa/utils"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/google/uuid"
+	"go-tiny-mfa/router"
+	"log"
+	"net/http"
 )
 
 func cleanup() {
@@ -80,27 +73,33 @@ func main() {
 
 	*/
 
-	connURL := "postgres://postgres:postgres@localhost/tinymfa?sslmode=disable"
-	db := middleware.CreateConnection(connURL)
-	defer middleware.CloseConnection(db)
+	/*
+			connURL := "postgres://postgres:postgres@localhost/tinymfa?sslmode=disable"
+			db := middleware.CreateConnection(connURL)
+			defer middleware.CloseConnection(db)
 
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cleanup()
-		middleware.CloseConnection(db)
-		os.Exit(1)
-	}()
+			c := make(chan os.Signal)
+			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-c
+				cleanup()
+				middleware.CloseConnection(db)
+				os.Exit(1)
+			}()
 
-	passphrase, _ := core.GenerateStandardSecretKey()
-	mykey, _ := core.GenerateExtendedSecretKey()
-	var base32key []byte = make([]byte, base32.StdEncoding.EncodedLen(len(mykey)))
-	base32.StdEncoding.Encode(base32key, mykey)
-	cryptedBase32Key := base32.StdEncoding.EncodeToString(utils.Encrypt(base32key, passphrase))
-	issuer := structs.Issuer{ID: "", Name: "issuer.net"}
-	user := structs.User{Name: "mario", Email: "mario@issuer.net", Issuer: issuer, Enabled: true, CryptedBase32Key: cryptedBase32Key, ID: uuid.New().String()}
+		passphrase, _ := core.GenerateStandardSecretKey()
+		mykey, _ := core.GenerateExtendedSecretKey()
+		var base32key []byte = make([]byte, base32.StdEncoding.EncodedLen(len(mykey)))
+		base32.StdEncoding.Encode(base32key, mykey)
+		cryptedBase32Key := base32.StdEncoding.EncodeToString(utils.Encrypt(base32key, passphrase))
+		issuer := structs.Issuer{ID: "", Name: "issuer.net"}
+		user := structs.User{Name: "mario", Email: "mario@issuer.net", Issuer: issuer, Enabled: true, CryptedBase32Key: cryptedBase32Key, ID: uuid.New().String()}
 
-	middleware.InsertUser(user, db)
-	fmt.Println(user)
+		middleware.InsertUser(user)
+		fmt.Println(user)
+	*/
+	r := router.Router()
+	fmt.Println(fmt.Sprintf("Start serving on port %s", "10000"))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", "10000"), r))
+
 }
