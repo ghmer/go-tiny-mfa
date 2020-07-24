@@ -3,6 +3,7 @@ package middleware
 import (
 	"database/sql"
 	"fmt"
+	"go-tiny-mfa/structs"
 
 	// SQL Driver package
 	_ "github.com/lib/pq"
@@ -35,9 +36,9 @@ func CloseConnection(db *sql.DB) error {
 func initializeDatabase(db *sql.DB) {
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
 						id varchar(45) NOT NULL,
-						username varchar(32) NOT NULL,
+						username varchar(32) NOT NULL UNIQUE,
 						issuer varchar(48) NOT NULL,
-						key varchar(64) NOT NULL,
+						key varchar(255) NOT NULL,
 						enabled boolean DEFAULT '1',
 						PRIMARY KEY (id)
 					);`
@@ -45,6 +46,18 @@ func initializeDatabase(db *sql.DB) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
 
-	fmt.Println("Initial database 'tinymfa' was just created!")
+//InsertUser inserts a userstruct to the DB
+func InsertUser(user structs.User, db *sql.DB) {
+	sqlInsert := `INSERT INTO accounts (id, username, issuer, key, enabled)
+				VALUES ($1, $2, $3, $4, $5)
+				RETURNING id`
+	res, err := db.Exec(sqlInsert, user.ID, user.Username, user.Issuer, user.CryptedBase32Key, true)
+	if err != nil {
+		panic(err)
+	}
+
+	rows, _ := res.RowsAffected()
+	fmt.Println("insert operation result: ", rows)
 }
