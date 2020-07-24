@@ -14,7 +14,13 @@ import (
 
 // CreateConnection creates a connection to a postgres DB
 func CreateConnection() *sql.DB {
-	db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
+	dbuser := os.Getenv("POSTGRES_USER")
+	dbpass := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DATABASE")
+
+	dbURL := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", dbuser, dbpass, dbname)
+
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		panic(err)
 	}
