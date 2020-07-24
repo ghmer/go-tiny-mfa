@@ -24,8 +24,6 @@ func CreateConnection() *sql.DB {
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected!")
-
 	return db
 }
 
@@ -148,7 +146,7 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 func GetIssuers() ([]structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlCountSelect := `SELECT COUNT(id, name, contact, enabled) FROM issuer`
+	sqlCountSelect := `SELECT COUNT(name) FROM issuer`
 	res, err := db.Query(sqlCountSelect)
 	if err != nil {
 		return []structs.Issuer{}, err
