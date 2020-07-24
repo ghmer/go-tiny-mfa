@@ -12,6 +12,12 @@ func Router() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("GET").Methods("POST").Methods("DELETE")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("GET").Methods("POST").Methods("DELETE")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/validate/{token}", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/recreate", Welcome).Methods("GET")
 
 	return router
 }
