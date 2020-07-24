@@ -64,7 +64,8 @@ func initializeIssuerTable() {
 	}
 }
 
-func initializeDatabase() {
+//InitializeDatabase will create the issuer and user tables
+func InitializeDatabase() {
 	initializeIssuerTable()
 	initializeUserTable()
 }

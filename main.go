@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/router"
 	"log"
 	"net/http"
@@ -98,6 +99,8 @@ func main() {
 		middleware.InsertUser(user)
 		fmt.Println(user)
 	*/
+
+	middleware.InitializeDatabase()
 	r := router.Router()
 	fmt.Println(fmt.Sprintf("Start serving on port %s", "10000"))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", "10000"), r))
