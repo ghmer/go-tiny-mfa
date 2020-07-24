@@ -76,7 +76,7 @@ func InsertUser(user structs.User, db *sql.DB) {
 	sqlInsert := `INSERT INTO accounts (id, username, email, issuer_id, key, enabled)
 				VALUES ($1, $2, $3, $4, $5)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, user.ID, user.Username, user.Email, user.Issuer.ID, user.CryptedBase32Key, true)
+	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.CryptedBase32Key, true)
 	if err != nil {
 		panic(err)
 	}

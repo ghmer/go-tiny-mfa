@@ -13,9 +13,9 @@ import (
 const FormatString string = "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=6&issuer=%s&period=30&secret=%s"
 
 // GenerateQrCode Generates a QRCode of the totp url
-func GenerateQrCode(issuer, username, secret string) ([]byte, error) {
+func GenerateQrCode(user structs.User, secret string) ([]byte, error) {
 	var png []byte
-	otpauthURL := buildPayload(issuer, username, secret)
+	otpauthURL := buildPayload(user.Issuer.Name, user.Name, secret)
 	png, err := qrcode.Encode(otpauthURL, qrcode.Medium, 256)
 
 	return png, err
@@ -27,7 +27,7 @@ func WriteQrCodeImage(user structs.User, passphrase []byte, filePath string) err
 	if err != nil {
 		return err
 	}
-	return writeQrCodeImage(user.Issuer.Name, user.Username, string(passphrase), filePath)
+	return writeQrCodeImage(user.Issuer.Name, user.Name, string(passphrase), filePath)
 }
 
 func writeQrCodeImage(issuer, username, secret, filePath string) error {
