@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"go-tiny-mfa/structs"
 
+	"github.com/google/uuid"
+
 	// SQL Driver package
 	_ "github.com/lib/pq"
 )
@@ -36,11 +38,12 @@ func CloseConnection(db *sql.DB) error {
 func initializeUserTable(db *sql.DB) {
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
 		id varchar(45) NOT NULL,
-		username varchar(32) NOT NULL UNIQUE,
-		email varchar(128) NOT NULL UNIQUE,
+		username varchar(32) NOT NULL,
+		email varchar(128) NOT NULL,
 		issuer_id varchar(45) NOT NULL,
 		key varchar(255) NOT NULL,
 		enabled boolean DEFAULT '1',
+		unique (username, email, issuer_id),
 		PRIMARY KEY (id)
 	);`
 	_, err := db.Exec(createstring)
@@ -80,6 +83,58 @@ func InsertUser(user structs.User, db *sql.DB) {
 
 	rows, _ := res.RowsAffected()
 	fmt.Println("insert operation result: ", rows)
+}
+
+//CreateIssuer returns a Issuer struct with the values provided
+func CreateIssuer(issuer, contact string, enabled bool) structs.Issuer {
+	id := uuid.New().String()
+	issuerStruct := structs.Issuer{ID: id, Name: issuer, Contact: contact, Enabled: enabled}
+
+	return issuerStruct
+}
+
+//InsertIssuer inserts a Issuer struct to the database
+func InsertIssuer(issuer structs.Issuer, db *sql.DB) {
+	sqlInsert := `INSERT INTO issuer (id, name, contact, enabled)
+				VALUES ($1, $2, $3, $4)
+				RETURNING id`
+	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Enabled)
+	if err != nil {
+		panic(err)
+	}
+
+	rows, _ := res.RowsAffected()
+	fmt.Println("insert operation result: ", rows)
+}
+
+//DeleteIssuer deletes an issuer from the database
+func DeleteIssuer(issuer string, db *sql.DB) {
+	sqlDelete := `DELETE FROM issuer WHERE name=$1`
+	res, err := db.Exec(sqlDelete, issuer)
+	if err != nil {
+		panic(err)
+	}
+
+	rows, _ := res.RowsAffected()
+	fmt.Println("insert operation result: ", rows)
+}
+
+//GetIssuer returns the requested issuer from the database as Issuer struct
+func GetIssuer(issuer string, db *sql.DB) (structs.Issuer, error) {
+	sqlSelect := `SELECT * FROM issuer where name=$1`
+	res, err := db.Query(sqlSelect, issuer)
+	if err != nil {
+		return structs.Issuer{}, err
+	}
+
+	var id string
+	var name string
+	var contact string
+	var enabled bool
+	res.Scan(&id, &name, &contact, &enabled)
+
+	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Enabled: enabled}
+	return issuerStruct, nil
 }
 
 //GetUser returns a User struct based on given username and issuer
