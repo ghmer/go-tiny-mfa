@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-tiny-mfa/middleware"
+	"go-tiny-mfa/structs"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,7 +16,7 @@ func Router() *mux.Router {
 
 	router.HandleFunc("/", Welcome).Methods("GET")
 	router.HandleFunc("/api/v1/issuer", ListAllIssuers).Methods("GET")
-	router.HandleFunc("/api/v1/issuer", ListAllIssuers).Methods("POST")
+	router.HandleFunc("/api/v1/issuer", CreateNewIssuer).Methods("POST")
 	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("GET")
 	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("POST")
 	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("DELETE")
@@ -44,6 +45,25 @@ func ListAllIssuers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	issuers, err := middleware.GetIssuers()
+	if err != nil {
+		json.NewEncoder(w).Encode(err)
+	}
+	// send the response
+	json.NewEncoder(w).Encode(issuers)
+}
+
+func CreateNewIssuer(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("create new issuer")
+	w.Header().Set("Context-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var issuer structs.Issuer
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&issuer)
+
+	fmt.Println(issuer)
+	middleware.InsertIssuer(issuer)
 	issuers, err := middleware.GetIssuers()
 	if err != nil {
 		json.NewEncoder(w).Encode(err)

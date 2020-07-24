@@ -99,19 +99,25 @@ func CreateIssuer(issuer, contact string, enabled bool) structs.Issuer {
 }
 
 //InsertIssuer inserts a Issuer struct to the database
-func InsertIssuer(issuer structs.Issuer) {
+func InsertIssuer(issuer structs.Issuer) (int64, error) {
 	db := CreateConnection()
 	defer db.Close()
+	if issuer.ID == "" {
+		fmt.Print("ID emtpy. using ")
+		issuer.ID = uuid.New().String()
+		fmt.Println(issuer.ID)
+	}
 	sqlInsert := `INSERT INTO issuer (id, name, contact, enabled)
 				VALUES ($1, $2, $3, $4)
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Enabled)
 	if err != nil {
-		panic(err)
+		return -1, err
 	}
 
 	rows, _ := res.RowsAffected()
 	fmt.Println("insert operation result: ", rows)
+	return rows, nil
 }
 
 //DeleteIssuer deletes an issuer from the database
@@ -148,19 +154,32 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 	return issuerStruct, nil
 }
 
+func checkCount(rows *sql.Rows) (int, error) {
+	var count int
+	for rows.Next() {
+		err := rows.Scan(&count)
+		if err != nil {
+			return -1, err
+		}
+	}
+	return count, nil
+}
+
 //GetIssuers returns all Issuers from the database
 func GetIssuers() ([]structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlCountSelect := `SELECT COUNT(name) FROM issuer`
+	sqlCountSelect := `SELECT COUNT(name) FROM issuer;`
 	res, err := db.Query(sqlCountSelect)
 	if err != nil {
 		return []structs.Issuer{}, err
 	}
 
-	var count int
-	res.Scan(&count)
-
+	count, err := checkCount(res)
+	if err != nil {
+		return []structs.Issuer{}, err
+	}
+	fmt.Println("Current Count: ", count)
 	issuers := make([]structs.Issuer, count)
 
 	sqlSelect := `SELECT id, name, contact, enabled FROM issuer`
