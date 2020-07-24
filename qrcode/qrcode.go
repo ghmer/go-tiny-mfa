@@ -27,7 +27,7 @@ func WriteQrCodeImage(user structs.User, passphrase []byte, filePath string) err
 	if err != nil {
 		return err
 	}
-	return writeQrCodeImage(user.Issuer, user.Username, string(passphrase), filePath)
+	return writeQrCodeImage(user.Issuer.Name, user.Username, string(passphrase), filePath)
 }
 
 func writeQrCodeImage(issuer, username, secret, filePath string) error {
