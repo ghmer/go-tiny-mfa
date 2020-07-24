@@ -54,7 +54,7 @@ func initializeIssuerTable() {
 	createstring := `CREATE TABLE IF NOT EXISTS issuer (
 		id varchar(45) NOT NULL,
 		name varchar(32) NOT NULL UNIQUE,
-		contact varchar(255) NOT NULL
+		contact varchar(255) NOT NULL,
 		enabled boolean DEFAULT '1',
 		PRIMARY KEY (id)
 	);`
