@@ -351,15 +351,6 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	currentIssuer, err := GetIssuerByID(issuer.ID)
-	if err != nil {
-		return false, err
-	}
-
-	if issuer.Contact == "" {
-		issuer.Contact = currentIssuer.Contact
-	}
-
 	sqlUpdate := `UPDATE issuer 
 				  SET 
 				  	contact=$1, 

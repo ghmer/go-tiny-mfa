@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/structs"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -32,6 +33,22 @@ func Router() *mux.Router {
 	return router
 }
 
+func mapJSON(reader io.Reader) (map[string]interface{}, error) {
+	// Define empty interface
+	var e interface{}
+
+	// Unmarshal json data structure
+	err := json.NewDecoder(reader).Decode(&e)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use type assertion to access underlying map[string]interface{}
+	m := e.(map[string]interface{})
+
+	return m, nil
+}
+
 // Welcome will return a single Hello World
 func Welcome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/json")
@@ -52,10 +69,11 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		// send the response
-		json.NewEncoder(w).Encode(issuers)
+		return
 	}
+
+	// send the response
+	json.NewEncoder(w).Encode(issuers)
 }
 
 //CreateIssuer creates a new issuer
@@ -73,9 +91,10 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		json.NewEncoder(w).Encode(issuerStruct)
+		return
 	}
+
+	json.NewEncoder(w).Encode(issuerStruct)
 }
 
 //GetIssuer returns the issuer given in the URL
@@ -88,9 +107,10 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		json.NewEncoder(w).Encode(issuerStruct)
+		return
 	}
+
+	json.NewEncoder(w).Encode(issuerStruct)
 }
 
 //UpdateIssuer updates an existing issuer
@@ -107,33 +127,37 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	w.Header().Set("Context-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var issuerStruct structs.Issuer
-	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&issuerStruct)
-
-	/*
-		if issuer.ID == "" {
-			message := structs.Message{Success: false, Message: "ID not set in struct"}
-			json.NewEncoder(w).Encode(message)
-		}
-	*/
+	jsonMap, err := mapJSON(r.Body)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	currentIssuer, err := middleware.GetIssuer(issuer)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		issuerStruct.ID = currentIssuer.ID
-
-		result, err := middleware.UpdateIssuer(issuerStruct)
-		if err != nil {
-			message := structs.Message{Success: false, Message: err.Error()}
-			json.NewEncoder(w).Encode(message)
-		} else {
-			message := structs.Message{Success: result}
-			json.NewEncoder(w).Encode(message)
-		}
+		return
 	}
+
+	if val, ok := jsonMap["enabled"]; ok {
+		currentIssuer.Enabled = val.(bool)
+	}
+
+	if val, ok := jsonMap["contact"]; ok {
+		currentIssuer.Contact = val.(string)
+	}
+
+	result, err := middleware.UpdateIssuer(currentIssuer)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	message := structs.Message{Success: result}
+	json.NewEncoder(w).Encode(message)
 }
 
 //DeleteIssuer deletes an existing issuer
@@ -145,15 +169,17 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	if issuer == "" {
 		message := structs.Message{Success: false, Message: "issuer not set in url"}
 		json.NewEncoder(w).Encode(message)
+		return
 	}
 	result, err := middleware.DeleteIssuer(issuer)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		message := structs.Message{Success: result}
-		json.NewEncoder(w).Encode(message)
+		return
 	}
+
+	message := structs.Message{Success: result}
+	json.NewEncoder(w).Encode(message)
 }
 
 //GetUsers returns all users for a given issuer
@@ -169,15 +195,17 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		users, err := middleware.GetUsers(issuerStruct)
-		if err != nil {
-			message := structs.Message{Success: false, Message: err.Error()}
-			json.NewEncoder(w).Encode(message)
-		} else {
-			json.NewEncoder(w).Encode(users)
-		}
+		return
 	}
+
+	users, err := middleware.GetUsers(issuerStruct)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	json.NewEncoder(w).Encode(users)
 }
 
 //CreateUser creates a new user in the scope of the given issuer
@@ -193,20 +221,22 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		var user structs.User
-		decoder := json.NewDecoder(r.Body)
-		decoder.Decode(&user)
-		user.Issuer = issuerStruct
-
-		userStruct, err := middleware.CreateUser(user)
-		if err != nil {
-			message := structs.Message{Success: false, Message: err.Error()}
-			json.NewEncoder(w).Encode(message)
-		} else {
-			json.NewEncoder(w).Encode(userStruct)
-		}
+		return
 	}
+
+	var user structs.User
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&user)
+	user.Issuer = issuerStruct
+
+	userStruct, err := middleware.CreateUser(user)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	json.NewEncoder(w).Encode(userStruct)
 }
 
 //GetUser returns a distinct user in the scope of the given issuer
@@ -257,24 +287,29 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var jsonUser structs.User
-	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&jsonUser)
-
-	if jsonUser.Email != "" {
-		userStruct.Email = jsonUser.Email
+	jsonMap, err := mapJSON(r.Body)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
 	}
 
-	userStruct.Enabled = jsonUser.Enabled
+	if val, ok := jsonMap["email"]; ok {
+		userStruct.Email = val.(string)
+	}
+	if val, ok := jsonMap["enabled"]; ok {
+		userStruct.Enabled = val.(bool)
+	}
 
 	result, err := middleware.UpdateUser(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		message := structs.Message{Success: result}
-		json.NewEncoder(w).Encode(message)
+		return
 	}
+
+	message := structs.Message{Success: result}
+	json.NewEncoder(w).Encode(message)
 }
 
 //DeleteUser deletes a user in the scope of the given issuer
@@ -312,8 +347,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
-	} else {
-		message := structs.Message{Success: result}
-		json.NewEncoder(w).Encode(message)
+		return
 	}
+
+	message := structs.Message{Success: result}
+	json.NewEncoder(w).Encode(message)
 }
