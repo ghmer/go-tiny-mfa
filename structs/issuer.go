@@ -5,5 +5,6 @@ type Issuer struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Contact string `json:"contact"`
+	Key     string `json:"key"`
 	Enabled bool   `json:"enabled"`
 }

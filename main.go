@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/router"
 	"log"
 	"net/http"
+	"os"
 )
 
 func cleanup() {
@@ -100,9 +102,32 @@ func main() {
 		fmt.Println(user)
 	*/
 
-	middleware.InitializeDatabase()
-	r := router.Router()
-	fmt.Println(fmt.Sprintf("Start serving on port %s", "10000"))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", "10000"), r))
+	// Check if needed environment variables have been set
+	err := checkEnvironmentVariables()
+	if err != nil {
+		panic(err)
+	}
 
+	// Initialize Database
+	middleware.InitializeDatabase()
+
+	// Create the router
+	routerport := os.Getenv("ROUTER_PORT")
+	r := router.Router()
+	fmt.Println(fmt.Sprintf("Start serving on port %s", routerport))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", routerport), r))
+
+}
+
+func checkEnvironmentVariables() error {
+	dbuser := os.Getenv("POSTGRES_USER")
+	dbpass := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DATABASE")
+	routerport := os.Getenv("ROUTER_PORT")
+
+	if dbuser == "" || dbpass == "" || dbname == "" || routerport == "" {
+		return errors.New("Environment Variables not defined.")
+	}
+
+	return nil
 }

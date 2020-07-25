@@ -15,18 +15,19 @@ func Router() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer", ListAllIssuers).Methods("GET")
-	router.HandleFunc("/api/v1/issuer", CreateNewIssuer).Methods("POST")
-	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("POST")
-	router.HandleFunc("/api/v1/issuer/{issuer}", Welcome).Methods("DELETE")
+	router.HandleFunc("/api/v1/issuer", ListIssuers).Methods("GET")
+	router.HandleFunc("/api/v1/issuer", CreateIssuer).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}", GetIssuer).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}", UpdateIssuer).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}", DeleteIssuer).Methods("DELETE")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", Welcome).Methods("GET")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", Welcome).Methods("POST")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("GET")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("POST")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", Welcome).Methods("DELETE")
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/validate/{token}", Welcome).Methods("GET")
-	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/recreate", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/qrcode/recreate", Welcome).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/qrcode", Welcome).Methods("GET")
 
 	return router
 }
@@ -37,24 +38,60 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// send the response
-	json.NewEncoder(w).Encode("Hello, World")
+	message := structs.Message{Success: true, Message: "Hello, World"}
+	json.NewEncoder(w).Encode(message)
 }
 
-func ListAllIssuers(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("list all issuers")
+func ListIssuers(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("LIST issuers")
 	w.Header().Set("Context-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	issuers, err := middleware.GetIssuers()
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+	} else {
+		// send the response
+		json.NewEncoder(w).Encode(issuers)
 	}
-	// send the response
-	json.NewEncoder(w).Encode(issuers)
 }
 
-func CreateNewIssuer(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("create new issuer")
+func GetIssuer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	issuer := vars["issuer"]
+	fmt.Println("GET issuer ", issuer)
+
+	issuerStruct, err := middleware.GetIssuer(issuer)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+	} else {
+		json.NewEncoder(w).Encode(issuerStruct)
+	}
+}
+
+func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	issuer := vars["issuer"]
+	fmt.Println("DELETE issuer ", issuer)
+
+	if issuer == "" {
+		message := structs.Message{Success: false, Message: "issuer not set in url"}
+		json.NewEncoder(w).Encode(message)
+	}
+	result, err := middleware.DeleteIssuer(issuer)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+	} else {
+		message := structs.Message{Success: result}
+		json.NewEncoder(w).Encode(message)
+	}
+}
+
+func CreateIssuer(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("CREATE issuer")
 	w.Header().Set("Context-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -63,13 +100,39 @@ func CreateNewIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&issuer)
 
 	fmt.Println(issuer)
-	middleware.InsertIssuer(issuer)
-	issuers, err := middleware.GetIssuers()
+	issuerStruct, err := middleware.InsertIssuer(issuer)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+	} else {
+		json.NewEncoder(w).Encode(issuerStruct)
 	}
-	// send the response
-	json.NewEncoder(w).Encode(issuers)
+}
+
+func UpdateIssuer(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("UPDATE issuer")
+	w.Header().Set("Context-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var issuer structs.Issuer
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&issuer)
+
+	fmt.Println(issuer)
+
+	if issuer.ID == "" {
+		message := structs.Message{Success: false, Message: "ID not set in struct"}
+		json.NewEncoder(w).Encode(message)
+	}
+
+	result, err := middleware.UpdateIssuer(issuer)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+	} else {
+		message := structs.Message{Success: result}
+		json.NewEncoder(w).Encode(message)
+	}
 }
 
 /*

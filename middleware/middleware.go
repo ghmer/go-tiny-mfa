@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"go-tiny-mfa/structs"
 	"os"
@@ -41,7 +42,7 @@ func initializeUserTable() {
 		username varchar(32) NOT NULL,
 		email varchar(128) NOT NULL,
 		issuer_id varchar(45) NOT NULL,
-		key varchar(255) NOT NULL,
+		key varchar(128) NOT NULL,
 		enabled boolean DEFAULT '1',
 		unique (username, email, issuer_id),
 		PRIMARY KEY (id)
@@ -59,6 +60,7 @@ func initializeIssuerTable() {
 		id varchar(45) NOT NULL,
 		name varchar(32) NOT NULL UNIQUE,
 		contact varchar(255) NOT NULL,
+		key varchar(128) NOT NULL,
 		enabled boolean DEFAULT '1',
 		PRIMARY KEY (id)
 	);`
@@ -81,7 +83,7 @@ func InsertUser(user structs.User) {
 	sqlInsert := `INSERT INTO accounts (id, username, email, issuer_id, key, enabled)
 				VALUES ($1, $2, $3, $4, $5)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.CryptedBase32Key, true)
+	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, true)
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +101,7 @@ func CreateIssuer(issuer, contact string, enabled bool) structs.Issuer {
 }
 
 //InsertIssuer inserts a Issuer struct to the database
-func InsertIssuer(issuer structs.Issuer) (int64, error) {
+func InsertIssuer(issuer structs.Issuer) (structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
 	if issuer.ID == "" {
@@ -112,26 +114,68 @@ func InsertIssuer(issuer structs.Issuer) (int64, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Enabled)
 	if err != nil {
-		return -1, err
+		fmt.Println("Error ", err)
+		return structs.Issuer{}, err
 	}
 
 	rows, _ := res.RowsAffected()
+	if rows != 1 {
+		return issuer, errors.New("Insert Operation was not successful")
+	}
 	fmt.Println("insert operation result: ", rows)
-	return rows, nil
+	return issuer, nil
+}
+
+func UpdateIssuer(issuer structs.Issuer) (bool, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	currentIssuer, err := GetIssuerByID(issuer.ID)
+	if err != nil {
+		return false, err
+	}
+
+	if issuer.Contact == "" {
+		issuer.Contact = currentIssuer.Contact
+	}
+
+	sqlUpdate := `UPDATE issuer 
+				  SET 
+				  	contact=$1, 
+				  	enabled=$2 
+				  WHERE 
+				  	id=$3`
+	res, err := db.Exec(sqlUpdate, issuer.Contact, issuer.Enabled, issuer.ID)
+	if err != nil {
+		fmt.Println("Error ", err)
+		return false, err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows != 1 {
+		return false, errors.New("Update Operation was not successful")
+	}
+	fmt.Println("insert operation result: ", rows)
+	return true, nil
 }
 
 //DeleteIssuer deletes an issuer from the database
-func DeleteIssuer(issuer string) {
+func DeleteIssuer(issuer string) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
 	sqlDelete := `DELETE FROM issuer WHERE name=$1`
 	res, err := db.Exec(sqlDelete, issuer)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	rows, _ := res.RowsAffected()
 	fmt.Println("insert operation result: ", rows)
+	if rows != 1 {
+		return false, fmt.Errorf("Operation affected %d rows", rows)
+	}
+
+	return true, nil
 }
 
 //GetIssuer returns the requested issuer from the database as Issuer struct
@@ -148,7 +192,31 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 	var name string
 	var contact string
 	var enabled bool
-	res.Scan(&id, &name, &contact, &enabled)
+	if res.Next() {
+		res.Scan(&id, &name, &contact, &enabled)
+	}
+
+	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Enabled: enabled}
+	return issuerStruct, nil
+}
+
+//GetIssuer returns the requested issuer from the database as Issuer struct
+func GetIssuerByID(issuerID string) (structs.Issuer, error) {
+	db := CreateConnection()
+	defer db.Close()
+	sqlSelect := `SELECT * FROM issuer where id=$1`
+	res, err := db.Query(sqlSelect, issuerID)
+	if err != nil {
+		return structs.Issuer{}, err
+	}
+
+	var id string
+	var name string
+	var contact string
+	var enabled bool
+	if res.Next() {
+		res.Scan(&id, &name, &contact, &enabled)
+	}
 
 	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Enabled: enabled}
 	return issuerStruct, nil
