@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
-	"go-tiny-mfa/structs"
+	"go-tiny-mfa/core"
 	"io"
 	"io/ioutil"
 	"os"
@@ -90,6 +90,37 @@ func createMd5Hash(key []byte) []byte {
 	return hasher.Sum(nil)
 }
 
+//GenerateCryptedKeyBase32 generates a new Key, encrypts it with the master key and encodes it to base32
+func GenerateCryptedKeyBase32(masterKey []byte) (string, error) {
+	issuerKey, err := core.GenerateExtendedSecretKey()
+	if err != nil {
+		return "", err
+	}
+
+	cryptedKey := Encrypt(issuerKey, masterKey)
+
+	return base32.StdEncoding.EncodeToString(cryptedKey), nil
+}
+
+//GenerateExtendedKeyBase32 returns a base32 encoded 256bit key
+func GenerateExtendedKeyBase32() (string, error) {
+	masterKey, err := core.GenerateExtendedSecretKey()
+	if err != nil {
+		return "", err
+	}
+
+	encodedKey := base32.StdEncoding.EncodeToString(masterKey)
+
+	return encodedKey, nil
+}
+
+//DecodeBase32Key Decodes a base32 encoded key to a byte array
+func DecodeBase32Key(encodedKey string) ([]byte, error) {
+	key, err := base32.StdEncoding.DecodeString(encodedKey)
+	return key, err
+}
+
+/*
 //DecryptAndDecodeUserKey takes a User struct and a passphrase and returns the unencrypted secret key
 func DecryptAndDecodeUserKey(user structs.User, passphrase []byte) ([]byte, error) {
 	innerData, err := DecryptUserKey(user, passphrase)
@@ -113,3 +144,13 @@ func DecryptUserKey(user structs.User, passphrase []byte) ([]byte, error) {
 
 	return innerData, nil
 }
+
+
+func GetRawUserKey(user structs.User) {
+
+		userkey := user.Key
+		issuerKey := user.Issuer.Key
+
+
+}
+*/
