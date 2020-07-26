@@ -244,6 +244,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 //ValidateUserToken validates a given token
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("VALIDATE token")
+	vars := mux.Vars(r)
+	token := vars["token"]
+
+	if token == "" {
+		message := structs.Message{Success: false, Message: "no token provided."}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
@@ -252,12 +260,10 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	token := vars["token"]
-
-	if token == "" {
-		message := structs.Message{Success: false, Message: "no token provided."}
+	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
+		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
 		json.NewEncoder(w).Encode(message)
+		w.WriteHeader(500)
 		return
 	}
 
@@ -392,6 +398,13 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		w.WriteHeader(500)
+		return
+	}
+
+	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
+		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
 		json.NewEncoder(w).Encode(message)
 		w.WriteHeader(500)
 		return
