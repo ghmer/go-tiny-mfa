@@ -2,8 +2,8 @@ package qrcode
 
 import (
 	"fmt"
+	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/structs"
-	"go-tiny-mfa/utils"
 	"strings"
 
 	qrcode "github.com/skip2/go-qrcode"
@@ -13,21 +13,25 @@ import (
 const FormatString string = "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=6&issuer=%s&period=30&secret=%s"
 
 // GenerateQrCode Generates a QRCode of the totp url
-func GenerateQrCode(user structs.User, secret string) ([]byte, error) {
+func GenerateQrCode(user structs.User) ([]byte, error) {
 	var png []byte
-	otpauthURL := buildPayload(user.Issuer.Name, user.Name, secret)
-	png, err := qrcode.Encode(otpauthURL, qrcode.Medium, 256)
+	base32key, err := middleware.GetUserKeyBase32(user)
+	if err != nil {
+		return nil, err
+	}
+	otpauthURL := buildPayload(user.Issuer.Name, user.Name, base32key)
+	png, err = qrcode.Encode(otpauthURL, qrcode.Medium, 256)
 
 	return png, err
 }
 
 // WriteQrCodeImage writes a png to the filesystem
-func WriteQrCodeImage(user structs.User, passphrase []byte, filePath string) error {
-	passphrase, err := utils.DecryptUserKey(user, passphrase)
+func WriteQrCodeImage(user structs.User, filePath string) error {
+	passphrase, err := middleware.GetUserKeyBase32(user)
 	if err != nil {
 		return err
 	}
-	return writeQrCodeImage(user.Issuer.Name, user.Name, string(passphrase), filePath)
+	return writeQrCodeImage(user.Issuer.Name, user.Name, passphrase, filePath)
 }
 
 func writeQrCodeImage(issuer, username, secret, filePath string) error {

@@ -119,38 +119,3 @@ func DecodeBase32Key(encodedKey string) ([]byte, error) {
 	key, err := base32.StdEncoding.DecodeString(encodedKey)
 	return key, err
 }
-
-/*
-//DecryptAndDecodeUserKey takes a User struct and a passphrase and returns the unencrypted secret key
-func DecryptAndDecodeUserKey(user structs.User, passphrase []byte) ([]byte, error) {
-	innerData, err := DecryptUserKey(user, passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	decoded, err := base32.StdEncoding.DecodeString(string(innerData))
-
-	return decoded, nil
-}
-
-//DecryptUserKey takes a User struct and a passphrase and returns the unencrypted secret key
-func DecryptUserKey(user structs.User, passphrase []byte) ([]byte, error) {
-	outerData, err := base32.StdEncoding.DecodeString(user.CryptedBase32Key)
-	if err != nil {
-		return nil, err
-	}
-
-	innerData := Decrypt(outerData, passphrase)
-
-	return innerData, nil
-}
-
-
-func GetRawUserKey(user structs.User) {
-
-		userkey := user.Key
-		issuerKey := user.Issuer.Key
-
-
-}
-*/

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"database/sql"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"go-tiny-mfa/structs"
@@ -118,10 +119,10 @@ func GetMasterKey() ([]byte, error) {
 	defer db.Close()
 	selectQuery := "SELECT key FROM system WHERE id=1"
 	result, err := db.Query(selectQuery)
-	defer result.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer result.Close()
 
 	var encodedMasterKey string
 	if result.Next() {
@@ -164,6 +165,16 @@ func GetUserKey(user structs.User) ([]byte, error) {
 	return plainKey, nil
 }
 
+//GetUserKeyBase32 returns the decrypted user key in base32 encoding
+func GetUserKeyBase32(user structs.User) (string, error) {
+	plainKey, err := GetUserKey(user)
+	if err != nil {
+		return "", err
+	}
+
+	return base32.StdEncoding.EncodeToString(plainKey), nil
+}
+
 //InitializeDatabase will create the issuer and user tables
 func InitializeDatabase() {
 	initializeSystemTable()
@@ -187,11 +198,10 @@ func checkCountWithQuery(sqlQuery string) (int, error) {
 	defer db.Close()
 
 	res, err := db.Query(sqlQuery)
-	defer res.Close()
-
 	if err != nil {
 		return -1, err
 	}
+	defer res.Close()
 
 	count, err := checkCount(res)
 	if err != nil {
@@ -201,41 +211,30 @@ func checkCountWithQuery(sqlQuery string) (int, error) {
 	return count, nil
 }
 
-/*
-//CreateIssuer returns a Issuer struct with the values provided
-func CreateIssuer(issuer, contact string, enabled bool) structs.Issuer {
-	id := uuid.New().String()
-	issuerStruct := structs.Issuer{ID: id, Name: issuer, Contact: contact, Enabled: enabled}
-
-	return issuerStruct
-}
-*/
-
 //GetIssuers returns all Issuers from the database
 func GetIssuers() ([]structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
 	sqlCountSelect := `SELECT COUNT(name) FROM issuer;`
 	res, err := db.Query(sqlCountSelect)
-	defer res.Close()
-
 	if err != nil {
-		return []structs.Issuer{}, err
+		return nil, err
 	}
+	defer res.Close()
 
 	count, err := checkCount(res)
 	if err != nil {
-		return []structs.Issuer{}, err
+		return nil, err
 	}
 	fmt.Println("Current Count: ", count)
 	issuers := make([]structs.Issuer, count)
 
 	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer`
 	rows, errorMessage := db.Query(sqlSelect)
-	defer rows.Close()
 	if errorMessage != nil {
 		return issuers, errorMessage
 	}
+	defer rows.Close()
 
 	loop := 0
 	for rows.Next() {
@@ -258,27 +257,20 @@ func GetIssuers() ([]structs.Issuer, error) {
 func CreateIssuer(issuer structs.Issuer) (structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
-	if issuer.ID == "" {
-		fmt.Print("ID emtpy. using ")
-		issuer.ID = uuid.New().String()
-		fmt.Println(issuer.ID)
+	issuer.ID = uuid.New().String()
+
+	masterKey, err := GetMasterKey()
+	if err != nil {
+		return structs.Issuer{}, err
 	}
-	if issuer.Key == "" {
-		fmt.Print("key emtpy. using ")
-		masterKey, err := GetMasterKey()
-		if err != nil {
-			return structs.Issuer{}, err
-		}
-		cryptedKey, err := utils.GenerateCryptedKeyBase32(masterKey)
-		if err != nil {
-			return structs.Issuer{}, err
-		}
-		issuer.Key = cryptedKey
-		fmt.Println(issuer.Key)
+	cryptedKey, err := utils.GenerateCryptedKeyBase32(masterKey)
+	if err != nil {
+		return structs.Issuer{}, err
 	}
+	issuer.Key = cryptedKey
 
 	sqlInsert := `INSERT INTO issuer (id, name, contact, key, enabled)
-				VALUES ($1, $2, $3, $4)
+				VALUES ($1, $2, $3, $4, $5)
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.Enabled)
 	if err != nil {
@@ -300,11 +292,10 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 	defer db.Close()
 	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer where name=$1`
 	res, err := db.Query(sqlSelect, issuer)
-	defer res.Close()
-
 	if err != nil {
 		return structs.Issuer{}, err
 	}
+	defer res.Close()
 
 	var id string
 	var name string
@@ -327,11 +318,10 @@ func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 	defer db.Close()
 	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer where id=$1`
 	res, err := db.Query(sqlSelect, issuerID)
-	defer res.Close()
-
 	if err != nil {
 		return structs.Issuer{}, err
 	}
+	defer res.Close()
 
 	var id string
 	var name string
@@ -372,11 +362,11 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 }
 
 //DeleteIssuer deletes an issuer from the database
-func DeleteIssuer(issuer string) (bool, error) {
+func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlDelete := `DELETE FROM issuer WHERE name=$1`
-	res, err := db.Exec(sqlDelete, issuer)
+	sqlDelete := `DELETE FROM issuer WHERE id=$1`
+	res, err := db.Exec(sqlDelete, issuer.ID)
 	if err != nil {
 		return false, err
 	}
@@ -394,26 +384,26 @@ func DeleteIssuer(issuer string) (bool, error) {
 func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlCountSelect := `SELECT COUNT(name) FROM users WHERE issuer_id=$1;`
+	sqlCountSelect := `SELECT COUNT(username) FROM accounts WHERE issuer_id=$1;`
 	res, err := db.Query(sqlCountSelect, issuer.ID)
-	defer res.Close()
-	if err != nil {
-		return []structs.User{}, err
-	}
 
+	if err != nil {
+		return nil, err
+	}
 	count, err := checkCount(res)
 	if err != nil {
-		return []structs.User{}, err
+		return nil, err
 	}
+	defer res.Close()
 	fmt.Println("Current Count: ", count)
 	users := make([]structs.User, count)
 
-	sqlSelect := `SELECT id, username, email, issuer_id, key, enabled FROM users WHERE issuer_id=$1`
-	rows, errorMessage := db.Query(sqlSelect, issuer)
-	defer rows.Close()
+	sqlSelect := `SELECT id, username, email, issuer_id, key, enabled FROM accounts WHERE issuer_id=$1`
+	rows, errorMessage := db.Query(sqlSelect, issuer.ID)
 	if errorMessage != nil {
-		return []structs.User{}, errorMessage
+		return nil, errorMessage
 	}
+	defer rows.Close()
 
 	loop := 0
 	for rows.Next() {
@@ -458,7 +448,7 @@ func CreateUser(user structs.User) (structs.User, error) {
 	db := CreateConnection()
 	defer db.Close()
 	sqlInsert := `INSERT INTO accounts (id, username, email, issuer_id, key, enabled)
-				VALUES ($1, $2, $3, $4, $5)
+				VALUES ($1, $2, $3, $4, $5, $6)
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, user.Enabled)
 	if err != nil {
@@ -478,13 +468,12 @@ func CreateUser(user structs.User) (structs.User, error) {
 func GetUser(user string, issuer structs.Issuer) (structs.User, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlSelect := `SELECT id, username, email, key, enabled FROM user where name=$1 and issuer_id=$2`
+	sqlSelect := `SELECT id, username, email, key, enabled FROM accounts where username=$1 and issuer_id=$2`
 	res, err := db.Query(sqlSelect, user, issuer.ID)
-	defer res.Close()
-
 	if err != nil {
 		return structs.User{}, err
 	}
+	defer res.Close()
 
 	var id string
 	var name string
@@ -506,7 +495,7 @@ func UpdateUser(user structs.User) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlUpdate := `UPDATE user 
+	sqlUpdate := `UPDATE accounts 
 				  SET 
 				  	email=$1, 
 				  	enabled=$2 
@@ -530,7 +519,7 @@ func UpdateUser(user structs.User) (bool, error) {
 func DeleteUser(user structs.User) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlDelete := `DELETE FROM users WHERE id=$1 and issuer_id=$2`
+	sqlDelete := `DELETE FROM accounts WHERE id=$1 and issuer_id=$2`
 	res, err := db.Exec(sqlDelete, user.ID, user.Issuer.ID)
 	if err != nil {
 		return false, err
