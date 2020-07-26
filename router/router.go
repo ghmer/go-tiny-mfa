@@ -356,7 +356,7 @@ func getIssuerStructByVars(r *http.Request) (structs.Issuer, error) {
 	issuer := vars["issuer"]
 
 	if issuer == "" {
-		return structs.Issuer{}, errors.New("issuer not set in url.")
+		return structs.Issuer{}, errors.New("issuer not set in url")
 	}
 
 	issuerStruct, err := middleware.GetIssuer(issuer)
@@ -376,7 +376,7 @@ func getUserStructByVars(r *http.Request) (structs.User, error) {
 	vars := mux.Vars(r)
 	user := vars["user"]
 	if user == "" {
-		return structs.User{}, errors.New("user not set in url.")
+		return structs.User{}, errors.New("user not set in url")
 	}
 
 	userStruct, err := middleware.GetUser(user, issuerStruct)
