@@ -1,0 +1,31 @@
+version: "3"
+services:
+    database:
+        image: "postgres:latest"
+        networks: 
+            - tiny-mfa-net
+        volumes:
+            - data:/var/lib/postgres/data
+        environment: 
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=tinymfa
+    
+    tinymfa:
+        image: "go-tiny-mfa"
+        depends_on: 
+            - database
+        networks:
+            - tiny-mfa-net
+        ports:
+            - "57687:57687"
+        environment:
+            - POSTGRES_HOST=database
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=tinymfa
+volumes: 
+    data:
+
+networks: 
+    tiny-mfa-net:
