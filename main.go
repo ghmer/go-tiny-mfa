@@ -12,10 +12,16 @@ import (
 
 func main() {
 	// Check if needed environment variables have been set
-	log.Fatal(checkEnvironmentVariables())
+	err := checkEnvironmentVariables()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialize Database
-	log.Fatal(middleware.InitializeDatabase())
+	err = middleware.InitializeDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create the router
 	r := router.Router()

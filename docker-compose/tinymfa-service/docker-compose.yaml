@@ -13,8 +13,6 @@ services:
     
     tinymfa:
         image: "go-tiny-mfa"
-        depends_on: 
-            - database
         networks:
             - tiny-mfa-net
         ports:
@@ -24,6 +22,7 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=tinymfa
+        restart: unless-stopped
 volumes: 
     data:
 
