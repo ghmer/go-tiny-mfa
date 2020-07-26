@@ -10,112 +10,17 @@ import (
 	"os"
 )
 
-func cleanup() {
-	fmt.Println("Cleanup called")
-}
 func main() {
-	/*
-			var connURL string = os.Args[1]
-			var port string = os.Args[2]
-
-			db := middleware.CreateConnection(connURL)
-			defer middleware.CloseConnection(db)
-
-			c := make(chan os.Signal)
-			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				<-c
-				cleanup()
-				middleware.CloseConnection(db)
-				os.Exit(1)
-			}()
-
-			r := router.Router()
-			// fs := http.FileServer(http.Dir("build"))
-			// http.Handle("/", fs)
-			fmt.Println(fmt.Sprintf("Start serving on port %s", port))
-			log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
-
-
-		key, err := core.GenerateStandardSecretKey()
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		str := base32.StdEncoding.EncodeToString(key)
-		fmt.Println(str)
-
-		key, err = core.GenerateExtendedSecretKey()
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		str = base32.StdEncoding.EncodeToString(key)
-		fmt.Println(str)
-
-			16
-			D5WZMKC5I3FDIW7FXG6P2KSVGA======
-			32
-			KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====
-	*/
-
-	/*
-		key, err := base32.StdEncoding.DecodeString("KWHWKSJJY7TXIDWAUHHAVAV3YULTW3ERZ6ZVUGZ7F46HBMVLTFZA====")
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Printf("% x\n", key)
-
-		user := structs.User{Username: "mario", Issuer: "issuer.net", Base32Key: key}
-
-		qrcode.WriteQrCodeImage(user, "/tmp/image.png")
-
-		fmt.Println(core.GenerateValidToken(time.Now().Unix(), user.Base32Key, 0))
-		fmt.Println(core.ValidateTokenCurrentTimestamp(248440, user.Base32Key))
-
-	*/
-
-	/*
-			connURL := "postgres://postgres:postgres@localhost/tinymfa?sslmode=disable"
-			db := middleware.CreateConnection(connURL)
-			defer middleware.CloseConnection(db)
-
-			c := make(chan os.Signal)
-			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				<-c
-				cleanup()
-				middleware.CloseConnection(db)
-				os.Exit(1)
-			}()
-
-		passphrase, _ := core.GenerateStandardSecretKey()
-		mykey, _ := core.GenerateExtendedSecretKey()
-		var base32key []byte = make([]byte, base32.StdEncoding.EncodedLen(len(mykey)))
-		base32.StdEncoding.Encode(base32key, mykey)
-		cryptedBase32Key := base32.StdEncoding.EncodeToString(utils.Encrypt(base32key, passphrase))
-		issuer := structs.Issuer{ID: "", Name: "issuer.net"}
-		user := structs.User{Name: "mario", Email: "mario@issuer.net", Issuer: issuer, Enabled: true, CryptedBase32Key: cryptedBase32Key, ID: uuid.New().String()}
-
-		middleware.InsertUser(user)
-		fmt.Println(user)
-	*/
-
 	// Check if needed environment variables have been set
-	err := checkEnvironmentVariables()
-	if err != nil {
-		panic(err)
-	}
+	log.Fatal(checkEnvironmentVariables())
 
 	// Initialize Database
-	middleware.InitializeDatabase()
+	log.Fatal(middleware.InitializeDatabase())
 
 	// Create the router
-	routerport := os.Getenv("ROUTER_PORT")
 	r := router.Router()
-	fmt.Println(fmt.Sprintf("Start serving on port %s", routerport))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", routerport), r))
+	fmt.Println("Start serving on port 57687")
+	log.Fatal(http.ListenAndServe(":57687", r))
 
 }
 
@@ -123,10 +28,9 @@ func checkEnvironmentVariables() error {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DATABASE")
-	routerport := os.Getenv("ROUTER_PORT")
 
-	if dbuser == "" || dbpass == "" || dbname == "" || routerport == "" {
-		return errors.New("Environment Variables not defined.")
+	if dbuser == "" || dbpass == "" || dbname == "" {
+		return errors.New("environment variables not defined")
 	}
 
 	return nil

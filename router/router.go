@@ -3,7 +3,6 @@ package router
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go-tiny-mfa/core"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/qrcode"
@@ -64,7 +63,6 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 
 //GetIssuers returns all issuers
 func GetIssuers(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("LIST issuers")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -83,7 +81,6 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 
 //CreateIssuer creates a new issuer
 func CreateIssuer(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("CREATE issuer")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -91,7 +88,6 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&issuer)
 
-	fmt.Println(issuer)
 	issuerStruct, err := middleware.CreateIssuer(issuer)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -106,7 +102,6 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 
 //GetIssuer returns the issuer given in the URL
 func GetIssuer(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GET issuer")
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -120,8 +115,6 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 
 //UpdateIssuer updates an existing issuer
 func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!!!
-	fmt.Println("UPDATE issuer ")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -160,7 +153,6 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 
 //DeleteIssuer deletes an existing issuer
 func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DELETE issuer")
 	issuerStruct, err := getIssuerStructByVars(r)
 	result, err := middleware.DeleteIssuer(issuerStruct)
 	if err != nil {
@@ -176,8 +168,6 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 
 //GetUsers returns all users for a given issuer
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("LIST users for issuer")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -200,8 +190,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 //CreateUser creates a new user in the scope of the given issuer
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("CREATE user for issuer")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -229,8 +217,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 //GetUser returns a distinct user in the scope of the given issuer
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GET user")
-
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -243,7 +229,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 //ValidateUserToken validates a given token
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("VALIDATE token")
 	vars := mux.Vars(r)
 	token := vars["token"]
 
@@ -299,8 +284,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 //UpdateUser updates a user
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("UPDATE user")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -338,7 +321,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 //DeleteUser deletes a user in the scope of the given issuer
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DELETE user")
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}

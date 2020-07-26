@@ -36,7 +36,25 @@ func CreateConnection() *sql.DB {
 	return db
 }
 
-func initializeUserTable() {
+//InitializeDatabase will create the issuer and user tables
+func InitializeDatabase() error {
+	err := initializeSystemTable()
+	if err != nil {
+		return err
+	}
+	err = initializeIssuerTable()
+	if err != nil {
+		return err
+	}
+	err = initializeUserTable()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initializeUserTable() error {
 	db := CreateConnection()
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
@@ -51,11 +69,12 @@ func initializeUserTable() {
 	);`
 	_, err := db.Exec(createstring)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
+	return nil
 }
 
-func initializeIssuerTable() {
+func initializeIssuerTable() error {
 	db := CreateConnection()
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS issuer (
@@ -68,11 +87,12 @@ func initializeIssuerTable() {
 	);`
 	_, err := db.Exec(createstring)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
+	return nil
 }
 
-func initializeSystemTable() {
+func initializeSystemTable() error {
 	db := CreateConnection()
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS system (
@@ -82,35 +102,36 @@ func initializeSystemTable() {
 	);`
 	_, err := db.Exec(createstring)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	queryKey := "SELECT COUNT(key) FROM system"
 	count, err := checkCountWithQuery(queryKey)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	if count != 1 {
 		createMasterKey()
 	}
+
+	return nil
 }
 
-func createMasterKey() {
+func createMasterKey() error {
 	base32MasterKey, err := utils.GenerateExtendedKeyBase32()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	db := CreateConnection()
 	defer db.Close()
 	insertQuery := `INSERT INTO system(key) VALUES($1);`
-	res, err := db.Exec(insertQuery, base32MasterKey)
+	_, err = db.Exec(insertQuery, base32MasterKey)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
-	rows, _ := res.RowsAffected()
-	fmt.Println("insert operation result: ", rows)
+	return nil
 }
 
 //GetMasterKey retrieves the key generated on system initialization
@@ -175,13 +196,6 @@ func GetUserKeyBase32(user structs.User) (string, error) {
 	return base32.StdEncoding.EncodeToString(plainKey), nil
 }
 
-//InitializeDatabase will create the issuer and user tables
-func InitializeDatabase() {
-	initializeSystemTable()
-	initializeIssuerTable()
-	initializeUserTable()
-}
-
 func checkCount(rows *sql.Rows) (int, error) {
 	var count int
 	for rows.Next() {
@@ -226,7 +240,6 @@ func GetIssuers() ([]structs.Issuer, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Current Count: ", count)
 	issuers := make([]structs.Issuer, count)
 
 	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer`
@@ -274,7 +287,6 @@ func CreateIssuer(issuer structs.Issuer) (structs.Issuer, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.Enabled)
 	if err != nil {
-		fmt.Println("Error ", err)
 		return structs.Issuer{}, err
 	}
 
@@ -282,7 +294,6 @@ func CreateIssuer(issuer structs.Issuer) (structs.Issuer, error) {
 	if rows != 1 {
 		return issuer, errors.New("Insert Operation was not successful")
 	}
-	fmt.Println("insert operation result: ", rows)
 	return issuer, nil
 }
 
@@ -349,7 +360,6 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 				  	id=$3`
 	res, err := db.Exec(sqlUpdate, issuer.Contact, issuer.Enabled, issuer.ID)
 	if err != nil {
-		fmt.Println("Error ", err)
 		return false, err
 	}
 
@@ -357,7 +367,6 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 	if rows != 1 {
 		return false, errors.New("Update Operation was not successful")
 	}
-	fmt.Println("insert operation result: ", rows)
 	return true, nil
 }
 
@@ -372,7 +381,6 @@ func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 	}
 
 	rows, _ := res.RowsAffected()
-	fmt.Println("insert operation result: ", rows)
 	if rows != 1 {
 		return false, fmt.Errorf("Operation affected %d rows", rows)
 	}
@@ -395,7 +403,6 @@ func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 		return nil, err
 	}
 	defer res.Close()
-	fmt.Println("Current Count: ", count)
 	users := make([]structs.User, count)
 
 	sqlSelect := `SELECT id, username, email, issuer_id, key, enabled FROM accounts WHERE issuer_id=$1`
@@ -426,13 +433,10 @@ func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 //CreateUser inserts a userstruct to the DB
 func CreateUser(user structs.User) (structs.User, error) {
 	if user.ID == "" {
-		fmt.Print("ID emtpy. using ")
 		user.ID = uuid.New().String()
-		fmt.Println(user.ID)
 	}
 
 	if user.Key == "" {
-		fmt.Print("Key empty. using ")
 		issuerKey, err := GetIssuerKey(user.Issuer)
 		if err != nil {
 			return user, err
@@ -442,7 +446,6 @@ func CreateUser(user structs.User) (structs.User, error) {
 			return user, err
 		}
 		user.Key = cryptedKey
-		fmt.Println(user.Key)
 	}
 
 	db := CreateConnection()
@@ -452,7 +455,6 @@ func CreateUser(user structs.User) (structs.User, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, user.Enabled)
 	if err != nil {
-		fmt.Println("Error ", err)
 		return structs.User{}, err
 	}
 
@@ -460,7 +462,6 @@ func CreateUser(user structs.User) (structs.User, error) {
 	if rows != 1 {
 		return structs.User{}, errors.New("Insert Operation was not successful")
 	}
-	fmt.Println("insert operation result: ", rows)
 	return user, nil
 }
 
@@ -503,7 +504,6 @@ func UpdateUser(user structs.User) (bool, error) {
 				  	id=$3`
 	res, err := db.Exec(sqlUpdate, user.Email, user.Enabled, user.ID)
 	if err != nil {
-		fmt.Println("Error ", err)
 		return false, err
 	}
 
@@ -511,7 +511,6 @@ func UpdateUser(user structs.User) (bool, error) {
 	if rows != 1 {
 		return false, errors.New("Update Operation was not successful")
 	}
-	fmt.Println("insert operation result: ", rows)
 	return true, nil
 }
 
@@ -526,7 +525,6 @@ func DeleteUser(user structs.User) (bool, error) {
 	}
 
 	rows, _ := res.RowsAffected()
-	fmt.Println("insert operation result: ", rows)
 	if rows != 1 {
 		return false, fmt.Errorf("Operation affected %d rows", rows)
 	}

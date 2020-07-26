@@ -86,7 +86,6 @@ func createMd5Hash(key []byte) []byte {
 	hasher := md5.New()
 	hasher.Write(key)
 
-	//return hex.EncodeToString(hasher.Sum(nil))
 	return hasher.Sum(nil)
 }
 
