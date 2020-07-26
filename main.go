@@ -27,9 +27,10 @@ func main() {
 func checkEnvironmentVariables() error {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DATABASE")
+	dbhost := os.Getenv("POSTGRES_HOST")
+	dbname := os.Getenv("POSTGRES_DB")
 
-	if dbuser == "" || dbpass == "" || dbname == "" {
+	if dbuser == "" || dbpass == "" || dbhost == "" || dbname == "" {
 		return errors.New("environment variables not defined")
 	}
 

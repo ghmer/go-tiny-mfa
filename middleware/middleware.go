@@ -19,9 +19,10 @@ import (
 func CreateConnection() *sql.DB {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DATABASE")
+	dbhost := os.Getenv("POSTGRES_HOST")
+	dbname := os.Getenv("POSTGRES_DB")
 
-	dbURL := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", dbuser, dbpass, dbname)
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbname)
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
