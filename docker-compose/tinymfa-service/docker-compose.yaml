@@ -5,7 +5,7 @@ services:
         networks: 
             - tiny-mfa-net
         volumes:
-            - data:/var/lib/postgres/data
+            - data:/var/lib/postgresql/data
         environment: 
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
