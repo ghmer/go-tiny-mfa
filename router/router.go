@@ -102,6 +102,8 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 
 //GetIssuer returns the issuer given in the URL
 func GetIssuer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -153,6 +155,9 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 
 //DeleteIssuer deletes an existing issuer
 func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	issuerStruct, err := getIssuerStructByVars(r)
 	result, err := middleware.DeleteIssuer(issuerStruct)
 	if err != nil {
@@ -217,6 +222,9 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 //GetUser returns a distinct user in the scope of the given issuer
 func GetUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -229,6 +237,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 //ValidateUserToken validates a given token
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	vars := mux.Vars(r)
 	token := vars["token"]
 
@@ -321,6 +332,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 //DeleteUser deletes a user in the scope of the given issuer
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -377,6 +391,9 @@ func getUserStructByVars(r *http.Request) (structs.User, error) {
 
 //GenerateQrCode generates a QrCode
 func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -399,9 +416,6 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-
-	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	w.Write(png)
 }
