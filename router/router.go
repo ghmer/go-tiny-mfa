@@ -7,6 +7,7 @@ import (
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/qrcode"
 	"go-tiny-mfa/structs"
+	"go-tiny-mfa/utils"
 	"io"
 	"net/http"
 	"strconv"
@@ -331,6 +332,8 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+
+	userStruct, plainkey = utils.ScrubInformation(userStruct, plainkey)
 
 	message := structs.Message{Success: validated}
 	if !validated {
