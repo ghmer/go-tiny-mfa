@@ -292,12 +292,14 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
 
+	//No token provided?
 	if token == "" {
 		message := structs.Message{Success: false, Message: "no token provided."}
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	//can the submitted token be converted to an integer?
 	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -305,6 +307,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//is there actually a user?
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -312,6 +315,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//is either user or issuer disabled?
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
 		json.NewEncoder(w).Encode(message)
@@ -319,6 +323,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//primary checks green, decrypting user key
 	plainkey, err := middleware.GetUserKey(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -326,15 +331,17 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//validate token against user key and current system time
 	validated, err := core.ValidateTokenCurrentTimestamp(tokenInt, plainkey)
+	//Scrubbing data, then further processing
+	userStruct, plainkey = utils.ScrubInformation(userStruct, plainkey)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
-	userStruct, plainkey = utils.ScrubInformation(userStruct, plainkey)
-
+	//build result message
 	message := structs.Message{Success: validated}
 	if !validated {
 		message.Message = "token was NOT validated."
