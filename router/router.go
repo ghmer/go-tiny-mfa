@@ -298,6 +298,13 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenInt, err := strconv.Atoi(token)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -313,13 +320,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	plainkey, err := middleware.GetUserKey(userStruct)
-	if err != nil {
-		message := structs.Message{Success: false, Message: err.Error()}
-		json.NewEncoder(w).Encode(message)
-		return
-	}
-
-	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
