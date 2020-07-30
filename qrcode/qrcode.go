@@ -34,6 +34,7 @@ func WriteQrCodeImage(user structs.User, filePath string) error {
 	return writeQrCodeImage(user.Issuer.Name, user.Name, secret, filePath)
 }
 
+//writes a QRCode to the filesystem.
 func writeQrCodeImage(issuer, username, secret, filePath string) error {
 	otpauthURL := buildPayload(issuer, username, secret)
 	err := qrcode.WriteFile(otpauthURL, qrcode.Medium, 256, filePath)
@@ -41,6 +42,8 @@ func writeQrCodeImage(issuer, username, secret, filePath string) error {
 	return err
 }
 
+//builds the payload for the QRCode. In detail, this takes the otpAuthURL Formatstring constant
+//and formats it using the details provided in the method call.
 func buildPayload(issuer, username, secret string) string {
 	index := strings.Index(secret, "=")
 	mySecret := secret
