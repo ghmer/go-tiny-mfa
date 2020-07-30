@@ -56,7 +56,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	// send the response
-	message := structs.Message{Success: true, Message: "Hello, World!"}
+	message := structs.Message{Success: true, Message: "tiny-mfa alive!"}
 	json.NewEncoder(w).Encode(message)
 }
 
