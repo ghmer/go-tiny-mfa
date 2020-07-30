@@ -1,4 +1,4 @@
 FROM alpine:latest
 EXPOSE 57687
-ADD go-tiny-mfa /opt
+COPY build/go-tiny-mfa-amd64 /opt/go-tiny-mfa
 CMD ["/opt/go-tiny-mfa"]
