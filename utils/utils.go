@@ -127,7 +127,16 @@ func ScrubInformation(user *structs.User, key *[]byte) {
 			(*key)[i] = byte(0)
 		}
 	}
+	ScrubUserStruct(user)
+}
 
+//ScrubUserStruct scrubs the key of the user and also the issuer key
+func ScrubUserStruct(user *structs.User) {
 	user.Key = ""
-	user.Issuer.Key = ""
+	ScrubIssuerStruct(&user.Issuer)
+}
+
+//ScrubIssuerStruct scrubs the key of the issuer
+func ScrubIssuerStruct(issuer *structs.Issuer) {
+	issuer.Key = ""
 }
