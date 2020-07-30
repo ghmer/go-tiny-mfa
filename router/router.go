@@ -310,7 +310,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//can the submitted token be converted to an integer?
 	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
-		message := structs.Message{Success: false, Message: err.Error()}
+		message := structs.Message{Success: false, Message: "no valid token provided."}
 		json.NewEncoder(w).Encode(message)
 		return
 	}
