@@ -71,6 +71,9 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	for i := range issuers {
+		defer utils.ScrubIssuerStruct(&(issuers)[i])
+	}
 
 	// send the response
 	w.WriteHeader(200)
@@ -92,6 +95,7 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(issuerStruct)
@@ -108,6 +112,7 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	json.NewEncoder(w).Encode(issuerStruct)
 }
@@ -123,22 +128,23 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 		return
 	}
 
-	currentIssuer, err := getIssuerStructByVars(r)
+	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	if val, ok := jsonMap["enabled"]; ok {
-		currentIssuer.Enabled = val.(bool)
+		issuerStruct.Enabled = val.(bool)
 	}
 
 	if val, ok := jsonMap["contact"]; ok {
-		currentIssuer.Contact = val.(string)
+		issuerStruct.Contact = val.(string)
 	}
 
-	result, err := middleware.UpdateIssuer(currentIssuer)
+	result, err := middleware.UpdateIssuer(issuerStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -154,6 +160,11 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	issuerStruct, err := getIssuerStructByVars(r)
+	if err != nil {
+
+	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
+
 	result, err := middleware.DeleteIssuer(issuerStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -179,8 +190,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := middleware.GetUsers(issuerStruct)
 	for i := range users {
-
-		defer utils.ScrubInformation(&(users)[i], nil)
+		defer utils.ScrubUserStruct(&(users)[i])
 	}
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -208,7 +218,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user.Issuer = issuerStruct
 
 	userStruct, err := middleware.CreateUser(user)
-	defer utils.ScrubInformation(&userStruct, nil)
+	defer utils.ScrubUserStruct(&userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -223,12 +233,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	userStruct, err := getUserStructByVars(r)
-	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubUserStruct(&userStruct)
 
 	json.NewEncoder(w).Encode(userStruct)
 }
@@ -243,6 +253,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubUserStruct(&userStruct)
 
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
@@ -259,7 +270,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := middleware.UpdateUser(userStruct)
-	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -280,9 +290,10 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
-	result, err := middleware.DeleteUser(userStruct)
 	//Scrubbing data, then further processing
-	defer utils.ScrubInformation(&userStruct, nil)
+	defer utils.ScrubUserStruct(&userStruct)
+
+	result, err := middleware.DeleteUser(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -322,6 +333,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+	defer utils.ScrubUserStruct(&userStruct)
 
 	//is either user or issuer disabled?
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
@@ -371,8 +383,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-
-	defer utils.ScrubInformation(&userStruct, nil)
+	defer utils.ScrubUserStruct(&userStruct)
 
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
