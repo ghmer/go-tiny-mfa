@@ -178,6 +178,10 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	users, err := middleware.GetUsers(issuerStruct)
+	for i := range users {
+
+		defer utils.ScrubInformation(&(users)[i], nil)
+	}
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -204,6 +208,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user.Issuer = issuerStruct
 
 	userStruct, err := middleware.CreateUser(user)
+	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -218,6 +223,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	userStruct, err := getUserStructByVars(r)
+	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -253,6 +259,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := middleware.UpdateUser(userStruct)
+	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -274,7 +281,8 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := middleware.DeleteUser(userStruct)
-
+	//Scrubbing data, then further processing
+	defer utils.ScrubInformation(&userStruct, nil)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -334,7 +342,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//validate token against user key and current system time
 	validated, err := core.ValidateTokenCurrentTimestamp(tokenInt, plainkey)
 	//Scrubbing data, then further processing
-	utils.ScrubInformation(&userStruct, &plainkey)
+	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
@@ -363,6 +371,8 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
+
+	defer utils.ScrubInformation(&userStruct, nil)
 
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
