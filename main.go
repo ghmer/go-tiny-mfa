@@ -26,8 +26,10 @@ func main() {
 
 	// Create the router
 	r := router.Router()
-	fmt.Println("Start serving on port 57687")
-	log.Fatal(http.ListenAndServe(":57687", r))
+	routerPort, err := middleware.GetSystemProperty(middleware.RouterPortKey)
+
+	fmt.Println("Start serving on port", routerPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", routerPort), r))
 
 }
 
