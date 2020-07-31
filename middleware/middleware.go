@@ -116,6 +116,7 @@ func initializeMasterKey() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// key does not exist
+			fmt.Println("Warning: No master key found. A new one is being generated")
 			base32MasterKey, err := utils.GenerateExtendedKeyBase32()
 			if err != nil {
 				return err
@@ -137,6 +138,8 @@ func initializeMasterKey() error {
 			if err != nil {
 				return err
 			}
+
+			defer os.Chmod(SecretFilePath, 0400)
 
 			return nil
 		}
