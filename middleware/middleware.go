@@ -17,6 +17,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	//RouterPortKey the key of the router port entry in systemconfig table
+	RouterPortKey = "port"
+	//DenyLimitKey the key of the deny limit entry in systemconfig table
+	DenyLimitKey = "deny_limit"
+)
+
 //SecretFilePath location of the master key
 const SecretFilePath string = "/opt/go-tiny-mfa/secrets/key"
 
@@ -107,6 +114,76 @@ func initializeIssuerTable() error {
 		return err
 	}
 	return nil
+}
+
+func initializeSystemTable() error {
+	db := CreateConnection()
+	defer db.Close()
+	createstring := `CREATE TABLE IF NOT EXISTS systemconfig (
+		key varchar(128) NOT NULL,
+		value varchar(255) NOT NULL
+		PRIMARY KEY (key)
+	);`
+	_, err := db.Exec(createstring)
+	if err != nil {
+		return err
+	}
+
+	queryKey := "SELECT COUNT(key) FROM systemconfig"
+	count, err := checkCountWithQuery(queryKey)
+	if err != nil {
+		return err
+	}
+
+	if count < 1 {
+		err = initializeStandardConfiguration()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func initializeStandardConfiguration() error {
+	db := CreateConnection()
+	defer db.Close()
+
+	var configuration = map[string]string{
+		RouterPortKey: "57687",
+		DenyLimitKey:  "5",
+	}
+
+	for key, value := range configuration {
+		insertQuery := `INSERT INTO systemconfig(key,value) VALUES($1,$2);`
+		_, err := db.Exec(insertQuery, key, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//GetSystemProperty returns the value for the given key
+func GetSystemProperty(key string) (string, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	var value string
+	queryKey := "SELECT value FROM system where key=$1"
+	res, err := db.Query(queryKey, key)
+	if err != nil {
+		return value, err
+	}
+	defer res.Close()
+
+	if res.Next() {
+		var value string
+		res.Scan(&value)
+	}
+
+	return value, nil
 }
 
 //checks whether the master key exists on the file system
