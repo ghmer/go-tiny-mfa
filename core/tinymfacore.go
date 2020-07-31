@@ -146,6 +146,17 @@ func ValidateTokenCurrentTimestamp(token int, key []byte) structs.Validation {
 	return validation
 }
 
+// ValidateTokenWithTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
+func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64) structs.Validation {
+	result, err := ValidateToken(token, key, timestamp)
+	var validation = structs.Validation{
+		Message: GenerateMessage(timestamp, Present),
+		Success: result,
+		Error:   err,
+	}
+	return validation
+}
+
 // ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid
 func ValidateToken(token int, key []byte, unixTimestamp int64) (bool, error) {
 	var result bool = false
