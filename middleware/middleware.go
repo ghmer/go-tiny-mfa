@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -117,6 +118,7 @@ func initializeAuditTable() error {
 		username varchar(32) NOT NULL,
 		message varchar(16) NOT NULL,
 		success boolean DEFAULT '0',
+		validated_on timestamp NOT NULL,
 		PRIMARY KEY (id)
 	);`
 	_, err := db.Exec(createstring)
@@ -130,10 +132,10 @@ func initializeAuditTable() error {
 func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 	db := CreateConnection()
 	defer db.Close()
-	insertString := `INSERT INTO audit(issuer, username, message, success)
-					 VALUES($1,$2,$3,$4)`
+	insertString := `INSERT INTO audit(issuer, username, message, validated_on, success)
+					 VALUES($1,$2,$3,$4,$5)`
 
-	_, err := db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, validation.Success)
+	_, err := db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
 	if err != nil {
 		return err
 	}
