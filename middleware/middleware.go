@@ -102,6 +102,37 @@ func initializeUserTable() error {
 	return nil
 }
 
+func initializeAuditTable() error {
+	db := CreateConnection()
+	defer db.Close()
+	createstring := `CREATE TABLE IF NOT EXISTS audit (
+		id serial NOT NULL,
+		issuer varchar(32) NOT NULL,
+		username varchar(32) NOT NULL,
+		message varchar(16) NOT NULL,
+		success boolean DEFAULT '0',
+		PRIMARY KEY (id)
+	);`
+	_, err := db.Exec(createstring)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateAuditEntry(user structs.User, validation structs.Validation) error {
+	db := CreateConnection()
+	defer db.Close()
+	insertString := `INSERT INTO audit(issuer, username, message, success)
+					 VALUES($1,$2,$3,$4)`
+
+	_, err := db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, validation.Success)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func initializeIssuerTable() error {
 	db := CreateConnection()
 	defer db.Close()
