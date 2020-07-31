@@ -14,6 +14,7 @@ type AuditEntry struct {
 
 //AuditQueryParameter contains parameters for querying audit entries
 type AuditQueryParameter struct {
+	BaseQuery        string
 	Before           time.Time
 	After            time.Time
 	SourceDateFormat string
