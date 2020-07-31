@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -161,27 +162,89 @@ func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	return count, nil
 }
 
-//GetAuditEntries returns all audit entries from the db
-func GetAuditEntries() ([]structs.AuditEntry, error) {
+//dynamically creates a query string based on the supplied audit query parameters
+func createAuditQueryString(parameters structs.AuditQueryParameter) (string, int, []time.Time) {
+	builder := strings.Builder{}
+	var params []time.Time = make([]time.Time, 2)
+
+	paramID := 0
+	builder.WriteString(parameters.BaseQuery)
+	if (parameters.Before != time.Time{} || parameters.After != time.Time{}) {
+		builder.WriteString(" WHERE ")
+		paramID++
+		if (parameters.Before != time.Time{}) {
+			builder.WriteString(fmt.Sprintf("validated_on < $%d", paramID))
+			params[paramID-1] = parameters.Before
+		}
+
+		if (parameters.Before != time.Time{} && parameters.After != time.Time{}) {
+			builder.WriteString(" AND ")
+			paramID++
+		}
+
+		if (parameters.After != time.Time{}) {
+			builder.WriteString(fmt.Sprintf("validated_on > $%d", paramID))
+			params[paramID-1] = parameters.After
+		}
+	}
+	return builder.String(), paramID, params
+}
+
+func countAuditEntries(parameters structs.AuditQueryParameter) (int, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlCountSelect := `SELECT COUNT(id) FROM audit;`
-	res, err := db.Query(sqlCountSelect)
+
+	parameters.BaseQuery = `SELECT COUNT(id) FROM audit`
+	sqlCountSelect, paramID, params := createAuditQueryString(parameters)
+
+	var res *sql.Rows
+	var err error
+	switch paramID {
+	case 0:
+		res, err = db.Query(sqlCountSelect)
+	case 1:
+		res, err = db.Query(sqlCountSelect, params[0].Format(parameters.TargetDateFormat))
+	case 2:
+		res, err = db.Query(sqlCountSelect, params[0].Format(parameters.TargetDateFormat), params[1].Format(parameters.TargetDateFormat))
+	}
+
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 	defer res.Close()
 
 	count, err := checkCount(res)
 	if err != nil {
+		return -1, err
+	}
+
+	return count, nil
+}
+
+//GetAuditEntries returns all audit entries from the db
+func GetAuditEntries(parameters structs.AuditQueryParameter) ([]structs.AuditEntry, error) {
+	count, err := countAuditEntries(parameters)
+	if err != nil {
 		return nil, err
 	}
 	audits := make([]structs.AuditEntry, count)
 
-	sqlSelect := `SELECT id, issuer, username, message, success, validated_on FROM audit`
-	rows, errorMessage := db.Query(sqlSelect)
-	if errorMessage != nil {
-		return nil, errorMessage
+	db := CreateConnection()
+	defer db.Close()
+	parameters.BaseQuery = `SELECT id, issuer, username, message, success, validated_on FROM audit`
+	sqlQuery, paramID, params := createAuditQueryString(parameters)
+
+	var rows *sql.Rows
+	switch paramID {
+	case 0:
+		rows, err = db.Query(sqlQuery)
+	case 1:
+		rows, err = db.Query(sqlQuery, params[0].Format(parameters.TargetDateFormat))
+	case 2:
+		rows, err = db.Query(sqlQuery, params[0].Format(parameters.TargetDateFormat), params[1].Format(parameters.TargetDateFormat))
+	}
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -416,22 +479,33 @@ func checkCountWithQuery(sqlQuery string) (int, error) {
 	return count, nil
 }
 
-//GetIssuers returns all Issuers from the database
-func GetIssuers() ([]structs.Issuer, error) {
+func countIssuers() (int, error) {
 	db := CreateConnection()
 	defer db.Close()
 	sqlCountSelect := `SELECT COUNT(name) FROM issuer;`
 	res, err := db.Query(sqlCountSelect)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 	defer res.Close()
 
 	count, err := checkCount(res)
 	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
+
+//GetIssuers returns all Issuers from the database
+func GetIssuers() ([]structs.Issuer, error) {
+	count, err := countIssuers()
+	if err != nil {
 		return nil, err
 	}
 	issuers := make([]structs.Issuer, count)
+	db := CreateConnection()
+	defer db.Close()
 
 	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer`
 	rows, errorMessage := db.Query(sqlSelect)
