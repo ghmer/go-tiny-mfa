@@ -82,6 +82,7 @@ func initializeDatabase() error {
 	return nil
 }
 
+//initializes the user table in the database
 func initializeUserTable() error {
 	db := CreateConnection()
 	defer db.Close()
@@ -102,6 +103,7 @@ func initializeUserTable() error {
 	return nil
 }
 
+//initializes the audit table in the database
 func initializeAuditTable() error {
 	db := CreateConnection()
 	defer db.Close()
@@ -120,6 +122,7 @@ func initializeAuditTable() error {
 	return nil
 }
 
+//CreateAuditEntry creates an audit in the database
 func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 	db := CreateConnection()
 	defer db.Close()
@@ -133,6 +136,25 @@ func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 	return nil
 }
 
+//GetFailedValidationCount returns the number of times a user failed validation for a given message
+func GetFailedValidationCount(user structs.User, message int64) (int, error) {
+	db := CreateConnection()
+	defer db.Close()
+	queryString := `SELECT COUNT(success) FROM audit WHERE issuer=$1 AND username=$2 AND message=$3 AND success=$4`
+	rows, err := db.Query(queryString, user.Issuer.Name, user.Name, message, false)
+	if err != nil {
+		return -1, err
+	}
+
+	var count int
+	if rows.Next() {
+		rows.Scan(&count)
+	}
+
+	return count, nil
+}
+
+//initializes the issuer table in the database
 func initializeIssuerTable() error {
 	db := CreateConnection()
 	defer db.Close()
@@ -151,6 +173,7 @@ func initializeIssuerTable() error {
 	return nil
 }
 
+//initializes the system table in the database
 func initializeSystemTable() error {
 	db := CreateConnection()
 	defer db.Close()
@@ -180,6 +203,7 @@ func initializeSystemTable() error {
 	return nil
 }
 
+//initialize standard configuration
 func initializeStandardConfiguration() error {
 	db := CreateConnection()
 	defer db.Close()
