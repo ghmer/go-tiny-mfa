@@ -140,7 +140,7 @@ func ValidateTokenCurrentTimestamp(token int, key []byte) structs.Validation {
 	result, err := ValidateToken(token, key, currentTimestamp)
 	var validation = structs.Validation{
 		Message: GenerateMessage(currentTimestamp, Present),
-		Result:  result,
+		Success: result,
 		Error:   err,
 	}
 	return validation
