@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	fmt.Println("initializing")
 	// Check if needed environment variables have been set
 	err := checkEnvironmentVariables()
 	if err != nil {
