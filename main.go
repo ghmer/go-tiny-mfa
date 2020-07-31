@@ -18,8 +18,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Initialize Database
-	err = middleware.InitializeDatabase()
+	// Initialize System
+	err = middleware.InitializeSystem()
 	if err != nil {
 		log.Fatal(err)
 	}
