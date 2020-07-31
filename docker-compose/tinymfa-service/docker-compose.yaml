@@ -17,6 +17,8 @@ services:
             - tiny-mfa-net
         ports:
             - "57687:57687"
+            volumes:
+                - tinysecret:/opt/go-tiny-mfa/secrets
         environment:
             - POSTGRES_HOST=database
             - POSTGRES_USER=postgres
@@ -25,6 +27,7 @@ services:
         restart: unless-stopped
 volumes: 
     data:
+    tinysecret:
 
 networks: 
     tiny-mfa-net:
