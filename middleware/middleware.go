@@ -132,8 +132,9 @@ func initializeAuditTable() error {
 func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 	db := CreateConnection()
 	defer db.Close()
+
 	insertString := `INSERT INTO audit(issuer, username, message, validated_on, success)
-					 VALUES($1,$2,$3,$4,$5)`
+					 VALUES($1, $2, $3, $4, $5)`
 
 	_, err := db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
 	if err != nil {
@@ -146,7 +147,7 @@ func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	db := CreateConnection()
 	defer db.Close()
-	queryString := `SELECT COUNT(success) FROM audit WHERE issuer=$1 AND username=$2 AND message=$3 AND success=$4`
+	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=$3 AND success=$4`
 	rows, err := db.Query(queryString, user.Issuer.Name, user.Name, message, false)
 	if err != nil {
 		return -1, err
@@ -158,6 +159,48 @@ func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	}
 
 	return count, nil
+}
+
+//GetAuditEntries returns all audit entries from the db
+func GetAuditEntries() ([]structs.AuditEntry, error) {
+	db := CreateConnection()
+	defer db.Close()
+	sqlCountSelect := `SELECT COUNT(id) FROM audit;`
+	res, err := db.Query(sqlCountSelect)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	count, err := checkCount(res)
+	if err != nil {
+		return nil, err
+	}
+	audits := make([]structs.AuditEntry, count)
+
+	sqlSelect := `SELECT id, issuer, username, message, success, validated_on FROM audit`
+	rows, errorMessage := db.Query(sqlSelect)
+	if errorMessage != nil {
+		return nil, errorMessage
+	}
+	defer rows.Close()
+
+	loop := 0
+	for rows.Next() {
+		var id int
+		var issuer string
+		var name string
+		var message int64
+		var success bool
+		var date string
+		rows.Scan(&id, &issuer, &name, &message, &success, &date)
+
+		auditEntry := structs.AuditEntry{ID: id, Issuer: issuer, Username: name, Message: message, ValidatedOn: date, Success: success}
+		audits[loop] = auditEntry
+		loop++
+	}
+
+	return audits, nil
 }
 
 //initializes the issuer table in the database

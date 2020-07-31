@@ -23,6 +23,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/", Welcome).Methods("GET")
 
 	//API Endpoints
+	router.HandleFunc("/api/v1/system/audit", GetAuditEntries).Methods("GET")
 	//Return all registered issuers
 	router.HandleFunc("/api/v1/issuer", GetIssuers).Methods("GET")
 	//Create a new issuer using a POST request
@@ -59,6 +60,22 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	message := structs.Message{Success: true, Message: "tiny-mfa alive!"}
 	json.NewEncoder(w).Encode(message)
+}
+
+//GetAuditEntries returns all audit entries
+func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+
+	audits, err := middleware.GetAuditEntries()
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+	// send the response
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(audits)
 }
 
 //GetIssuers returns all issuers
