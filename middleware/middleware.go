@@ -175,7 +175,7 @@ func GetSystemProperty(key string) (string, error) {
 	defer db.Close()
 
 	var value string
-	queryKey := "SELECT value FROM system where key=$1"
+	queryKey := "SELECT value FROM systemconfig where key=$1"
 	res, err := db.Query(queryKey, key)
 	if err != nil {
 		return value, err
