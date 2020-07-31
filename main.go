@@ -28,6 +28,10 @@ func main() {
 	r := router.Router()
 	routerPort, err := middleware.GetSystemProperty(middleware.RouterPortKey)
 
+	if routerPort == "" {
+		log.Fatal("could not read routerport from database")
+	}
+
 	fmt.Println("Start serving on port", routerPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", routerPort), r))
 
