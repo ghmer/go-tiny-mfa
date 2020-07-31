@@ -183,7 +183,6 @@ func GetSystemProperty(key string) (string, error) {
 	defer res.Close()
 
 	if res.Next() {
-		var value string
 		res.Scan(&value)
 	}
 
