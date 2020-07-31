@@ -125,7 +125,7 @@ func initializeSystemTable() error {
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS systemconfig (
 		key varchar(128) NOT NULL,
-		value varchar(255) NOT NULL
+		value varchar(255) NOT NULL,
 		PRIMARY KEY (key)
 	);`
 	_, err := db.Exec(createstring)
