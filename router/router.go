@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -66,7 +67,27 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
-	audits, err := middleware.GetAuditEntries()
+	parameters := structs.NewAuditQueryParameter()
+
+	before, ok := r.URL.Query()["before"]
+	if ok {
+		variable := strings.Join(before, ":")
+		dateObj, err := time.Parse(parameters.SourceDateFormat, variable)
+		if err == nil {
+			parameters.Before = dateObj
+		}
+	}
+
+	after, ok := r.URL.Query()["after"]
+	if ok {
+		variable := strings.Join(after, ":")
+		dateObj, err := time.Parse(parameters.SourceDateFormat, variable)
+		if err == nil {
+			parameters.After = dateObj
+		}
+	}
+
+	audits, err := middleware.GetAuditEntries(parameters)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(500)
