@@ -30,6 +30,7 @@ func main() {
 
 }
 
+//check whether all variables needed for a proper system startup are set
 func checkEnvironmentVariables() error {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
