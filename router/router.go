@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -308,6 +309,10 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
+	//initializing base variables
+	timestamp := time.Now().Unix()
+
+	//getting token from url
 	vars := mux.Vars(r)
 	token := vars["token"]
 
@@ -343,6 +348,23 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//how many times did someone try to authenticate in this timeslot?
+	message := core.GenerateMessage(timestamp, core.Present)
+	failedCount, err := middleware.GetFailedValidationCount(userStruct, message)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	denyCountStr, _ := middleware.GetSystemProperty(middleware.DenyLimitKey)
+	denyCount, _ := strconv.Atoi(denyCountStr)
+	if failedCount >= denyCount {
+		message := structs.Message{Success: false, Message: "Too many authentication attempts. Please wait 30 seconds"}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
 	//primary checks green, decrypting user key
 	plainkey, err := middleware.GetUserKey(userStruct)
 	if err != nil {
@@ -352,7 +374,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//validate token against user key and current system time
-	validation := core.ValidateTokenCurrentTimestamp(tokenInt, plainkey)
+	validation := core.ValidateTokenWithTimestamp(tokenInt, plainkey, timestamp)
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {
@@ -361,14 +383,17 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//audit validation
+	middleware.CreateAuditEntry(userStruct, validation)
+
 	//build result message
-	message := structs.Message{Success: validated}
-	if !validated {
-		message.Message = "token was NOT validated."
+	result := structs.Message{Success: validation.Success}
+	if !validation.Success {
+		result.Message = "token was NOT validated."
 	} else {
-		message.Message = "token successfully validated."
+		result.Message = "token successfully validated."
 	}
-	json.NewEncoder(w).Encode(message)
+	json.NewEncoder(w).Encode(result)
 }
 
 //GenerateQrCode generates a QrCode
