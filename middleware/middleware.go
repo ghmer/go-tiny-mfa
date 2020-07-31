@@ -66,7 +66,11 @@ func InitializeSystem() error {
 
 //initializeDatabase will create the issuer and user tables
 func initializeDatabase() error {
-	err := initializeIssuerTable()
+	err := initializeSystemTable()
+	if err != nil {
+		return err
+	}
+	err = initializeIssuerTable()
 	if err != nil {
 		return err
 	}
