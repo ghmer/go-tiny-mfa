@@ -122,12 +122,17 @@ func DecodeBase32Key(encodedKey string) ([]byte, error) {
 
 //ScrubInformation crubs some sensitive information from the objects and nullifies the given byte array
 func ScrubInformation(user *structs.User, key *[]byte) {
+	ScrubKey(key)
+	ScrubUserStruct(user)
+}
+
+//ScrubKey nullifies a given byte array
+func ScrubKey(key *[]byte) {
 	if key != nil {
 		for i := 0; i < len(*key); i++ {
 			(*key)[i] = byte(0)
 		}
 	}
-	ScrubUserStruct(user)
 }
 
 //ScrubUserStruct scrubs the key of the user and also the issuer key
