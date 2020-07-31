@@ -78,6 +78,10 @@ func initializeDatabase() error {
 	if err != nil {
 		return err
 	}
+	err = initializeAuditTable()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
