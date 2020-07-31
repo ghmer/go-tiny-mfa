@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"go-tiny-mfa/structs"
 	"go-tiny-mfa/utils"
+	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
@@ -14,6 +16,9 @@ import (
 	// SQL Driver package
 	_ "github.com/lib/pq"
 )
+
+//SecretFilePath location of the master key
+const SecretFilePath string = "/opt/go-tiny-mfa/secrets/key"
 
 // CreateConnection creates a connection to a postgres DB
 func CreateConnection() *sql.DB {
@@ -37,13 +42,24 @@ func CreateConnection() *sql.DB {
 	return db
 }
 
-//InitializeDatabase will create the issuer and user tables
-func InitializeDatabase() error {
-	err := initializeSystemTable()
+//InitializeSystem will initialize the database and the master key
+func InitializeSystem() error {
+	err := initializeDatabase()
 	if err != nil {
 		return err
 	}
-	err = initializeIssuerTable()
+
+	err = initializeMasterKey()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//initializeDatabase will create the issuer and user tables
+func initializeDatabase() error {
+	err := initializeIssuerTable()
 	if err != nil {
 		return err
 	}
@@ -93,65 +109,50 @@ func initializeIssuerTable() error {
 	return nil
 }
 
-func initializeSystemTable() error {
-	db := CreateConnection()
-	defer db.Close()
-	createstring := `CREATE TABLE IF NOT EXISTS system (
-		id serial,
-		key varchar(128) NOT NULL UNIQUE,
-		PRIMARY KEY (key)
-	);`
-	_, err := db.Exec(createstring)
+//checks whether the master key exists on the file system
+//will create it if this is not the case
+func initializeMasterKey() error {
+	_, err := os.Stat(SecretFilePath)
 	if err != nil {
-		return err
+		if os.IsNotExist(err) {
+			// key does not exist
+			base32MasterKey, err := utils.GenerateExtendedKeyBase32()
+			if err != nil {
+				return err
+			}
+			file, err := os.Create(SecretFilePath)
+			if err != nil {
+				return err
+			}
+
+			// Defer is used for purposes of cleanup like
+			// closing a running file after the file has
+			// been written and main //function has
+			// completed execution
+			defer file.Close()
+
+			// len variable captures the length
+			// of the string written to the file.
+			_, err = file.WriteString(base32MasterKey)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
 	}
 
-	queryKey := "SELECT COUNT(key) FROM system"
-	count, err := checkCountWithQuery(queryKey)
-	if err != nil {
-		return err
-	}
-
-	if count != 1 {
-		createMasterKey()
-	}
-
-	return nil
-}
-
-func createMasterKey() error {
-	base32MasterKey, err := utils.GenerateExtendedKeyBase32()
-	if err != nil {
-		return err
-	}
-	db := CreateConnection()
-	defer db.Close()
-	insertQuery := `INSERT INTO system(key) VALUES($1);`
-	_, err = db.Exec(insertQuery, base32MasterKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 //GetMasterKey retrieves the key generated on system initialization
 func GetMasterKey() ([]byte, error) {
-	db := CreateConnection()
-	defer db.Close()
-	selectQuery := "SELECT key FROM system WHERE id=1"
-	result, err := db.Query(selectQuery)
+	encodedMasterKey, err := ioutil.ReadFile(SecretFilePath)
 	if err != nil {
-		return nil, err
-	}
-	defer result.Close()
-
-	var encodedMasterKey string
-	if result.Next() {
-		result.Scan(&encodedMasterKey)
+		log.Panicf("failed reading data from file: %s", err)
 	}
 
-	masterKey, err := utils.DecodeBase32Key(encodedMasterKey)
+	masterKey, err := utils.DecodeBase32Key(string(encodedMasterKey))
 	return masterKey, err
 }
 
@@ -166,6 +167,7 @@ func GetIssuerKey(issuer structs.Issuer) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer utils.ScrubKey(&masterKey)
 
 	plainKey := utils.Decrypt(cryptedKey, masterKey)
 	return plainKey, nil
@@ -182,6 +184,7 @@ func GetUserKey(user structs.User) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer utils.ScrubKey(&issuerKey)
 
 	plainKey := utils.Decrypt(cryptedKey, issuerKey)
 	return plainKey, nil
