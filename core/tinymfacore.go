@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
+	"go-tiny-mfa/structs"
 	"math"
 	"time"
 )
@@ -134,8 +135,15 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 }
 
 // ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func ValidateTokenCurrentTimestamp(token int, key []byte) (bool, error) {
-	return ValidateToken(token, key, time.Now().Unix())
+func ValidateTokenCurrentTimestamp(token int, key []byte) structs.Validation {
+	currentTimestamp := time.Now().Unix()
+	result, err := ValidateToken(token, key, currentTimestamp)
+	var validation = structs.Validation{
+		Message: GenerateMessage(currentTimestamp, Present),
+		Result:  result,
+		Error:   err,
+	}
+	return validation
 }
 
 // ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid

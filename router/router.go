@@ -352,10 +352,10 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//validate token against user key and current system time
-	validated, err := core.ValidateTokenCurrentTimestamp(tokenInt, plainkey)
+	validation := core.ValidateTokenCurrentTimestamp(tokenInt, plainkey)
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
-	if err != nil {
+	if validation.Error != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		json.NewEncoder(w).Encode(message)
 		return
