@@ -77,6 +77,7 @@ func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 	err := verifyMasterToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -120,6 +121,7 @@ func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	err := verifyMasterToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -127,6 +129,7 @@ func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	configuration, err := middleware.GetSystemConfiguration()
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -142,6 +145,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	err := verifyMasterToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -149,6 +153,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -156,6 +161,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	configuration, err := middleware.UpdateSystemConfiguration(jsonMap)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -168,10 +174,10 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 //GetIssuers returns all issuers
 func GetIssuers(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-
 	err := verifyMasterToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -195,10 +201,10 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 //CreateIssuer creates a new issuer
 func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-
 	err := verifyMasterToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -236,11 +242,12 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(issuerStruct)
 }
 
@@ -251,6 +258,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -258,6 +266,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -266,7 +275,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -282,10 +291,12 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	result, err := middleware.UpdateIssuer(issuerStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	w.WriteHeader(200)
 	message := structs.Message{Success: result}
 	json.NewEncoder(w).Encode(message)
 }
@@ -296,14 +307,17 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
-
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -311,11 +325,12 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	result, err := middleware.DeleteIssuer(issuerStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	w.WriteHeader(200)
 	message := structs.Message{Success: result}
 	json.NewEncoder(w).Encode(message)
 }
@@ -327,6 +342,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -334,7 +350,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -345,10 +361,12 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -359,6 +377,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -366,7 +385,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(4001)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -380,10 +399,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	defer utils.ScrubUserStruct(&userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(userStruct)
 }
 
@@ -394,6 +415,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -401,13 +423,13 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	err = verifyUserAccessHeader(userStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
 	defer utils.ScrubUserStruct(&userStruct)
-
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(userStruct)
 }
 
@@ -434,6 +456,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -448,11 +471,13 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	result, err := middleware.UpdateUser(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
 	message := structs.Message{Success: result}
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(message)
 }
 
@@ -463,6 +488,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -472,7 +498,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err = verifyUserAccessHeader(userStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -480,11 +506,13 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	result, err := middleware.DeleteUser(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
 
 	message := structs.Message{Success: result}
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(message)
 }
 
@@ -502,6 +530,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//No token provided?
 	if token == "" {
 		message := structs.Message{Success: false, Message: "no token provided."}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -510,6 +539,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
 		message := structs.Message{Success: false, Message: "no valid token provided."}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -518,6 +548,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -526,7 +557,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	err = verifyUserAccessHeader(userStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -534,8 +565,8 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//is either user or issuer disabled?
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
-		json.NewEncoder(w).Encode(message)
 		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(message)
 		return
 	}
 
@@ -544,6 +575,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	failedCount, err := middleware.GetFailedValidationCount(userStruct, message)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -552,6 +584,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	denyCount, _ := strconv.Atoi(denyCountStr)
 	if failedCount >= denyCount {
 		message := structs.Message{Success: false, Message: "Too many authentication attempts. Please wait 30 seconds"}
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -560,6 +593,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	plainkey, err := middleware.GetUserKey(userStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -570,6 +604,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -581,8 +616,10 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	result := structs.Message{Success: validation.Success}
 	if !validation.Success {
 		result.Message = "token was NOT validated."
+		w.WriteHeader(401)
 	} else {
 		result.Message = "token successfully validated."
+		w.WriteHeader(200)
 	}
 	json.NewEncoder(w).Encode(result)
 }
@@ -604,7 +641,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	err = verifyUserAccessHeader(userStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(404)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -624,6 +661,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(200)
 	w.Write(png)
 }
 
