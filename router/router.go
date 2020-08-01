@@ -84,6 +84,7 @@ func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 
 	parameters := structs.NewAuditQueryParameter()
 
+	//look for query parameter "before" in the url
 	before, ok := r.URL.Query()["before"]
 	if ok {
 		variable := strings.Join(before, ":")
@@ -93,6 +94,7 @@ func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//look for query parameter "after" in the url
 	after, ok := r.URL.Query()["after"]
 	if ok {
 		variable := strings.Join(after, ":")
