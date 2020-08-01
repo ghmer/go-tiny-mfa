@@ -21,6 +21,7 @@ type AuditQueryParameter struct {
 	TargetDateFormat string
 }
 
+//NewAuditQueryParameter returns an AuditQueryParameter struct with some standard settings for source- and target format
 func NewAuditQueryParameter() AuditQueryParameter {
 	return AuditQueryParameter{SourceDateFormat: "2006-01-02:15:04:05", TargetDateFormat: "2006-01-02 15:04:05"}
 }
