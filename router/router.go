@@ -27,8 +27,11 @@ func Router() *mux.Router {
 	router.HandleFunc("/", Welcome).Methods("GET")
 
 	//API Endpoints
+	//Return audit entries
 	router.HandleFunc("/api/v1/system/audit", GetAuditEntries).Methods("GET")
+	//Return current system configuration
 	router.HandleFunc("/api/v1/system/configuration", GetSystemConfiguration).Methods("GET")
+	//Updates the system configuration
 	router.HandleFunc("/api/v1/system/configuration", UpdateSystemConfiguration).Methods("POST")
 	//Return all registered issuers
 	router.HandleFunc("/api/v1/issuer", GetIssuers).Methods("GET")
@@ -215,101 +218,6 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(issuerStruct)
-}
-
-func verifyMasterToken(r *http.Request) error {
-	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
-	if err != nil {
-		return err
-	}
-
-	verifyToken, err := strconv.ParseBool(verifyTokenStr)
-	if err != nil {
-		return err
-	}
-
-	//check if token verification has been enabled.
-	if verifyToken {
-		masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
-		if err != nil {
-			return err
-		}
-
-		tokens := r.Header.Values(VerifyTokenHeaderKey)
-		if len(tokens) != 1 {
-			return errors.New("no access token provided in request")
-		}
-
-		token := tokens[0]
-		if token != masterToken {
-			return errors.New("wrong access token provided")
-		}
-	}
-
-	return nil
-}
-
-func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
-	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
-	if err != nil {
-		return err
-	}
-
-	verifyToken, err := strconv.ParseBool(verifyTokenStr)
-	if err != nil {
-		return err
-	}
-
-	//check if token verification has been enabled.
-	if verifyToken {
-		masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
-		if err != nil {
-			return err
-		}
-
-		tokens := r.Header.Values(VerifyTokenHeaderKey)
-		if len(tokens) != 1 {
-			return errors.New("no access token provided in request")
-		}
-
-		token := tokens[0]
-		if token != masterToken && token != issuer.ID {
-			return errors.New("wrong access token provided for issuer")
-		}
-	}
-
-	return nil
-}
-
-func verifyUserAccessHeader(user structs.User, r *http.Request) error {
-	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
-	if err != nil {
-		return err
-	}
-
-	verifyToken, err := strconv.ParseBool(verifyTokenStr)
-	if err != nil {
-		return err
-	}
-
-	//check if token verification has been enabled.
-	if verifyToken {
-		masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
-		if err != nil {
-			return err
-		}
-
-		tokens := r.Header.Values(VerifyTokenHeaderKey)
-		if len(tokens) != 1 {
-			return errors.New("no access token provided in request")
-		}
-
-		token := tokens[0]
-		if token != masterToken && token != user.ID && token != user.Issuer.ID {
-			return errors.New("wrong access token provided for issuer")
-		}
-	}
-	return nil
 }
 
 //GetIssuer returns the issuer given in the URL
@@ -778,4 +686,92 @@ func mapJSON(reader io.Reader) (map[string]interface{}, error) {
 	m := e.(map[string]interface{})
 
 	return m, nil
+}
+
+func verifyTokenEnabled() bool {
+	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
+	if err != nil {
+		return true
+	}
+
+	if verifyTokenStr == "" {
+		verifyTokenStr = "false"
+	}
+	verifyToken, err := strconv.ParseBool(verifyTokenStr)
+	if err != nil {
+		return true
+	}
+
+	return verifyToken
+}
+
+func verifyMasterToken(r *http.Request) error {
+	//check if token verification has been enabled.
+	verifyToken := verifyTokenEnabled()
+	if verifyToken {
+		masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+		if err != nil {
+			return err
+		}
+
+		tokens := r.Header.Values(VerifyTokenHeaderKey)
+		if len(tokens) != 1 {
+			return errors.New("no access token provided in request")
+		}
+
+		token := tokens[0]
+		if token != masterToken {
+			return errors.New("wrong access token provided")
+		}
+	}
+
+	return nil
+}
+
+func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
+	//check if token verification has been enabled.
+	verifyToken := verifyTokenEnabled()
+	if verifyToken {
+		tokens := r.Header.Values(VerifyTokenHeaderKey)
+		if len(tokens) != 1 {
+			return errors.New("no access token provided in request")
+		}
+
+		token := tokens[0]
+		if token != issuer.ID {
+			masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+			if err != nil {
+				return err
+			}
+			if token != masterToken {
+				return errors.New("wrong access token provided for issuer")
+			}
+
+		}
+	}
+
+	return nil
+}
+
+func verifyUserAccessHeader(user structs.User, r *http.Request) error {
+	//check if token verification has been enabled.
+	verifyToken := verifyTokenEnabled()
+	if verifyToken {
+		tokens := r.Header.Values(VerifyTokenHeaderKey)
+		if len(tokens) != 1 {
+			return errors.New("no access token provided in request")
+		}
+
+		token := tokens[0]
+		if token != user.ID && token != user.Issuer.ID {
+			masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+			if err != nil {
+				return err
+			}
+			if token != masterToken {
+				return errors.New("wrong access token provided for issuer")
+			}
+		}
+	}
+	return nil
 }
