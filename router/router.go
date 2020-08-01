@@ -385,7 +385,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err = verifyIssuerAccessHeader(issuerStruct, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
-		w.WriteHeader(4001)
+		w.WriteHeader(401)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
