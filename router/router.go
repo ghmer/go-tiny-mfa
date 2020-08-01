@@ -17,6 +17,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//VerifyTokenHeaderKey defines the header key to look for the access token
+const VerifyTokenHeaderKey string = "tiny-mfa-access-token"
+
 // Router is exported and used in main.go
 func Router() *mux.Router {
 	router := mux.NewRouter()
@@ -140,6 +143,20 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(issuerStruct)
 }
 
+func verifyAccessHeader(issuer structs.Issuer, r *http.Request) error {
+	tokens := r.Header.Values(VerifyTokenHeaderKey)
+	if len(tokens) != 1 {
+		return errors.New("no access token provided in request")
+	}
+
+	token := tokens[0]
+	if token != issuer.ID {
+		return errors.New("wrong access token provided for issuer")
+	}
+
+	return nil
+}
+
 //GetIssuer returns the issuer given in the URL
 func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
@@ -152,6 +169,14 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
+
+	err = verifyAccessHeader(issuerStruct, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	json.NewEncoder(w).Encode(issuerStruct)
 }
@@ -174,6 +199,14 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 		return
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
+
+	err = verifyAccessHeader(issuerStruct, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	if val, ok := jsonMap["enabled"]; ok {
 		issuerStruct.Enabled = val.(bool)
@@ -204,6 +237,14 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
+	err = verifyAccessHeader(issuerStruct, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
 	result, err := middleware.DeleteIssuer(issuerStruct)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
@@ -223,6 +264,14 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	err = verifyAccessHeader(issuerStruct, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -247,6 +296,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	err = verifyAccessHeader(issuerStruct, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
@@ -277,6 +334,15 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+
+	err = verifyAccessHeader(userStruct.Issuer, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
 	defer utils.ScrubUserStruct(&userStruct)
 
 	json.NewEncoder(w).Encode(userStruct)
@@ -293,6 +359,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer utils.ScrubUserStruct(&userStruct)
+
+	err = verifyAccessHeader(userStruct.Issuer, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
@@ -331,6 +405,14 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	//Scrubbing data, then further processing
 	defer utils.ScrubUserStruct(&userStruct)
+
+	err = verifyAccessHeader(userStruct.Issuer, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	result, err := middleware.DeleteUser(userStruct)
 	if err != nil {
@@ -377,6 +459,14 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer utils.ScrubUserStruct(&userStruct)
+
+	err = verifyAccessHeader(userStruct.Issuer, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	//is either user or issuer disabled?
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
@@ -447,6 +537,14 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer utils.ScrubUserStruct(&userStruct)
+
+	err = verifyAccessHeader(userStruct.Issuer, r)
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
 
 	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		message := structs.Message{Success: false, Message: "Issuer or User is disabled"}
