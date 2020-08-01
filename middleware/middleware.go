@@ -24,6 +24,10 @@ const (
 	RouterPortKey = "port"
 	//DenyLimitKey the key of the deny limit entry in systemconfig table
 	DenyLimitKey = "deny_limit"
+	//MasterTokenKey is the key of the master token entry in systemconfig table
+	MasterTokenKey = "master_token"
+	//VerifyTokenKey is the key of the verify token entry in systemconfig table
+	VerifyTokenKey = "verify_token"
 )
 
 //SecretFilePath location of the master key
@@ -321,8 +325,10 @@ func initializeStandardConfiguration() error {
 	defer db.Close()
 
 	var configuration = map[string]string{
-		RouterPortKey: "57687",
-		DenyLimitKey:  "5",
+		RouterPortKey:  "57687",
+		DenyLimitKey:   "5",
+		MasterTokenKey: uuid.New().String(),
+		VerifyTokenKey: "false",
 	}
 
 	for key, value := range configuration {
@@ -333,7 +339,18 @@ func initializeStandardConfiguration() error {
 		}
 	}
 
+	printSystemConfiguration(configuration)
+
 	return nil
+}
+
+func printSystemConfiguration(configuration map[string]string) {
+	fmt.Println("tiny-mfa configuration")
+	fmt.Println("----------------------")
+	fmt.Println("router port  ", configuration[RouterPortKey])
+	fmt.Println("deny limit   ", configuration[DenyLimitKey])
+	fmt.Println("verify tokens", configuration[VerifyTokenKey])
+	fmt.Println("master token ", configuration[MasterTokenKey])
 }
 
 //GetSystemProperty returns the value for the given key
@@ -354,6 +371,50 @@ func GetSystemProperty(key string) (string, error) {
 	}
 
 	return value, nil
+}
+
+//GetSystemConfiguration returns the system config
+func GetSystemConfiguration() (map[string]string, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	count, err := checkCountWithQuery("SELECT COUNT(key) FROM systemconfig")
+	if err != nil {
+		return nil, err
+	}
+
+	var values map[string]string = make(map[string]string, count)
+	queryKey := "SELECT key, value FROM systemconfig"
+	res, err := db.Query(queryKey)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var key, value string
+		res.Scan(&key, &value)
+
+		values[key] = value
+	}
+
+	return values, nil
+}
+
+//UpdateSystemConfiguration updates the system configuration
+func UpdateSystemConfiguration(config map[string]interface{}) (map[string]string, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	for key, value := range config {
+		sqlQuery := `UPDATE systemconfig SET value=$1 WHERE key=$2`
+		_, err := db.Exec(sqlQuery, value, key)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return GetSystemConfiguration()
 }
 
 //checks whether the master key exists on the file system
