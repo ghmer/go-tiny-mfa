@@ -169,10 +169,12 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if val, ok := jsonMap[middleware.RouterPortKey]; ok {
-		configuration.RouterPort = val.(uint16)
+		localval := val.(float64)
+		configuration.RouterPort = uint16(localval)
 	}
 	if val, ok := jsonMap[middleware.DenyLimitKey]; ok {
-		configuration.DenyLimit = val.(uint8)
+		localval := val.(float64)
+		configuration.DenyLimit = uint8(localval)
 	}
 	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
 		configuration.VerifyTokens = val.(bool)
