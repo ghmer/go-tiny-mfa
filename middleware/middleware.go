@@ -88,6 +88,14 @@ func initializeDatabase() error {
 	if err != nil {
 		return err
 	}
+	err = initializeActionsTable()
+	if err != nil {
+		return err
+	}
+	err = initializeAccessTokenTable()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -289,6 +297,24 @@ func initializeIssuerTable() error {
 	return nil
 }
 
+//initializes the access_token table
+func initializeAccessTokenTable() error {
+	db := CreateConnection()
+	defer db.Close()
+	createstring := `CREATE TABLE IF NOT EXISTS access_tokens (
+		id serial NOT NULL,
+		ref_id_action smallint,
+		ref_id_object varchar(45),
+		access_token varchar(45) NOT NULL,
+		PRIMARY KEY (access_token)
+	);`
+	_, err := db.Exec(createstring)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 //initializes the system table in the database
 func initializeSystemTable() error {
 	db := CreateConnection()
@@ -340,6 +366,58 @@ func initializeStandardConfiguration() error {
 	}
 
 	printSystemConfiguration(configuration)
+
+	return nil
+}
+
+//initializes the actions level table
+func initializeActionsTable() error {
+	db := CreateConnection()
+	defer db.Close()
+	createstring := `CREATE TABLE IF NOT EXISTS actions (
+		id smallint NOT NULL,
+		action varchar(16)
+	);`
+	_, err := db.Exec(createstring)
+	if err != nil {
+		return err
+	}
+
+	queryKey := "SELECT COUNT(id) FROM actions"
+	count, err := checkCountWithQuery(queryKey)
+	if err != nil {
+		return err
+	}
+
+	if count < 1 {
+		err = initializeStandardActions()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//initialize standard actions
+func initializeStandardActions() error {
+	db := CreateConnection()
+	defer db.Close()
+
+	var configuration = map[int]string{
+		1: "GET",
+		2: "POST",
+		3: "DELETE",
+		4: "FULL",
+	}
+
+	for key, value := range configuration {
+		insertQuery := `INSERT INTO actions(id,action) VALUES($1,$2);`
+		_, err := db.Exec(insertQuery, key, value)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
