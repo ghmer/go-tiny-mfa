@@ -17,9 +17,9 @@ const (
 
 //Token is a struct that can be used to define access to a resource
 type Token struct {
-	ObjectRefID string
-	ActionRefID int
-	Token       string
+	ObjectRefID string `json:"-"`
+	ActionRefID int    `json:"-"`
+	Token       string `json:"access-token"`
 }
 
 //NewFullAccessToken generates a new access token that has full access on the given object
