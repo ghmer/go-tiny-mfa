@@ -21,13 +21,13 @@ import (
 
 const (
 	//RouterPortKey the key of the router port entry in serverconfig table
-	RouterPortKey = "http_port"
+	RouterPortKey = "http-port"
 	//DenyLimitKey the key of the deny limit entry in serverconfig table
-	DenyLimitKey = "deny_limit"
+	DenyLimitKey = "deny-limit"
 	//MasterTokenKey is the key of the master token entry in serverconfig table
-	MasterTokenKey = "root_token"
+	MasterTokenKey = "root-token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
-	VerifyTokenKey = "verify_tokens"
+	VerifyTokenKey = "verify-tokens"
 )
 
 //SecretFilePath location of the master key
@@ -321,10 +321,10 @@ func initializeSystemTable() error {
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS serverconfig (
 		id serial NOT NULL,
-		http_port integer NOT NULL,
-		deny_limit smallint NOT NULL,
-		verify_tokens bool DEFAULT false,
-		root_token varchar(64) NOT NULL,
+		http-port integer NOT NULL,
+		deny-limit smallint NOT NULL,
+		verify-tokens bool DEFAULT false,
+		root-token varchar(64) NOT NULL,
 		PRIMARY KEY (id)
 	);`
 	_, err := db.Exec(createstring)
