@@ -160,7 +160,25 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	configuration, err := middleware.UpdateSystemConfiguration(jsonMap)
+	configuration, err := middleware.GetSystemConfiguration()
+	if err != nil {
+		message := structs.Message{Success: false, Message: err.Error()}
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	if val, ok := jsonMap[middleware.RouterPortKey]; ok {
+		configuration.RouterPort = val.(uint16)
+	}
+	if val, ok := jsonMap[middleware.DenyLimitKey]; ok {
+		configuration.DenyLimit = val.(uint8)
+	}
+	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
+		configuration.VerifyTokens = val.(bool)
+	}
+
+	configuration, err = middleware.UpdateSystemConfiguration(configuration)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(500)

@@ -20,14 +20,14 @@ import (
 )
 
 const (
-	//RouterPortKey the key of the router port entry in systemconfig table
-	RouterPortKey = "port"
-	//DenyLimitKey the key of the deny limit entry in systemconfig table
+	//RouterPortKey the key of the router port entry in serverconfig table
+	RouterPortKey = "http_port"
+	//DenyLimitKey the key of the deny limit entry in serverconfig table
 	DenyLimitKey = "deny_limit"
-	//MasterTokenKey is the key of the master token entry in systemconfig table
-	MasterTokenKey = "master_token"
-	//VerifyTokenKey is the key of the verify token entry in systemconfig table
-	VerifyTokenKey = "verify_token"
+	//MasterTokenKey is the key of the master token entry in serverconfig table
+	MasterTokenKey = "root_token"
+	//VerifyTokenKey is the key of the verify token entry in serverconfig table
+	VerifyTokenKey = "verify_tokens"
 )
 
 //SecretFilePath location of the master key
@@ -319,17 +319,20 @@ func initializeAccessTokenTable() error {
 func initializeSystemTable() error {
 	db := CreateConnection()
 	defer db.Close()
-	createstring := `CREATE TABLE IF NOT EXISTS systemconfig (
-		key varchar(128) NOT NULL,
-		value varchar(255) NOT NULL,
-		PRIMARY KEY (key)
+	createstring := `CREATE TABLE IF NOT EXISTS serverconfig (
+		id serial NOT NULL,
+		http_port integer NOT NULL,
+		deny_limit smallint NOT NULL,
+		verify_tokens bool DEFAULT false,
+		root_token varchar(64) NOT NULL,
+		PRIMARY KEY (id)
 	);`
 	_, err := db.Exec(createstring)
 	if err != nil {
 		return err
 	}
 
-	queryKey := "SELECT COUNT(key) FROM systemconfig"
+	queryKey := "SELECT COUNT(id) FROM serverconfig"
 	count, err := checkCountWithQuery(queryKey)
 	if err != nil {
 		return err
@@ -350,22 +353,21 @@ func initializeStandardConfiguration() error {
 	db := CreateConnection()
 	defer db.Close()
 
-	var configuration = map[string]string{
-		RouterPortKey:  "57687",
-		DenyLimitKey:   "5",
-		MasterTokenKey: uuid.New().String(),
-		VerifyTokenKey: "false",
+	var config = structs.StandardServerConfig()
+	hashedtoken, err := utils.BcryptHash([]byte(config.RootToken))
+	if err != nil {
+		return err
 	}
 
-	for key, value := range configuration {
-		insertQuery := `INSERT INTO systemconfig(key,value) VALUES($1,$2);`
-		_, err := db.Exec(insertQuery, key, value)
-		if err != nil {
-			return err
-		}
+	insertQuery := `INSERT INTO serverconfig 
+	(http_port,deny_limit,verify_tokens,root_token) 
+	VALUES($1,$2,$3,$4);`
+	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
+	if err != nil {
+		return err
 	}
 
-	printSystemConfiguration(configuration)
+	printSystemConfiguration(config)
 
 	return nil
 }
@@ -422,13 +424,13 @@ func initializeStandardActions() error {
 	return nil
 }
 
-func printSystemConfiguration(configuration map[string]string) {
+func printSystemConfiguration(config structs.ServerConfig) {
 	fmt.Println("tiny-mfa configuration")
-	fmt.Println("----------------------")
-	fmt.Println("router port  ", configuration[RouterPortKey])
-	fmt.Println("deny limit   ", configuration[DenyLimitKey])
-	fmt.Println("verify tokens", configuration[VerifyTokenKey])
-	fmt.Println("master token ", configuration[MasterTokenKey])
+	fmt.Println("------------------------------------------------")
+	fmt.Println("router port  ", config.RouterPort)
+	fmt.Println("deny limit   ", config.DenyLimit)
+	fmt.Println("verify tokens", config.VerifyTokens)
+	fmt.Println("root token   ", config.RootToken)
 }
 
 //GetSystemProperty returns the value for the given key
@@ -437,8 +439,8 @@ func GetSystemProperty(key string) (string, error) {
 	defer db.Close()
 
 	var value string
-	queryKey := "SELECT value FROM systemconfig where key=$1"
-	res, err := db.Query(queryKey, key)
+	queryKey := fmt.Sprintf("SELECT %s FROM serverconfig;", key)
+	res, err := db.Query(queryKey)
 	if err != nil {
 		return value, err
 	}
@@ -448,48 +450,53 @@ func GetSystemProperty(key string) (string, error) {
 		res.Scan(&value)
 	}
 
+	fmt.Println(value)
 	return value, nil
 }
 
 //GetSystemConfiguration returns the system config
-func GetSystemConfiguration() (map[string]string, error) {
+func GetSystemConfiguration() (structs.ServerConfig, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	count, err := checkCountWithQuery("SELECT COUNT(key) FROM systemconfig")
-	if err != nil {
-		return nil, err
-	}
-
-	var values map[string]string = make(map[string]string, count)
-	queryKey := "SELECT key, value FROM systemconfig"
+	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token FROM serverconfig"
 	res, err := db.Query(queryKey)
 	if err != nil {
-		return nil, err
+		return structs.ServerConfig{}, err
 	}
 	defer res.Close()
+	var config structs.ServerConfig
+	if res.Next() {
+		var httpPort uint16
+		var denyLimit uint8
+		var verifyTokens bool
+		var rootToken string
 
-	for res.Next() {
-		var key, value string
-		res.Scan(&key, &value)
-
-		values[key] = value
+		res.Scan(&httpPort, &denyLimit, &verifyTokens, &rootToken)
+		config = structs.ServerConfig{
+			RouterPort:   httpPort,
+			DenyLimit:    denyLimit,
+			VerifyTokens: verifyTokens,
+			RootToken:    rootToken,
+		}
 	}
 
-	return values, nil
+	return config, nil
 }
 
 //UpdateSystemConfiguration updates the system configuration
-func UpdateSystemConfiguration(config map[string]interface{}) (map[string]string, error) {
+func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfig, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	for key, value := range config {
-		sqlQuery := `UPDATE systemconfig SET value=$1 WHERE key=$2`
-		_, err := db.Exec(sqlQuery, value, key)
-		if err != nil {
-			return nil, err
-		}
+	sqlQuery := `UPDATE serverconfig 
+					SET 
+					http_port=$1, 
+					deny_limit=$2,
+					verify_tokens=$3`
+	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
+	if err != nil {
+		return structs.ServerConfig{}, err
 	}
 
 	return GetSystemConfiguration()
