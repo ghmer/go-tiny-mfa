@@ -305,7 +305,7 @@ func initializeAccessTokenTable() error {
 		id serial NOT NULL,
 		ref_id_action smallint,
 		ref_id_object varchar(45),
-		access_token varchar(45) NOT NULL,
+		access_token varchar(64) NOT NULL,
 		PRIMARY KEY (access_token)
 	);`
 	_, err := db.Exec(createstring)
@@ -671,18 +671,23 @@ func GetIssuers() ([]structs.Issuer, error) {
 }
 
 //CreateIssuer inserts a Issuer struct to the database
-func CreateIssuer(issuer structs.Issuer) (structs.Issuer, error) {
+func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 	db := CreateConnection()
 	defer db.Close()
-	issuer.ID = uuid.New().String()
 
+	var result map[string]interface{} = make(map[string]interface{})
+
+	issuer.ID = uuid.New().String()
 	masterKey, err := GetMasterKey()
+
 	if err != nil {
-		return structs.Issuer{}, err
+		result["error"] = err
+		return result, err
 	}
 	cryptedKey, err := utils.GenerateCryptedKeyBase32(masterKey)
 	if err != nil {
-		return structs.Issuer{}, err
+		result["error"] = err
+		return result, err
 	}
 	issuer.Key = cryptedKey
 
@@ -691,14 +696,27 @@ func CreateIssuer(issuer structs.Issuer) (structs.Issuer, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.Enabled)
 	if err != nil {
-		return structs.Issuer{}, err
+		result["error"] = err
+		return result, err
 	}
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return issuer, errors.New("Insert Operation was not successful")
+		result["error"] = errors.New("Insert Operation was not successful")
+		return result, err
 	}
-	return issuer, nil
+
+	token := structs.NewFullAccessToken(issuer.ID)
+	err = InsertToken(token)
+	if err != nil {
+		result["error"] = err
+		return result, err
+	}
+
+	result["issuer"] = issuer
+	result["token"] = token
+
+	return result, nil
 }
 
 //GetIssuer returns the requested issuer from the database as Issuer struct
@@ -778,8 +796,19 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
+
 	sqlDelete := `DELETE FROM issuer WHERE id=$1`
 	res, err := db.Exec(sqlDelete, issuer.ID)
+	if err != nil {
+		return false, err
+	}
+
+	err = DeleteTokens(issuer.ID)
+	if err != nil {
+		return false, err
+	}
+
+	err = DeleteUsers(issuer.ID)
 	if err != nil {
 		return false, err
 	}
@@ -835,19 +864,23 @@ func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 }
 
 //CreateUser inserts a userstruct to the DB
-func CreateUser(user structs.User) (structs.User, error) {
+func CreateUser(user structs.User) (map[string]interface{}, error) {
 	if user.ID == "" {
 		user.ID = uuid.New().String()
 	}
 
+	var result map[string]interface{} = make(map[string]interface{})
+
 	if user.Key == "" {
 		issuerKey, err := GetIssuerKey(user.Issuer)
 		if err != nil {
-			return user, err
+			result["error"] = err
+			return result, err
 		}
 		cryptedKey, err := utils.GenerateCryptedKeyBase32(issuerKey)
 		if err != nil {
-			return user, err
+			result["error"] = err
+			return result, err
 		}
 		user.Key = cryptedKey
 	}
@@ -859,14 +892,27 @@ func CreateUser(user structs.User) (structs.User, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, user.Enabled)
 	if err != nil {
-		return structs.User{}, err
+		result["error"] = err
+		return result, err
 	}
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return structs.User{}, errors.New("Insert Operation was not successful")
+		result["error"] = errors.New("Insert Operation was not successful")
+		return result, err
 	}
-	return user, nil
+
+	token := structs.NewFullAccessToken(user.ID)
+	err = InsertToken(token)
+	if err != nil {
+		result["error"] = err
+		return result, err
+	}
+
+	result["user"] = user
+	result["token"] = token
+
+	return result, nil
 }
 
 //GetUser returns a User struct from the database
@@ -928,10 +974,57 @@ func DeleteUser(user structs.User) (bool, error) {
 		return false, err
 	}
 
+	err = DeleteTokens(user.ID)
+	if err != nil {
+		return false, err
+	}
+
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
 		return false, fmt.Errorf("Operation affected %d rows", rows)
 	}
 
 	return true, nil
+}
+
+//InsertToken inserts an access token to the database
+func InsertToken(token structs.Token) error {
+	db := CreateConnection()
+	defer db.Close()
+
+	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
+	sqlInsert := `INSERT INTO access_tokens(ref_id_action, ref_id_object, access_token)
+				VALUES ($1, $2, $3)
+				RETURNING id`
+	res, err := db.Exec(sqlInsert, token.ActionRefID, token.ObjectRefID, string(hashedToken))
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows != 1 {
+		return errors.New("Insert Operation was not successful")
+	}
+
+	return nil
+}
+
+//DeleteTokens deletes all tokens for a given object id
+func DeleteTokens(objectid string) error {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_object=$1`
+	_, err := db.Exec(sqlDelete, objectid)
+	return err
+}
+
+//DeleteUsers deletes all tokens for a given object id
+func DeleteUsers(objectid string) error {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlDelete := `DELETE FROM accounts WHERE issuer_id=$1`
+	_, err := db.Exec(sqlDelete, objectid)
+	return err
 }
