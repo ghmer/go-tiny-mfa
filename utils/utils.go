@@ -11,6 +11,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 //Encrypt takes in a byte array as data and another byte array as the passphrase,
@@ -144,4 +146,24 @@ func ScrubUserStruct(user *structs.User) {
 //ScrubIssuerStruct scrubs the key of the issuer
 func ScrubIssuerStruct(issuer *structs.Issuer) {
 	issuer.Key = ""
+}
+
+//BcryptHash hashes a given byte array with bcrypt and a cost of 10
+func BcryptHash(tohash []byte) ([]byte, error) {
+	// Hashing with a default cost of 10
+	hash, err := bcrypt.GenerateFromPassword(tohash, bcrypt.DefaultCost)
+	return hash, err
+}
+
+//BycrptVerify compares a plain byte array and its bcrypted comparable
+func BycrptVerify(verifiable, comparable []byte) error {
+	// Hashing verifiable with a default cost of 10
+	hashedVerifiable, err := bcrypt.GenerateFromPassword(verifiable, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// Comparing the password with the hash
+	err = bcrypt.CompareHashAndPassword(hashedVerifiable, comparable)
+	return err
 }
