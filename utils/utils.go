@@ -92,26 +92,26 @@ func createMd5Hash(key []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-//GenerateCryptedKeyBase32 generates a new Key, encrypts it with the master key and encodes it to base32
-func GenerateCryptedKeyBase32(masterKey []byte) (string, error) {
+//GenerateCryptedKeyBase32 generates a new Key, encrypts it with the root key and encodes it to base32
+func GenerateCryptedKeyBase32(rootKey []byte) (string, error) {
 	issuerKey, err := core.GenerateExtendedSecretKey()
 	if err != nil {
 		return "", err
 	}
 
-	cryptedKey := Encrypt(issuerKey, masterKey)
+	cryptedKey := Encrypt(issuerKey, rootKey)
 
 	return base32.StdEncoding.EncodeToString(cryptedKey), nil
 }
 
 //GenerateExtendedKeyBase32 returns a base32 encoded 256bit key
 func GenerateExtendedKeyBase32() (string, error) {
-	masterKey, err := core.GenerateExtendedSecretKey()
+	rootKey, err := core.GenerateExtendedSecretKey()
 	if err != nil {
 		return "", err
 	}
 
-	encodedKey := base32.StdEncoding.EncodeToString(masterKey)
+	encodedKey := base32.StdEncoding.EncodeToString(rootKey)
 
 	return encodedKey, nil
 }

@@ -74,7 +74,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 //GetAuditEntries returns all audit entries
 func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-	err := verifyMasterToken(r)
+	err := verifyRootToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -120,7 +120,7 @@ func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
-	err := verifyMasterToken(r)
+	err := verifyRootToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -144,7 +144,7 @@ func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 //UpdateSystemConfiguration updates the system configuration
 func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-	err := verifyMasterToken(r)
+	err := verifyRootToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -196,7 +196,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 //GetIssuers returns all issuers
 func GetIssuers(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-	err := verifyMasterToken(r)
+	err := verifyRootToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -223,7 +223,7 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 //CreateIssuer creates a new issuer
 func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
-	err := verifyMasterToken(r)
+	err := verifyRootToken(r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -769,11 +769,11 @@ func verifyTokenEnabled() bool {
 	return verifyToken
 }
 
-func verifyMasterToken(r *http.Request) error {
+func verifyRootToken(r *http.Request) error {
 	//check if token verification has been enabled.
 	verifyToken := verifyTokenEnabled()
 	if verifyToken {
-		masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+		rootToken, err := middleware.GetSystemProperty(middleware.RootTokenKey)
 		if err != nil {
 			return err
 		}
@@ -784,7 +784,8 @@ func verifyMasterToken(r *http.Request) error {
 		}
 
 		token := tokens[0]
-		if token != masterToken {
+		err = utils.BycrptVerify([]byte(token), []byte(rootToken))
+		if token != rootToken {
 			return errors.New("wrong access token provided")
 		}
 	}
@@ -803,11 +804,11 @@ func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
 
 		token := tokens[0]
 		if token != issuer.ID {
-			masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+			rootToken, err := middleware.GetSystemProperty(middleware.RootTokenKey)
 			if err != nil {
 				return err
 			}
-			if token != masterToken {
+			if token != rootToken {
 				return errors.New("wrong access token provided for issuer")
 			}
 
@@ -828,11 +829,11 @@ func verifyUserAccessHeader(user structs.User, r *http.Request) error {
 
 		token := tokens[0]
 		if token != user.ID && token != user.Issuer.ID {
-			masterToken, err := middleware.GetSystemProperty(middleware.MasterTokenKey)
+			rootToken, err := middleware.GetSystemProperty(middleware.RootTokenKey)
 			if err != nil {
 				return err
 			}
-			if token != masterToken {
+			if token != rootToken {
 				return errors.New("wrong access token provided for issuer")
 			}
 		}

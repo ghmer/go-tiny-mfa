@@ -24,13 +24,13 @@ const (
 	RouterPortKey = "http-port"
 	//DenyLimitKey the key of the deny limit entry in serverconfig table
 	DenyLimitKey = "deny-limit"
-	//MasterTokenKey is the key of the master token entry in serverconfig table
-	MasterTokenKey = "root-token"
+	//RootTokenKey is the key of the root token entry in serverconfig table
+	RootTokenKey = "root-token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
 	VerifyTokenKey = "verify-tokens"
 )
 
-//SecretFilePath location of the master key
+//SecretFilePath location of the root key
 const SecretFilePath string = "/opt/go-tiny-mfa/secrets/key"
 
 // CreateConnection creates a connection to a postgres DB
@@ -55,14 +55,14 @@ func CreateConnection() *sql.DB {
 	return db
 }
 
-//InitializeSystem will initialize the database and the master key
+//InitializeSystem will initialize the database and the root key
 func InitializeSystem() error {
 	err := initializeDatabase()
 	if err != nil {
 		return err
 	}
 
-	err = initializeMasterKey()
+	err = initializeRootKey()
 	if err != nil {
 		return err
 	}
@@ -550,15 +550,15 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 	return GetSystemConfiguration()
 }
 
-//checks whether the master key exists on the file system
+//checks whether the root key exists on the file system
 //will create it if this is not the case
-func initializeMasterKey() error {
+func initializeRootKey() error {
 	_, err := os.Stat(SecretFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// key does not exist
-			fmt.Println("Warning: No master key found. A new one is being generated")
-			base32MasterKey, err := utils.GenerateExtendedKeyBase32()
+			fmt.Println("Warning: No root key found. A new one is being generated")
+			base32RootKey, err := utils.GenerateExtendedKeyBase32()
 			if err != nil {
 				return err
 			}
@@ -575,7 +575,7 @@ func initializeMasterKey() error {
 
 			// len variable captures the length
 			// of the string written to the file.
-			_, err = file.WriteString(base32MasterKey)
+			_, err = file.WriteString(base32RootKey)
 			if err != nil {
 				return err
 			}
@@ -589,15 +589,15 @@ func initializeMasterKey() error {
 	return err
 }
 
-//GetMasterKey retrieves the key generated on system initialization
-func GetMasterKey() ([]byte, error) {
-	encodedMasterKey, err := ioutil.ReadFile(SecretFilePath)
+//GetRootKey retrieves the key generated on system initialization
+func GetRootKey() ([]byte, error) {
+	encodedRootKey, err := ioutil.ReadFile(SecretFilePath)
 	if err != nil {
 		log.Panicf("failed reading data from file: %s", err)
 	}
 
-	masterKey, err := utils.DecodeBase32Key(string(encodedMasterKey))
-	return masterKey, err
+	rootKey, err := utils.DecodeBase32Key(string(encodedRootKey))
+	return rootKey, err
 }
 
 //GetIssuerKey returns the decrypted issuer key as byte array
@@ -607,13 +607,13 @@ func GetIssuerKey(issuer structs.Issuer) ([]byte, error) {
 		return nil, err
 	}
 
-	masterKey, err := GetMasterKey()
+	rootKey, err := GetRootKey()
 	if err != nil {
 		return nil, err
 	}
-	defer utils.ScrubKey(&masterKey)
+	defer utils.ScrubKey(&rootKey)
 
-	plainKey := utils.Decrypt(cryptedKey, masterKey)
+	plainKey := utils.Decrypt(cryptedKey, rootKey)
 	return plainKey, nil
 }
 
@@ -733,13 +733,13 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 	var result map[string]interface{} = make(map[string]interface{})
 
 	issuer.ID = uuid.New().String()
-	masterKey, err := GetMasterKey()
+	rootKey, err := GetRootKey()
 
 	if err != nil {
 		result["error"] = err
 		return result, err
 	}
-	cryptedKey, err := utils.GenerateCryptedKeyBase32(masterKey)
+	cryptedKey, err := utils.GenerateCryptedKeyBase32(rootKey)
 	if err != nil {
 		result["error"] = err
 		return result, err
