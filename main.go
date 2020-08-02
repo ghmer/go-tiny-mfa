@@ -26,14 +26,13 @@ func main() {
 
 	// Create the router
 	r := router.Router()
-	routerPort, err := middleware.GetSystemProperty(middleware.RouterPortKey)
-
-	if routerPort == "" {
-		log.Fatal("could not read routerport from database")
+	config, err := middleware.GetSystemConfiguration()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println("Start serving on port", routerPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", routerPort), r))
+	fmt.Println("Start serving on port", config.RouterPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.RouterPort), r))
 
 }
 
