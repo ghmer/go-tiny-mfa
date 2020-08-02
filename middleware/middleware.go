@@ -433,13 +433,62 @@ func printSystemConfiguration(config structs.ServerConfig) {
 	fmt.Println("root token   ", config.RootToken)
 }
 
+func escape(source string) string {
+	var j int = 0
+	if len(source) == 0 {
+		return ""
+	}
+	tempStr := source[:]
+	desc := make([]byte, len(tempStr)*2)
+	for i := 0; i < len(tempStr); i++ {
+		flag := false
+		var escape byte
+		switch tempStr[i] {
+		case '\r':
+			flag = true
+			escape = '\r'
+			break
+		case '\n':
+			flag = true
+			escape = '\n'
+			break
+		case '\\':
+			flag = true
+			escape = '\\'
+			break
+		case '\'':
+			flag = true
+			escape = '\''
+			break
+		case '"':
+			flag = true
+			escape = '"'
+			break
+		case '\032':
+			flag = true
+			escape = 'Z'
+			break
+		default:
+		}
+		if flag {
+			desc[j] = '\\'
+			desc[j+1] = escape
+			j = j + 2
+		} else {
+			desc[j] = tempStr[i]
+			j = j + 1
+		}
+	}
+	return string(desc[0:j])
+}
+
 //GetSystemProperty returns the value for the given key
 func GetSystemProperty(key string) (string, error) {
 	db := CreateConnection()
 	defer db.Close()
 
 	var value string
-	queryKey := fmt.Sprintf("SELECT %s FROM serverconfig;", key)
+	queryKey := fmt.Sprintf("SELECT %s FROM serverconfig;", escape(key))
 	res, err := db.Query(queryKey)
 	if err != nil {
 		return value, err
@@ -450,7 +499,6 @@ func GetSystemProperty(key string) (string, error) {
 		res.Scan(&value)
 	}
 
-	fmt.Println(value)
 	return value, nil
 }
 
