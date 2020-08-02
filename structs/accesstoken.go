@@ -1,6 +1,8 @@
 package structs
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 const (
 	//ActionIDGet id of the GET action
