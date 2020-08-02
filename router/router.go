@@ -215,17 +215,19 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&issuer)
 
-	issuerStruct, err := middleware.CreateIssuer(issuer)
+	resultmap, err := middleware.CreateIssuer(issuer)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(405)
 		json.NewEncoder(w).Encode(message)
 		return
 	}
+
+	issuerStruct := resultmap["issuer"].(structs.Issuer)
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(issuerStruct)
+	json.NewEncoder(w).Encode(resultmap)
 }
 
 //GetIssuer returns the issuer given in the URL
@@ -397,8 +399,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&user)
 	user.Issuer = issuerStruct
 
-	userStruct, err := middleware.CreateUser(user)
-	defer utils.ScrubUserStruct(&userStruct)
+	resultmap, err := middleware.CreateUser(user)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(500)
@@ -406,8 +407,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userStruct := resultmap["user"].(structs.User)
+	defer utils.ScrubUserStruct(&userStruct)
+
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(userStruct)
+	json.NewEncoder(w).Encode(resultmap)
 }
 
 //GetUser returns a distinct user in the scope of the given issuer
