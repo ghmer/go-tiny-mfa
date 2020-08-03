@@ -1065,7 +1065,7 @@ func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
 		index++
 	}
 
-	for index, token := range tokens {
+	for _, token := range tokens {
 		err = utils.BycrptVerify([]byte(token), []byte(submittedToken))
 		if err == nil {
 			return true, nil
