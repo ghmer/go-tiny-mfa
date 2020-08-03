@@ -4,10 +4,10 @@ import "github.com/google/uuid"
 
 //ServerConfig is a struct that holds a server configuration
 type ServerConfig struct {
-	RouterPort   uint16 `json:"http-port"`
-	DenyLimit    uint8  `json:"deny-limit"`
-	RootToken    string `json:"root-access-token"`
-	VerifyTokens bool   `json:"verify-tokens"`
+	RouterPort   uint16 `json:"http_port"`
+	DenyLimit    uint8  `json:"deny_limit"`
+	RootToken    string `json:"root_token"`
+	VerifyTokens bool   `json:"verify_tokens"`
 }
 
 //StandardServerConfig returns a standard server configuration
