@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
-	"fmt"
 	"go-tiny-mfa/core"
 	"go-tiny-mfa/structs"
 	"io"
@@ -151,10 +150,8 @@ func ScrubIssuerStruct(issuer *structs.Issuer) {
 
 //BcryptHash hashes a given byte array with bcrypt and a cost of 10
 func BcryptHash(tohash []byte) ([]byte, error) {
-	fmt.Println("hashing: ", string(tohash))
 	// Hashing with a default cost of 10
 	hash, err := bcrypt.GenerateFromPassword(tohash, bcrypt.DefaultCost)
-	fmt.Println("hash and error:", string(hash), err)
 	return hash, err
 }
 
