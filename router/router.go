@@ -33,6 +33,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/system/configuration", GetSystemConfiguration).Methods("GET")
 	//Updates the system configuration
 	router.HandleFunc("/api/v1/system/configuration", UpdateSystemConfiguration).Methods("POST")
+
 	//Return all registered issuers
 	router.HandleFunc("/api/v1/issuer", GetIssuers).Methods("GET")
 	//Create a new issuer using a POST request
@@ -43,6 +44,8 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/issuer/{issuer}", UpdateIssuer).Methods("POST")
 	//Deletes a distinct issuer using a DELETE request
 	router.HandleFunc("/api/v1/issuer/{issuer}", DeleteIssuer).Methods("DELETE")
+	//Creates a new access token for the given issuer using a PUT request
+	router.HandleFunc("/api/v1/issuer/{issuer}", AddIssuerAccessToken).Methods("PUT")
 
 	//Return all users belonging to the scope of a distinct issuer
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", GetUsers).Methods("GET")
@@ -315,6 +318,54 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	message := structs.Message{Success: result}
 	json.NewEncoder(w).Encode(message)
+}
+
+//AddIssuerAccessToken adds an access token to this issuer
+func AddIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+
+	jsonMap, err := mapJSON(r.Body)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	issuerStruct, err := getIssuerStructByVars(r)
+	if err != nil {
+		returnError(err, 404, w)
+		return
+	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
+
+	err = verifyIssuerAccessHeader(issuerStruct, r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	var description string
+	if val, ok := jsonMap["description"]; ok {
+		description = val.(string)
+
+	}
+
+	if description == "" {
+		returnError(errors.New("description must be provided for an access token"), 500, w)
+	}
+
+	token := structs.NewAccessToken(issuerStruct.ID, description)
+	err = middleware.InsertToken(token)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	w.WriteHeader(200)
+	result := make(map[string]interface{}, 2)
+	result["message"] = structs.Message{Success: true, Message: "token successfully created"}
+	result["token"] = token
+	json.NewEncoder(w).Encode(result)
+
 }
 
 //GetUsers returns all users for a given issuer
