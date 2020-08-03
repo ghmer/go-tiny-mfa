@@ -21,13 +21,13 @@ import (
 
 const (
 	//RouterPortKey the key of the router port entry in serverconfig table
-	RouterPortKey = "http-port"
+	RouterPortKey = "http_port"
 	//DenyLimitKey the key of the deny limit entry in serverconfig table
-	DenyLimitKey = "deny-limit"
+	DenyLimitKey = "deny_limit"
 	//RootTokenKey is the key of the root token entry in serverconfig table
-	RootTokenKey = "root-token"
+	RootTokenKey = "root_token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
-	VerifyTokenKey = "verify-tokens"
+	VerifyTokenKey = "verify_tokens"
 )
 
 //SecretFilePath location of the root key
@@ -85,10 +85,6 @@ func initializeDatabase() error {
 		return err
 	}
 	err = initializeAuditTable()
-	if err != nil {
-		return err
-	}
-	err = initializeActionsTable()
 	if err != nil {
 		return err
 	}
@@ -303,9 +299,9 @@ func initializeAccessTokenTable() error {
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS access_tokens (
 		id serial NOT NULL,
-		ref_id_action smallint,
-		ref_id_object varchar(45),
+		ref_id_issuer varchar(45),
 		access_token varchar(64) NOT NULL,
+		description varchar(255),
 		PRIMARY KEY (access_token)
 	);`
 	_, err := db.Exec(createstring)
@@ -321,10 +317,10 @@ func initializeSystemTable() error {
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS serverconfig (
 		id serial NOT NULL,
-		http-port integer NOT NULL,
-		deny-limit smallint NOT NULL,
-		verify-tokens bool DEFAULT false,
-		root-token varchar(64) NOT NULL,
+		http_port integer NOT NULL,
+		deny_limit smallint NOT NULL,
+		verify_tokens bool DEFAULT false,
+		root_token varchar(64) NOT NULL,
 		PRIMARY KEY (id)
 	);`
 	_, err := db.Exec(createstring)
@@ -368,58 +364,6 @@ func initializeStandardConfiguration() error {
 	}
 
 	printSystemConfiguration(config)
-
-	return nil
-}
-
-//initializes the actions level table
-func initializeActionsTable() error {
-	db := CreateConnection()
-	defer db.Close()
-	createstring := `CREATE TABLE IF NOT EXISTS actions (
-		id smallint NOT NULL,
-		action varchar(16)
-	);`
-	_, err := db.Exec(createstring)
-	if err != nil {
-		return err
-	}
-
-	queryKey := "SELECT COUNT(id) FROM actions"
-	count, err := checkCountWithQuery(queryKey)
-	if err != nil {
-		return err
-	}
-
-	if count < 1 {
-		err = initializeStandardActions()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-//initialize standard actions
-func initializeStandardActions() error {
-	db := CreateConnection()
-	defer db.Close()
-
-	var configuration = map[int]string{
-		1: "GET",
-		2: "POST",
-		3: "DELETE",
-		4: "FULL",
-	}
-
-	for key, value := range configuration {
-		insertQuery := `INSERT INTO actions(id,action) VALUES($1,$2);`
-		_, err := db.Exec(insertQuery, key, value)
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -761,7 +705,7 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 		return result, err
 	}
 
-	token := structs.NewFullAccessToken(issuer.ID)
+	token := structs.NewAccessToken(issuer.ID)
 	err = InsertToken(token)
 	if err != nil {
 		result["error"] = err
@@ -957,7 +901,7 @@ func CreateUser(user structs.User) (map[string]interface{}, error) {
 		return result, err
 	}
 
-	token := structs.NewFullAccessToken(user.ID)
+	token := structs.NewAccessToken(user.ID)
 	err = InsertToken(token)
 	if err != nil {
 		result["error"] = err
@@ -1048,10 +992,10 @@ func InsertToken(token structs.Token) error {
 	defer db.Close()
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
-	sqlInsert := `INSERT INTO access_tokens(ref_id_action, ref_id_object, access_token)
+	sqlInsert := `INSERT INTO access_tokens(ref_id_issuer, access_token, description)
 				VALUES ($1, $2, $3)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, token.ActionRefID, token.ObjectRefID, string(hashedToken))
+	res, err := db.Exec(sqlInsert, token.ObjectRefID, string(hashedToken), token.Description)
 	if err != nil {
 		return err
 	}
@@ -1069,7 +1013,7 @@ func DeleteTokens(objectid string) error {
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_object=$1`
+	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_issuer=$1`
 	_, err := db.Exec(sqlDelete, objectid)
 	return err
 }
@@ -1082,4 +1026,52 @@ func DeleteUsers(objectid string) error {
 	sqlDelete := `DELETE FROM accounts WHERE issuer_id=$1`
 	_, err := db.Exec(sqlDelete, objectid)
 	return err
+}
+
+//ValidateToken returns true if a token could be looked up in the db
+func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlCount := `SELECT COUNT(access_token) FROM access_tokens where ref_id_issuer=$1`
+	countresult, err := db.Query(sqlCount, issuer.ID)
+	if err != nil {
+		return false, err
+	}
+	defer countresult.Close()
+
+	count, err := checkCount(countresult)
+	if err != nil {
+		return false, err
+	}
+
+	if count < 1 {
+		return false, errors.New("there are no tokens defined for the given issuer")
+	}
+
+	sqlSelect := `SELECT access_token FROM access_tokens where ref_id_issuer=$1`
+	tokenresult, err := db.Query(sqlSelect, issuer.ID)
+	if err != nil {
+		return false, err
+	}
+	defer tokenresult.Close()
+
+	var tokens []string = make([]string, count)
+	var index int = 0
+	for tokenresult.Next() {
+		var token string
+		tokenresult.Scan(&token)
+		tokens[index] = token
+		index++
+	}
+
+	for index, token := range tokens {
+		fmt.Println("verifying ", token, index)
+		err = utils.BycrptVerify([]byte(token), []byte(submittedToken))
+		if err == nil {
+			return true, nil
+		}
+	}
+
+	return false, errors.New("token not verified")
 }

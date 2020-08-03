@@ -446,7 +446,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyUserAccessHeader(userStruct, r)
+	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -471,7 +471,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyUserAccessHeader(userStruct, r)
+	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(404)
@@ -521,7 +521,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	//Scrubbing data, then further processing
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyUserAccessHeader(userStruct, r)
+	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -580,7 +580,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyUserAccessHeader(userStruct, r)
+	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -664,7 +664,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyUserAccessHeader(userStruct, r)
+	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
 	if err != nil {
 		message := structs.Message{Success: false, Message: err.Error()}
 		w.WriteHeader(401)
@@ -784,8 +784,10 @@ func verifyRootToken(r *http.Request) error {
 		}
 
 		token := tokens[0]
-		err = utils.BycrptVerify([]byte(token), []byte(rootToken))
-		if token != rootToken {
+
+		err = utils.BycrptVerify([]byte(rootToken), []byte(token))
+
+		if err != nil {
 			return errors.New("wrong access token provided")
 		}
 	}
@@ -803,40 +805,17 @@ func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
 		}
 
 		token := tokens[0]
-		if token != issuer.ID {
-			rootToken, err := middleware.GetSystemProperty(middleware.RootTokenKey)
+		validated, err := middleware.ValidateToken(issuer, token)
+		if err != nil {
+			return err
+		}
+		if !validated {
+			err = verifyRootToken(r)
 			if err != nil {
 				return err
 			}
-			if token != rootToken {
-				return errors.New("wrong access token provided for issuer")
-			}
-
 		}
 	}
 
-	return nil
-}
-
-func verifyUserAccessHeader(user structs.User, r *http.Request) error {
-	//check if token verification has been enabled.
-	verifyToken := verifyTokenEnabled()
-	if verifyToken {
-		tokens := r.Header.Values(VerifyTokenHeaderKey)
-		if len(tokens) != 1 {
-			return errors.New("no access token provided in request")
-		}
-
-		token := tokens[0]
-		if token != user.ID && token != user.Issuer.ID {
-			rootToken, err := middleware.GetSystemProperty(middleware.RootTokenKey)
-			if err != nil {
-				return err
-			}
-			if token != rootToken {
-				return errors.New("wrong access token provided for issuer")
-			}
-		}
-	}
 	return nil
 }
