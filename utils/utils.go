@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
+	"fmt"
 	"go-tiny-mfa/core"
 	"go-tiny-mfa/structs"
 	"io"
@@ -150,20 +151,16 @@ func ScrubIssuerStruct(issuer *structs.Issuer) {
 
 //BcryptHash hashes a given byte array with bcrypt and a cost of 10
 func BcryptHash(tohash []byte) ([]byte, error) {
+	fmt.Println("hashing: ", string(tohash))
 	// Hashing with a default cost of 10
 	hash, err := bcrypt.GenerateFromPassword(tohash, bcrypt.DefaultCost)
+	fmt.Println("hash and error:", string(hash), err)
 	return hash, err
 }
 
-//BycrptVerify compares a plain byte array and its bcrypted comparable
-func BycrptVerify(verifiable, comparable []byte) error {
-	// Hashing verifiable with a default cost of 10
-	hashedVerifiable, err := bcrypt.GenerateFromPassword(verifiable, bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
+//BycrptVerify compares a bcrypted comparable and its plain byte array
+func BycrptVerify(comparable, verifiable []byte) error {
 	// Comparing the password with the hash
-	err = bcrypt.CompareHashAndPassword(hashedVerifiable, comparable)
+	err := bcrypt.CompareHashAndPassword(comparable, verifiable)
 	return err
 }
