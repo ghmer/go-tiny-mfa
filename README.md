@@ -10,6 +10,9 @@ a tinymfa implementation written in go.
  4. The api offers an endpoint to generate a QRCode for a user. Use this to let the user register their secret key in an Authenticator App
  5. The api offers an endpoint to validate a token. Send the token using a http get request to the api interface. The resulting json object contains the boolean result of the validation.
 
+## Access tokens
+tinymfa can be configured to validate access to its resources. Once activated, tinymfa checks for presence of the http header key 'tiny-mfa-access-token'. This must be either the root token created on installation, or the issuer token presented upon issuer creation.
+
 ## Already working
  - v1 api to CRUD issuers and users
  - validate tokens
