@@ -11,13 +11,13 @@ docker build -t registry.parzival.link/go-tiny-mfa:amd64 -f Dockerfile_amd64 .
 docker build -t registry.parzival.link/go-tiny-mfa:arm64 -f Dockerfile_arm64 .
 docker build -t registry.parzival.link/go-tiny-mfa:arm -f Dockerfile_arm .
 
+docker buildx build -t registry.parzival.link/go-tiny-mfa:amd64 --platform=linux/amd64 -f Dockerfile_amd64 .
+docker buildx build -t registry.parzival.link/go-tiny-mfa:arm64 --platform=linux/arm64 -f Dockerfile_arm64 .
+docker buildx build -t registry.parzival.link/go-tiny-mfa:arm --platform=linux/arm/v7 -f Dockerfile_arm .
+
 docker push registry.parzival.link/go-tiny-mfa:arm
 docker push registry.parzival.link/go-tiny-mfa:arm64
 docker push registry.parzival.link/go-tiny-mfa:amd64
-
-docker buildx build --push -t registry.parzival.link/go-tiny-mfa:amd64 --platform=linux/amd64 -f Dockerfile_amd64 .
-docker buildx build --push -t registry.parzival.link/go-tiny-mfa:arm64 --platform=linux/arm64 -f Dockerfile_arm64 .
-docker buildx build --push -t registry.parzival.link/go-tiny-mfa:arm --platform=linux/arm/v7 -f Dockerfile_arm .
 
 docker manifest create \
             registry.parzival.link/go-tiny-mfa \
