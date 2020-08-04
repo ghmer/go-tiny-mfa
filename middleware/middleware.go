@@ -636,6 +636,24 @@ func countIssuers() (int, error) {
 	return count, err
 }
 
+func countIssuerAccessTokens(issuer structs.Issuer) (int, error) {
+	db := CreateConnection()
+	defer db.Close()
+	sqlCountSelect := `SELECT COUNT(id) FROM access_tokens where ref_id_issuer=$1;`
+	res, err := db.Query(sqlCountSelect, issuer.ID)
+	if err != nil {
+		return -1, err
+	}
+	defer res.Close()
+
+	count, err := checkCount(res)
+	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
+
 //GetIssuers returns all Issuers from the database
 func GetIssuers() ([]structs.Issuer, error) {
 	count, err := countIssuers()
@@ -668,6 +686,37 @@ func GetIssuers() ([]structs.Issuer, error) {
 	}
 
 	return issuers, nil
+}
+
+//GetIssuerAccessTokens returns all access tokens for a given issuer from the database
+func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.Token, error) {
+	count, err := countIssuerAccessTokens(issuer)
+	if err != nil {
+		return nil, err
+	}
+	tokens := make([]structs.Token, count)
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlSelect := `SELECT id, description FROM access_tokens`
+	rows, errorMessage := db.Query(sqlSelect)
+	if errorMessage != nil {
+		return tokens, errorMessage
+	}
+	defer rows.Close()
+
+	loop := 0
+	for rows.Next() {
+		var id string
+		var description string
+		rows.Scan(&id, &description)
+
+		token := structs.Token{ID: id, Description: description}
+		tokens[loop] = token
+		loop++
+	}
+
+	return tokens, nil
 }
 
 //CreateIssuer inserts a Issuer struct to the database
