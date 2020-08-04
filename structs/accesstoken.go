@@ -7,19 +7,9 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	//ActionIDGet id of the GET action
-	ActionIDGet = 1
-	//ActionIDPost id of the POST action
-	ActionIDPost = 2
-	//ActionIDDelete id of the DELETE action
-	ActionIDDelete = 3
-	//ActionIDFull id of the FULL action
-	ActionIDFull = 4
-)
-
 //Token is a struct that can be used to define access to a resource
 type Token struct {
+	ID          string `json:"id"`
 	ObjectRefID string `json:"-"`
 	Token       string `json:"access-token"`
 	Description string `json:"description"`
@@ -28,6 +18,7 @@ type Token struct {
 //NewAccessToken generates a new access token that has full access on the given object
 func NewAccessToken(args ...string) Token {
 	var token Token
+	token.ID = uuid.New().String()
 	token.Token = uuid.New().String()
 
 	for i, arg := range args {

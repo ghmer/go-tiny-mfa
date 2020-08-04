@@ -298,7 +298,7 @@ func initializeAccessTokenTable() error {
 	db := CreateConnection()
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS access_tokens (
-		id serial NOT NULL,
+		id varchar(45) NOT NULL,
 		ref_id_issuer varchar(45),
 		access_token varchar(64) NOT NULL,
 		description varchar(255),
@@ -993,10 +993,10 @@ func InsertToken(token structs.Token) error {
 	defer db.Close()
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
-	sqlInsert := `INSERT INTO access_tokens(ref_id_issuer, access_token, description)
+	sqlInsert := `INSERT INTO access_tokens(id, ref_id_issuer, access_token, description)
 				VALUES ($1, $2, $3)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, token.ObjectRefID, string(hashedToken), token.Description)
+	res, err := db.Exec(sqlInsert, token.ID, token.ObjectRefID, string(hashedToken), token.Description)
 	if err != nil {
 		return err
 	}
@@ -1009,13 +1009,23 @@ func InsertToken(token structs.Token) error {
 	return nil
 }
 
-//DeleteTokens deletes all tokens for a given object id
-func DeleteTokens(objectid string) error {
+//DeleteTokens deletes all tokens for a given issuer id
+func DeleteTokens(issuerid string) error {
 	db := CreateConnection()
 	defer db.Close()
 
 	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_issuer=$1`
-	_, err := db.Exec(sqlDelete, objectid)
+	_, err := db.Exec(sqlDelete, issuerid)
+	return err
+}
+
+//DeleteToken deletes all tokens for a given issuer id
+func DeleteToken(issuerid, tokenid string) error {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_issuer=$1 and id=$2`
+	_, err := db.Exec(sqlDelete, issuerid, tokenid)
 	return err
 }
 

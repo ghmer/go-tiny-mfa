@@ -44,8 +44,13 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/issuer/{issuer}", UpdateIssuer).Methods("POST")
 	//Deletes a distinct issuer using a DELETE request
 	router.HandleFunc("/api/v1/issuer/{issuer}", DeleteIssuer).Methods("DELETE")
+
+	//Return all registered access tokens for a given issuer
+	router.HandleFunc("/api/v1/issuer/{issuer}/token", GetIssuerAccessToken).Methods("GET")
 	//Creates a new access token for the given issuer using a PUT request
-	router.HandleFunc("/api/v1/issuer/{issuer}", AddIssuerAccessToken).Methods("PUT")
+	router.HandleFunc("/api/v1/issuer/{issuer}/token", CreateIssuerAccessToken).Methods("POST")
+	//Deletes a distinct access token in the scope of a distinct issuer
+	router.HandleFunc("/api/v1/issuer/{issuer}/token/{tokenid}", DeleteIssuerAccessToken).Methods("POST")
 
 	//Return all users belonging to the scope of a distinct issuer
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", GetUsers).Methods("GET")
@@ -320,8 +325,14 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//AddIssuerAccessToken adds an access token to this issuer
-func AddIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
+func GetIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
+	//TODO
+	writeStandardHeaders(w)
+	returnError(errors.New("not implemented, yet"), 500, w)
+}
+
+//CreateIssuerAccessToken adds an access token to a distinct issuer
+func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	jsonMap, err := mapJSON(r.Body)
@@ -366,6 +377,45 @@ func AddIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	result["token"] = token
 	json.NewEncoder(w).Encode(result)
 
+}
+
+func DeleteIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tokenid := vars["tokenid"]
+	if tokenid == "" {
+		returnError(errors.New("token id not set in url"), 500, w)
+		return
+	}
+
+	if tokenid == "*" {
+		returnError(errors.New("please don't do that"), 500, w)
+		return
+	}
+
+	writeStandardHeaders(w)
+
+	issuerStruct, err := getIssuerStructByVars(r)
+	if err != nil {
+		returnError(err, 404, w)
+		return
+	}
+	defer utils.ScrubIssuerStruct(&issuerStruct)
+
+	err = verifyIssuerToken(issuerStruct, r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	err = middleware.DeleteToken(issuerStruct.ID, tokenid)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	w.WriteHeader(200)
+	message := structs.Message{Success: true}
+	json.NewEncoder(w).Encode(message)
 }
 
 //GetUsers returns all users for a given issuer
