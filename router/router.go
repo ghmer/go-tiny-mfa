@@ -240,7 +240,7 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -267,7 +267,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -303,7 +303,7 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -337,7 +337,7 @@ func AddIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -378,7 +378,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -407,7 +407,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyIssuerAccessHeader(issuerStruct, r)
+	err = verifyIssuerToken(issuerStruct, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -441,7 +441,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
+	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -463,7 +463,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
+	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -505,7 +505,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	//Scrubbing data, then further processing
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
+	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -554,7 +554,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
+	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -624,7 +624,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	}
 	defer utils.ScrubUserStruct(&userStruct)
 
-	err = verifyIssuerAccessHeader(userStruct.Issuer, r)
+	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
 		returnError(err, 401, w)
 		return
@@ -706,6 +706,7 @@ func mapJSON(reader io.Reader) (map[string]interface{}, error) {
 	return m, nil
 }
 
+//returns true if the token verification has been enabled
 func verifyTokenEnabled() bool {
 	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
 	if err != nil {
@@ -723,6 +724,7 @@ func verifyTokenEnabled() bool {
 	return verifyToken
 }
 
+//verify whether the root token was part of the request
 func verifyRootToken(r *http.Request) error {
 	//check if token verification has been enabled.
 	verifyToken := verifyTokenEnabled()
@@ -749,7 +751,8 @@ func verifyRootToken(r *http.Request) error {
 	return nil
 }
 
-func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
+//verify whether a valid issuer token was part of the request
+func verifyIssuerToken(issuer structs.Issuer, r *http.Request) error {
 	//check if token verification has been enabled.
 	verifyToken := verifyTokenEnabled()
 	if verifyToken {
@@ -774,6 +777,7 @@ func verifyIssuerAccessHeader(issuer structs.Issuer, r *http.Request) error {
 	return nil
 }
 
+//return the error via the http ResponseWriter
 func returnError(err error, statuscode int, w http.ResponseWriter) {
 	message := structs.Message{Success: false, Message: err.Error()}
 	w.WriteHeader(statuscode)
