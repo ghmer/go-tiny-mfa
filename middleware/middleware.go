@@ -520,9 +520,6 @@ func initializeRootKey() error {
 			// been written and main //function has
 			// completed execution
 			defer file.Close()
-
-			// len variable captures the length
-			// of the string written to the file.
 			_, err = file.WriteString(base32RootKey)
 			if err != nil {
 				return err
