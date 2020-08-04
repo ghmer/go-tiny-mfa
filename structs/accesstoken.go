@@ -2,6 +2,7 @@ package structs
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -37,7 +38,7 @@ func NewAccessToken(args ...string) Token {
 		case 1:
 			token.Description = arg
 		default:
-			fmt.Println(fmt.Sprintf("cannot use argument %s with parameter %d on a new token", arg, i))
+			log.Println(fmt.Sprintf("cannot use argument %s with parameter %d on a new token", arg, i))
 		}
 	}
 

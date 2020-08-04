@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-func main() {
-	fmt.Println("initializing")
+func init() {
+	log.Println("initializing")
 	// Check if needed environment variables have been set
 	err := checkEnvironmentVariables()
 	if err != nil {
@@ -23,7 +23,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("initialization finished")
+}
 
+func main() {
 	// Create the router
 	r := router.Router()
 	config, err := middleware.GetSystemConfiguration()
@@ -31,9 +34,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Start serving on port", config.RouterPort)
+	log.Println("Start serving on port", config.RouterPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.RouterPort), r))
-
 }
 
 //check whether all variables needed for a proper system startup are set

@@ -369,12 +369,16 @@ func initializeStandardConfiguration() error {
 }
 
 func printSystemConfiguration(config structs.ServerConfig) {
-	fmt.Println("tiny-mfa configuration")
-	fmt.Println("------------------------------------------------")
-	fmt.Println("router port  ", config.RouterPort)
-	fmt.Println("deny limit   ", config.DenyLimit)
-	fmt.Println("verify tokens", config.VerifyTokens)
-	fmt.Println("root token   ", config.RootToken)
+	log.Println()
+	log.Println("----------------------------------------------------------------")
+	log.Println("tiny-mfa configuration")
+	log.Println("----------------------------------------------------------------")
+	log.Println("router port  ", config.RouterPort)
+	log.Println("deny limit   ", config.DenyLimit)
+	log.Println("verify tokens", config.VerifyTokens)
+	log.Println("root token   ", config.RootToken)
+	log.Println("----------------------------------------------------------------")
+	log.Println()
 }
 
 func escape(source string) string {
@@ -501,7 +505,7 @@ func initializeRootKey() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// key does not exist
-			fmt.Println("Warning: No root key found. A new one is being generated")
+			log.Println("Warning: No root key found. A new one is being generated")
 			base32RootKey, err := utils.GenerateExtendedKeyBase32()
 			if err != nil {
 				return err
