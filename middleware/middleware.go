@@ -689,17 +689,17 @@ func GetIssuers() ([]structs.Issuer, error) {
 }
 
 //GetIssuerAccessTokens returns all access tokens for a given issuer from the database
-func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.Token, error) {
+func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 	count, err := countIssuerAccessTokens(issuer)
 	if err != nil {
 		return nil, err
 	}
-	tokens := make([]structs.Token, count)
+	tokens := make([]map[string]string, count)
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlSelect := `SELECT id, description FROM access_tokens`
-	rows, errorMessage := db.Query(sqlSelect)
+	sqlSelect := `SELECT id, description FROM access_tokens where ref_id_issuer=$1`
+	rows, errorMessage := db.Query(sqlSelect, issuer.ID)
 	if errorMessage != nil {
 		return tokens, errorMessage
 	}
@@ -711,7 +711,10 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.Token, error) {
 		var description string
 		rows.Scan(&id, &description)
 
-		token := structs.Token{ID: id, Description: description}
+		token := make(map[string]string, 2)
+		token["id"] = id
+		token["description"] = description
+
 		tokens[loop] = token
 		loop++
 	}
@@ -1043,7 +1046,7 @@ func InsertToken(token structs.Token) error {
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
 	sqlInsert := `INSERT INTO access_tokens(id, ref_id_issuer, access_token, description)
-				VALUES ($1, $2, $3)
+				VALUES ($1, $2, $3, $4)
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, token.ID, token.ObjectRefID, string(hashedToken), token.Description)
 	if err != nil {
