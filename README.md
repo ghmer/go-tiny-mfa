@@ -61,7 +61,7 @@ services:
             - POSTGRES_DB=tinymfa
     
     tinymfa:
-        image: registry.parzival.link/go-tiny-mfa
+        image: tinymfa/go-tiny-mfa
         networks:
             - tiny-mfa-net
         ports:
