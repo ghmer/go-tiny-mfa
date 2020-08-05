@@ -118,7 +118,7 @@ curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local
 ```
 - validate a token
 ```
-curl --location --request POST 'https://demo.tinymfa.parzival.link/api/v1/issuer/issuer.local/users/demo/totp' \
+curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "token" : "123456"
