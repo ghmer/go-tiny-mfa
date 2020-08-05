@@ -1,5 +1,5 @@
 # go-tiny-mfa
-a tinymfa implementation written in go.
+a tinymfa implementation written in go. See https://tinymfa.parzival.link for more information.
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
