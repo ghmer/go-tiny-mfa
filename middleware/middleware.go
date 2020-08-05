@@ -922,23 +922,19 @@ func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 }
 
 //CreateUser inserts a userstruct to the DB
-func CreateUser(user structs.User) (map[string]interface{}, error) {
+func CreateUser(user structs.User) (structs.User, error) {
 	if user.ID == "" {
 		user.ID = uuid.New().String()
 	}
 
-	var result map[string]interface{} = make(map[string]interface{})
-
 	if user.Key == "" {
 		issuerKey, err := GetIssuerKey(user.Issuer)
 		if err != nil {
-			result["error"] = err
-			return result, err
+			return structs.User{}, err
 		}
 		cryptedKey, err := utils.GenerateCryptedKeyBase32(issuerKey)
 		if err != nil {
-			result["error"] = err
-			return result, err
+			return structs.User{}, err
 		}
 		user.Key = cryptedKey
 	}
@@ -950,27 +946,15 @@ func CreateUser(user structs.User) (map[string]interface{}, error) {
 				RETURNING id`
 	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, user.Enabled)
 	if err != nil {
-		result["error"] = err
-		return result, err
+		return structs.User{}, err
 	}
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		result["error"] = errors.New("Insert Operation was not successful")
-		return result, err
+		return structs.User{}, errors.New("Insert Operation was not successful")
 	}
 
-	token := structs.NewAccessToken(user.ID)
-	err = InsertToken(token)
-	if err != nil {
-		result["error"] = err
-		return result, err
-	}
-
-	result["user"] = user
-	result["token"] = token
-
-	return result, nil
+	return user, nil
 }
 
 //GetUser returns a User struct from the database
