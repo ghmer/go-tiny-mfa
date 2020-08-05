@@ -10,7 +10,7 @@ env GOOS=linux GOARCH=arm GOARM=6 go build -o build/go-tiny-mfa-arm
 #purge old manifest
 docker manifest push --purge registry.parzival.link/go-tiny-mfa
 #remove all containers
-docker system prune --volumes --all
+docker system prune --volumes --all -f
 
 #create docker image for linux/amd64
 docker buildx build --load -t registry.parzival.link/go-tiny-mfa:amd64 --platform=linux/amd64 -f Dockerfile_amd64 .
