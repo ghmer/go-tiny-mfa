@@ -45,8 +45,10 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}|GET|Return a distinct user in the scope of a distinct issuer
 /api/v1/issuer/{issuer}/users/{user}|POST|Update a distinct user in the scope of a distinct issuer
 /api/v1/issuer/{issuer}/users/{user}|DELETE|Deletes a distinct user in the scope of a distinct issuer
-/api/v1/issuer/{issuer}/users/{user}/validate/{token}|GET|Validates a given token in the scope of a distinct user and issuer
-/api/v1/issuer/{issuer}/users/{user}/qrcode|GET|Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
+
+### User token handling
+/api/v1/issuer/{issuer}/users/{user}/totp|GET|Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
+/api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
 
 ## docker-compose
 This will result in a working tiny-mfa instance:
