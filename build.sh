@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -z ${VERSION} ]; then
+    echo "no version environment variable 'VERSION' set"
+    exit 0
+fi
+
 #build for linux/amd64
 env GOOS=linux GOARCH=amd64 go build -o build/go-tiny-mfa-amd64
 #build for linux/arm64
