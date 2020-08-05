@@ -29,6 +29,10 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}|GET|Return a distinct issuer by its name
 /api/v1/issuer/{issuer}|POST|Updates a distinct issuer using a POST request
 /api/v1/issuer/{issuer}|DELETE|Deletes a distinct issuer using a DELETE request
+
+### Access token handling
+Endpoint|Method|Description
+--- | --- | ---
 /api/v1/issuer/{issuer}/token|GET|Return all registered access tokens for a given issuer
 /api/v1/issuer/{issuer}/token|POST|Creates a new access token for the given issuer using a PUT request
 /api/v1/issuer/{issuer}/token/{tokenid}|DELETE|Deletes a distinct access token in the scope of a distinct issuer
