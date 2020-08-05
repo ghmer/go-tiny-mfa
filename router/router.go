@@ -383,6 +383,7 @@ func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 
 	if description == "" {
 		returnError(errors.New("description must be provided for an access token"), 500, w)
+		return
 	}
 
 	token := structs.NewAccessToken(issuerStruct.ID, description)
@@ -490,17 +491,15 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&user)
 	user.Issuer = issuerStruct
 
-	resultmap, err := middleware.CreateUser(user)
+	userStruct, err := middleware.CreateUser(user)
 	if err != nil {
 		returnError(err, 500, w)
 		return
 	}
-
-	userStruct := resultmap["user"].(structs.User)
 	defer utils.ScrubUserStruct(&userStruct)
 
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(resultmap)
+	json.NewEncoder(w).Encode(userStruct)
 }
 
 //GetUser returns a distinct user in the scope of the given issuer
@@ -835,14 +834,13 @@ func verifyIssuerToken(issuer structs.Issuer, r *http.Request) error {
 
 		token := tokens[0]
 		validated, err := middleware.ValidateToken(issuer, token)
-		if err != nil {
-			return err
-		}
-		if !validated {
+		if !validated && err.Error() == "token not verified" {
 			err = verifyRootToken(r)
 			if err != nil {
 				return err
 			}
+		} else if !validated {
+			return err
 		}
 	}
 
