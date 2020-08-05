@@ -50,7 +50,7 @@ func Router() *mux.Router {
 	//Creates a new access token for the given issuer using a PUT request
 	router.HandleFunc("/api/v1/issuer/{issuer}/token", CreateIssuerAccessToken).Methods("POST")
 	//Deletes a distinct access token in the scope of a distinct issuer
-	router.HandleFunc("/api/v1/issuer/{issuer}/token/{tokenid}", DeleteIssuerAccessToken).Methods("POST")
+	router.HandleFunc("/api/v1/issuer/{issuer}/token/{tokenid}", DeleteIssuerAccessToken).Methods("DELETE")
 
 	//Return all users belonging to the scope of a distinct issuer
 	router.HandleFunc("/api/v1/issuer/{issuer}/users", GetUsers).Methods("GET")
@@ -436,7 +436,7 @@ func DeleteIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	message := structs.Message{Success: true}
+	message := structs.Message{Success: true, Message: "token successfully deleted"}
 	json.NewEncoder(w).Encode(message)
 }
 
