@@ -302,6 +302,8 @@ func initializeAccessTokenTable() error {
 		ref_id_issuer varchar(45),
 		access_token varchar(64) NOT NULL,
 		description varchar(255),
+		created_on timestamp NOT NULL,
+		last_access_time timestamp,
 		PRIMARY KEY (access_token)
 	);`
 	_, err := db.Exec(createstring)
@@ -698,7 +700,7 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlSelect := `SELECT id, description FROM access_tokens where ref_id_issuer=$1`
+	sqlSelect := `SELECT id, description, created_on, last_access_time FROM access_tokens where ref_id_issuer=$1`
 	rows, errorMessage := db.Query(sqlSelect, issuer.ID)
 	if errorMessage != nil {
 		return tokens, errorMessage
@@ -709,11 +711,15 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 	for rows.Next() {
 		var id string
 		var description string
-		rows.Scan(&id, &description)
+		var createdOn string
+		var lastAccessTime string
+		rows.Scan(&id, &description, &createdOn, &lastAccessTime)
 
-		token := make(map[string]string, 2)
+		token := make(map[string]string, 4)
 		token["id"] = id
 		token["description"] = description
+		token["created_on"] = createdOn
+		token["last_access_time"] = lastAccessTime
 
 		tokens[loop] = token
 		loop++
@@ -1045,10 +1051,10 @@ func InsertToken(token structs.Token) error {
 	defer db.Close()
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
-	sqlInsert := `INSERT INTO access_tokens(id, ref_id_issuer, access_token, description)
-				VALUES ($1, $2, $3, $4)
+	sqlInsert := `INSERT INTO access_tokens(id, ref_id_issuer, access_token, description, created_on)
+				VALUES ($1, $2, $3, $4, $5)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, token.ID, token.ObjectRefID, string(hashedToken), token.Description)
+	res, err := db.Exec(sqlInsert, token.ID, token.ObjectRefID, string(hashedToken), token.Description, time.Now())
 	if err != nil {
 		return err
 	}
@@ -1131,9 +1137,18 @@ func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
 	for _, token := range tokens {
 		err = utils.BycrptVerify([]byte(token), []byte(submittedToken))
 		if err == nil {
+			updateTokenAccessTime(token)
 			return true, nil
 		}
 	}
 
 	return false, errors.New("token not verified")
+}
+
+func updateTokenAccessTime(token string) {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlCount := `UPDATE access_tokens SET last_access_time=$1 where access_token=$2`
+	db.Exec(sqlCount, time.Now(), token)
 }
