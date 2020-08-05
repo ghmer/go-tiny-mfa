@@ -47,6 +47,8 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}|DELETE|Deletes a distinct user in the scope of a distinct issuer
 
 ### User token handling
+Endpoint|Method|Description
+--- | --- | ---
 /api/v1/issuer/{issuer}/users/{user}/totp|GET|Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
 /api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
 
@@ -112,11 +114,15 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.loca
 ```
 - get the QRCode for the Authenticator App:
 ```
-curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/qrcode'
+curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp'
 ```
 - validate a token
 ```
-curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/validate/123456'
+curl --location --request POST 'https://demo.tinymfa.parzival.link/api/v1/issuer/issuer.local/users/demo/totp' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "token" : "123456"
+}'
 ```
 
 ## Already working
