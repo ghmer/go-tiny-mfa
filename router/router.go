@@ -62,10 +62,10 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", UpdateUser).Methods("POST")
 	//Deletes a distinct user in the scope of a distinct issuer
 	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}", DeleteUser).Methods("DELETE")
-	//Validates a given token in the scope of a distinct user and issuer
-	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/validate/{token}", ValidateUserToken).Methods("GET")
 	//Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
-	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/qrcode", GenerateQrCode).Methods("GET")
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/totp", GenerateQrCode).Methods("GET")
+	//Validates a given token in the scope of a distinct user and issuer
+	router.HandleFunc("/api/v1/issuer/{issuer}/users/{user}/totp", ValidateUserToken).Methods("POST")
 
 	return router
 }
@@ -600,9 +600,22 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//initializing base variables
 	timestamp := time.Now().Unix()
 
+	jsonMap, err := mapJSON(r.Body)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	var token string
+	if val, ok := jsonMap["token"]; ok {
+		token = val.(string)
+	}
+
 	//getting token from url
-	vars := mux.Vars(r)
-	token := vars["token"]
+	/*
+		vars := mux.Vars(r)
+		token := vars["token"]
+	*/
 
 	//No token provided?
 	if token == "" {
