@@ -25,16 +25,16 @@ Endpoint|Method|Description
 /api/v1/system/configuration|POST|Updates the system configuration
 
 #### payload: Update system configuration
-***http_port***: the port to run on. Requires a restart!
-
-***deny_limit***: how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
-
-***veriy_token***: whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
+key|type|description
+--- | --- | ---
+ttp_port|integer|the port to run on. Requires a restart!
+deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
+veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
 
 ```
 {
     "http_port" : 57687
-    "deny_limit": 15,
+    "deny_limit": 3,
     "verify_tokens": true
 }
 ```
@@ -49,11 +49,11 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}|DELETE|Deletes a distinct issuer using a DELETE request
 
 #### payload: create a new issuer
-***name***: the name of this issuer
-
-***contact***: a mail adress of the responsible person
-
-***enabled***: whether this issuer is active
+key|type|description
+--- | --- | ---
+name|string|the name of this issuer
+contact|string|a mail adress of the responsible person
+enabled|boolean|whether this issuer is active
 
 ```
 {
@@ -64,9 +64,10 @@ Endpoint|Method|Description
 ```
 
 #### payload: update a new issuer
-***contact***: a mail adress of the responsible person
-
-***enabled***: whether this issuer is active
+key|type|description
+--- | --- | ---
+contact|string|a mail adress of the responsible person
+enabled|boolean|whether this issuer is active
 
 ```
 {
@@ -83,7 +84,9 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/token/{tokenid}|DELETE|Deletes a distinct access token in the scope of a distinct issuer
 
 #### payload: create a new issuer access token
-***description***: a description for the new token
+key|type|description
+--- | --- | ---
+description|string|a description for the new token
 
 ```
 {
@@ -101,11 +104,11 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}|DELETE|Deletes a distinct user in the scope of a distinct issuer
 
 #### payload: create a new user
-***name***: the name this user
-
-***email***: a mail adress of the user
-
-***enabled***: whether this user is active
+key|type|description
+--- | --- | ---
+name|string|the name this user
+email|string|a mail adress of the user
+enabled|boolean|whether this user is active
 
 ```
 {
@@ -116,9 +119,10 @@ Endpoint|Method|Description
 ```
 
 #### payload: update an existing user
-***email***: a mail adress of the user
-
-***enabled***: whether this user is active
+key|type|description
+--- | --- | ---
+email|string|a mail adress of the user
+enabled|boolean|whether this user is active
 
 ```
 {
@@ -134,9 +138,9 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
 
 #### payload: validate a totp token
-***token***: the token to validate
-
-***enabled***: whether this user is active
+key|type|description
+--- | --- | ---
+token|string|the token to validate
 
 ```
 {
