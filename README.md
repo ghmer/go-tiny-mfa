@@ -5,6 +5,8 @@ Our repository on github: https://github.com/ghmer/go-tiny-mfa.
 
 Find a docker repository at https://hub.docker.com/r/tinymfa/go-tiny-mfa
 
+Checkout our postman collection: https://tinymfa.parzival.link/tinymfa.postman_collection.json
+
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
@@ -31,12 +33,14 @@ key|type|description
 --- | --- | ---
 http_port|integer|the port to run on. Requires a restart!
 deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
+token_length|integer|Length of the desired totp tokens
 veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
 
 ```
 {
     "http_port" : 57687,
     "deny_limit": 3,
+    "token_length: 6,
     "verify_tokens": true
 }
 ```
