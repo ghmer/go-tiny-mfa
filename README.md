@@ -27,7 +27,7 @@ Endpoint|Method|Description
 #### payload: Update system configuration
 key|type|description
 --- | --- | ---
-ttp_port|integer|the port to run on. Requires a restart!
+http_port|integer|the port to run on. Requires a restart!
 deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
 veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
 
