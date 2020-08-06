@@ -1,0 +1,692 @@
+{
+	"info": {
+		"_postman_id": "d0de9858-4898-4e84-ab94-97f8720b69a5",
+		"name": "tinymfa Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "List Issuers",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer"
+					]
+				},
+				"description": "List all Issuers"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Issuer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"enabled\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer"
+					]
+				},
+				"description": "Creates an Issuer"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Issuer",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test"
+					]
+				},
+				"description": "Gets an issuer"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Issuer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"enabled\" : true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Issuer",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Issuer Tokens",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Issuer Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\" : \"my access token\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Issuer Token",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/token/TOKEN_ID",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"token",
+						"TOKEN_ID"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Users",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users",
+						"demo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\" : \"mario@issuer.net\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users",
+						"demo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users",
+						"demo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User QRCode",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo/totp",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users",
+						"demo",
+						"totp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"token\" : \"95869179\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo/totp",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"users",
+						"demo",
+						"totp"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get System Configuration",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "8d282fcb-611d-400f-aee8-23afd043ac4c",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/system/configuration",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"system",
+						"configuration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update System Configuration",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "57687mer-dead-c0de-babe-cafea13c8054",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"deny_limit\": 10,\n    \"token_length\": 8\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/system/configuration",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"system",
+						"configuration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Audit",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/system/audit",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"system",
+						"audit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Issuer Access Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"type": "text",
+						"value": "INSERT_TOKEN_HERE"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\": \"another key\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Issuer Access Token",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:57687/api/v1/issuer/test/token/INSERT_TOKEN_ID",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "57687",
+					"path": [
+						"api",
+						"v1",
+						"issuer",
+						"test",
+						"token",
+						"INSERT_TOKEN_ID"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
