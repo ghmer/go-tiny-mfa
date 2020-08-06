@@ -611,12 +611,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		token = val.(string)
 	}
 
-	//getting token from url
-	/*
-		vars := mux.Vars(r)
-		token := vars["token"]
-	*/
-
 	//No token provided?
 	if token == "" {
 		returnError(errors.New("no token provided"), 500, w)
