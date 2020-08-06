@@ -33,7 +33,7 @@ veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and 
 
 ```
 {
-    "http_port" : 57687
+    "http_port" : 57687,
     "deny_limit": 3,
     "verify_tokens": true
 }
