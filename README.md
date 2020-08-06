@@ -1,5 +1,6 @@
 # go-tiny-mfa
 a tinymfa implementation written in go. See https://tinymfa.parzival.link for more information.
+Our repository on github: https://github.com/ghmer/go-tiny-mfa
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
@@ -117,7 +118,7 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
 
 #### payload: validate a totp token
-*****token***: the token to validate
+***token***: the token to validate
 ***enabled***: whether this user is active
 ```
 {
