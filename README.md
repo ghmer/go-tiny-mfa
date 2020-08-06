@@ -106,7 +106,7 @@ Endpoint|Method|Description
 ***enabled***: whether this user is active
 ```
 {
-    "email": "demo@tinymfa.parzival.link",
+    "email": "demo.address@issuer.local",
     "enabled": true
 }
 ```
