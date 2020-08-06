@@ -1,6 +1,8 @@
 # go-tiny-mfa
 a tinymfa implementation written in go. See https://tinymfa.parzival.link for more information.
+
 Our repository on github: https://github.com/ghmer/go-tiny-mfa
+
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
@@ -24,8 +26,11 @@ Endpoint|Method|Description
 
 #### payload: Update system configuration
 ***http_port***: the port to run on. Requires a restart!
+
 ***deny_limit***: how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
+
 ***veriy_token***: whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
+
 ```
 {
     "http_port" : 57687
@@ -45,8 +50,11 @@ Endpoint|Method|Description
 
 #### payload: create a new issuer
 ***name***: the name of this issuer
+
 ***contact***: a mail adress of the responsible person
+
 ***enabled***: whether this issuer is active
+
 ```
 {
     "name": "issuer.local",
@@ -57,7 +65,9 @@ Endpoint|Method|Description
 
 #### payload: update a new issuer
 ***contact***: a mail adress of the responsible person
+
 ***enabled***: whether this issuer is active
+
 ```
 {
     "contact": "demo@issuer.local",
@@ -74,6 +84,7 @@ Endpoint|Method|Description
 
 #### payload: create a new issuer access token
 ***description***: a description for the new token
+
 ```
 {
     "description" : "my access token"
@@ -91,8 +102,11 @@ Endpoint|Method|Description
 
 #### payload: create a new user
 ***name***: the name this user
+
 ***email***: a mail adress of the user
+
 ***enabled***: whether this user is active
+
 ```
 {
     "name" : "demo",
@@ -103,7 +117,9 @@ Endpoint|Method|Description
 
 #### payload: update an existing user
 ***email***: a mail adress of the user
+
 ***enabled***: whether this user is active
+
 ```
 {
     "email": "demo.address@issuer.local",
@@ -119,7 +135,9 @@ Endpoint|Method|Description
 
 #### payload: validate a totp token
 ***token***: the token to validate
+
 ***enabled***: whether this user is active
+
 ```
 {
     "token": "123456"
