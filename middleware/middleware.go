@@ -28,6 +28,8 @@ const (
 	RootTokenKey = "root_token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
 	VerifyTokenKey = "verify_tokens"
+	//TokenLengthKey is the key of the token length entry in serverconfig table
+	TokenLengthKey = "token_length"
 )
 
 //SecretFilePath location of the root key
@@ -322,6 +324,7 @@ func initializeSystemTable() error {
 		http_port integer NOT NULL,
 		deny_limit smallint NOT NULL,
 		verify_tokens bool DEFAULT false,
+		token_length smallint NOT NULL,
 		root_token varchar(64) NOT NULL,
 		PRIMARY KEY (id)
 	);`
@@ -358,9 +361,9 @@ func initializeStandardConfiguration() error {
 	}
 
 	insertQuery := `INSERT INTO serverconfig 
-	(http_port,deny_limit,verify_tokens,root_token) 
-	VALUES($1,$2,$3,$4);`
-	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
+	(http_port,deny_limit,verify_tokens,token_length,root_token) 
+	VALUES($1,$2,$3,$4,$5);`
+	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, config.TokenLength, string(hashedtoken))
 	if err != nil {
 		return err
 	}
@@ -379,6 +382,7 @@ func printSystemConfiguration(config structs.ServerConfig) {
 	log.Println("deny limit   ", config.DenyLimit)
 	log.Println("verify tokens", config.VerifyTokens)
 	log.Println("root token   ", config.RootToken)
+	log.Println("token length ", config.TokenLength)
 	log.Println("----------------------------------------------------------------")
 	log.Println()
 }
@@ -457,7 +461,7 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token FROM serverconfig"
+	queryKey := "SELECT http_port,deny_limit,verify_tokens,token_length,root_token FROM serverconfig"
 	res, err := db.Query(queryKey)
 	if err != nil {
 		return structs.ServerConfig{}, err
@@ -468,13 +472,15 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 		var httpPort uint16
 		var denyLimit uint8
 		var verifyTokens bool
+		var tokenLength uint8
 		var rootToken string
 
-		res.Scan(&httpPort, &denyLimit, &verifyTokens, &rootToken)
+		res.Scan(&httpPort, &denyLimit, &verifyTokens, &tokenLength, &rootToken)
 		config = structs.ServerConfig{
 			RouterPort:   httpPort,
 			DenyLimit:    denyLimit,
 			VerifyTokens: verifyTokens,
+			TokenLength:  tokenLength,
 			RootToken:    rootToken,
 		}
 	}
@@ -491,13 +497,33 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 					SET 
 					http_port=$1, 
 					deny_limit=$2,
-					verify_tokens=$3`
-	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
+					verify_tokens=$3,
+					token_length=$4`
+	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, config.TokenLength)
 	if err != nil {
 		return structs.ServerConfig{}, err
 	}
 
 	return GetSystemConfiguration()
+}
+
+//GetTokenLength returns the length of the desired token
+func GetTokenLength() (uint8, error) {
+	db := CreateConnection()
+	defer db.Close()
+
+	sqlSelect := `SELECT token_length from serverconfig;`
+	result, err := db.Query(sqlSelect)
+	if err != nil {
+		return 99, err
+	}
+
+	var length uint8 = 6
+	if result.Next() {
+		result.Scan(&length)
+	}
+
+	return length, nil
 }
 
 //checks whether the root key exists on the file system

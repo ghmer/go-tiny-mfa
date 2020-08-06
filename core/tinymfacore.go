@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
+	"fmt"
 	"go-tiny-mfa/structs"
 	"math"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 const (
 	// Present can be used as an Offset Type
-	Present int8 = iota
+	Present uint8 = iota
 	// Future can be used as an Offset Type
 	Future
 	// Past can be used as an Offset Type
@@ -22,13 +23,13 @@ const (
 
 const (
 	// OffsetPresent is the offset to add when the OffsetTypePresent was used
-	OffsetPresent int = 0
+	OffsetPresent int8 = 0
 
 	// OffsetFuture is the offset to add when the OffsetTypeFuture was used
-	OffsetFuture int = 30
+	OffsetFuture int8 = 30
 
 	// OffsetPast is the offset to add when the OffsetTypePast was used
-	OffsetPast int = -30
+	OffsetPast int8 = -30
 
 	// KeySizeStandard is the default size of the SecretKey (128bit)
 	KeySizeStandard int8 = 16
@@ -79,8 +80,8 @@ func CalculateRFC2104HMAC(message []byte, key []byte) []byte {
 
 // GenerateMessage takes in a Unix Timestamp and an offsetType of 0,1,2
 // offsetTypes: 0=No Offset; 1=Future Offset; 2=Past Offset
-func GenerateMessage(timestamp int64, offsetType int8) int64 {
-	var offset int
+func GenerateMessage(timestamp int64, offsetType uint8) int64 {
+	var offset int8
 
 	// based on offsetType, we are applying different offsets to the timestamp
 	switch offsetType {
@@ -104,7 +105,7 @@ func GenerateMessage(timestamp int64, offsetType int8) int64 {
 }
 
 // GenerateValidToken takes a Unix Timestamp and a secret key and calculates a valid TOTP token
-func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, error) {
+func GenerateValidToken(unixTimestamp int64, key []byte, offsetType, tokenlength uint8) (int, error) {
 	message, err := GenerateMessageBytes(GenerateMessage(unixTimestamp, offsetType))
 	if err != nil {
 		return 0, err
@@ -127,7 +128,18 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 	// setting the most significant bit to 0
 	truncResult &= 0x7FFFFFFF
 	// making sure we get the right amount of numbers
-	truncResult %= 1000000
+	switch tokenlength {
+	case 5:
+		truncResult %= 100000
+	case 6:
+		truncResult %= 1000000
+	case 7:
+		truncResult %= 10000000
+	case 8:
+		truncResult %= 100000000
+	default:
+		return 0, fmt.Errorf("%d is not a valid length for a token. try something between 5-8", tokenlength)
+	}
 
 	token := int(truncResult)
 
@@ -135,9 +147,9 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType int8) (int, 
 }
 
 // ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func ValidateTokenCurrentTimestamp(token int, key []byte) structs.Validation {
+func ValidateTokenCurrentTimestamp(token int, key []byte, tokenlength uint8) structs.Validation {
 	currentTimestamp := time.Now().Unix()
-	result, err := ValidateToken(token, key, currentTimestamp)
+	result, err := ValidateToken(token, key, currentTimestamp, tokenlength)
 	var validation = structs.Validation{
 		Message: GenerateMessage(currentTimestamp, Present),
 		Success: result,
@@ -147,8 +159,8 @@ func ValidateTokenCurrentTimestamp(token int, key []byte) structs.Validation {
 }
 
 // ValidateTokenWithTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64) structs.Validation {
-	result, err := ValidateToken(token, key, timestamp)
+func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64, tokenlength uint8) structs.Validation {
+	result, err := ValidateToken(token, key, timestamp, tokenlength)
 	var validation = structs.Validation{
 		Message: GenerateMessage(timestamp, Present),
 		Success: result,
@@ -158,12 +170,12 @@ func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64) structs.
 }
 
 // ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid
-func ValidateToken(token int, key []byte, unixTimestamp int64) (bool, error) {
+func ValidateToken(token int, key []byte, unixTimestamp int64, tokenlength uint8) (bool, error) {
 	var result bool = false
 	// validating against a token that was generated with a current timestamp
 	// usually, the clocks of server and client should be synchronized, so this
 	// should be the most common case
-	generatedToken, err := GenerateValidToken(unixTimestamp, key, Present)
+	generatedToken, err := GenerateValidToken(unixTimestamp, key, Present, tokenlength)
 	if err != nil {
 		return false, err
 	}
@@ -175,7 +187,7 @@ func ValidateToken(token int, key []byte, unixTimestamp int64) (bool, error) {
 	// user missed the timewindow for that token. Verifying it against a token
 	// that was valid up to 30 seconds ago
 	if result == false {
-		generatedToken, err := GenerateValidToken(unixTimestamp, key, Past)
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, Past, tokenlength)
 		if err != nil {
 			return false, err
 		}
@@ -187,7 +199,7 @@ func ValidateToken(token int, key []byte, unixTimestamp int64) (bool, error) {
 	// we still could not verify the token. Doing a last check against the token
 	// that becomes valid in the next window.
 	if result == false {
-		generatedToken, err := GenerateValidToken(unixTimestamp, key, Future)
+		generatedToken, err := GenerateValidToken(unixTimestamp, key, Future, tokenlength)
 		if err != nil {
 			return false, err
 		}

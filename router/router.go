@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go-tiny-mfa/core"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/qrcode"
@@ -162,16 +163,30 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//casting map values
 	if val, ok := jsonMap[middleware.RouterPortKey]; ok {
 		localval := val.(float64)
-		configuration.RouterPort = uint16(localval)
+		var castedval uint16
+		castedval = uint16(localval)
+		configuration.RouterPort = castedval
 	}
 	if val, ok := jsonMap[middleware.DenyLimitKey]; ok {
 		localval := val.(float64)
-		configuration.DenyLimit = uint8(localval)
+		var castedval uint8
+		castedval = uint8(localval)
+		configuration.DenyLimit = castedval
 	}
 	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
 		configuration.VerifyTokens = val.(bool)
+	}
+	if val, ok := jsonMap[middleware.TokenLengthKey]; ok {
+		localval := val.(float64)
+		var castedval uint8
+		castedval = uint8(localval)
+		if localval < 5 || localval > 8 {
+			returnError(fmt.Errorf("%d is not a valid length for a token. try something between 5-8", castedval), 500, w)
+		}
+		configuration.TokenLength = castedval
 	}
 
 	configuration, err = middleware.UpdateSystemConfiguration(configuration)
@@ -666,8 +681,14 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenlength, err := middleware.GetTokenLength()
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
 	//validate token against user key and current system time
-	validation := core.ValidateTokenWithTimestamp(tokenInt, plainkey, timestamp)
+	validation := core.ValidateTokenWithTimestamp(tokenInt, plainkey, timestamp, tokenlength)
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {
@@ -713,7 +734,13 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	png, err := qrcode.GenerateQrCode(userStruct)
+	tokenlength, err := middleware.GetTokenLength()
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	png, err := qrcode.GenerateQrCode(userStruct, tokenlength)
 	if err != nil {
 		returnError(err, 500, w)
 		return
