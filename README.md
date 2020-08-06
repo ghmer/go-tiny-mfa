@@ -96,7 +96,7 @@ Endpoint|Method|Description
 ```
 {
     "name" : "demo",
-    "email": "demo@tinymfa.parzival.link",
+    "email": "demo@issuer.local",
     "enabled": true
 }
 ```
