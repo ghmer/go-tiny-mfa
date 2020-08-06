@@ -1,5 +1,6 @@
 #!/bin/bash
 
+DOCKER=`which docker`
 if [ -z ${VERSION} ]; then
     echo "no version environment variable 'VERSION' set"
     exit 0
@@ -18,37 +19,37 @@ env GOOS=linux GOARCH=arm64 GOARM=7 go build -o build/go-tiny-mfa-arm64
 env GOOS=linux GOARCH=arm GOARM=6 go build -o build/go-tiny-mfa-arm
 
 #purge old manifest
-docker manifest push --purge ${REPOSITORY}/go-tiny-mfa
-docker manifest push --purge ${REPOSITORY}/go-tiny-mfa:${VERSION}
+${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa
+${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:${VERSION}
 #remove all containers
-docker system prune --volumes --all -f
+${DOCKER} system prune --volumes --all -f
 
 #create docker image for linux/amd64
-docker buildx build --load -t ${REPOSITORY}/go-tiny-mfa:amd64 --platform=linux/amd64 -f Dockerfile_amd64 .
+${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:amd64 --platform=linux/amd64 -f Dockerfile.amd64 .
 #create docker image for linux/arm64
-docker buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm64 --platform=linux/arm64 -f Dockerfile_arm64 .
+${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm64 --platform=linux/arm64 -f Dockerfile.arm64 .
 #create docker image for linux/arm
-docker buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm --platform=linux/arm/v7 -f Dockerfile_arm .
+${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm --platform=linux/arm/v7 -f Dockerfile.arm .
 
 #push images to registry
-docker push ${REPOSITORY}/go-tiny-mfa:arm
-docker push ${REPOSITORY}/go-tiny-mfa:arm64
-docker push ${REPOSITORY}/go-tiny-mfa:amd64
+${DOCKER} push ${REPOSITORY}/go-tiny-mfa:arm
+${DOCKER} push ${REPOSITORY}/go-tiny-mfa:arm64
+${DOCKER} push ${REPOSITORY}/go-tiny-mfa:amd64
 
 #create new :latest manifest 
-docker manifest create \
+${DOCKER} manifest create \
             ${REPOSITORY}/go-tiny-mfa \
             ${REPOSITORY}/go-tiny-mfa:amd64 \
             ${REPOSITORY}/go-tiny-mfa:arm64 \
             ${REPOSITORY}/go-tiny-mfa:arm
 
 #create new :VERSION manifest 
-docker manifest create \
+${DOCKER} manifest create \
             ${REPOSITORY}/go-tiny-mfa:${VERSION} \
             ${REPOSITORY}/go-tiny-mfa:amd64 \
             ${REPOSITORY}/go-tiny-mfa:arm64 \
             ${REPOSITORY}/go-tiny-mfa:arm
 
 #push manifest to registry
-docker manifest push ${REPOSITORY}/go-tiny-mfa
-docker manifest push ${REPOSITORY}/go-tiny-mfa:${VERSION}
+${DOCKER} manifest push ${REPOSITORY}/go-tiny-mfa
+${DOCKER} manifest push ${REPOSITORY}/go-tiny-mfa:${VERSION}
