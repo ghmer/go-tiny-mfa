@@ -29,7 +29,7 @@ ${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:amd64 --platform=linu
 #create docker image for linux/arm64
 ${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm64 --platform=linux/arm64 -f Dockerfile.arm64 .
 #create docker image for linux/arm
-${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm --platform=linux/arm/v7 -f Dockerfile.arm .
+${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm --platform=linux/arm/v6 -f Dockerfile.arm .
 
 #push images to registry
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:arm
