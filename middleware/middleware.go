@@ -28,8 +28,6 @@ const (
 	RootTokenKey = "root_token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
 	VerifyTokenKey = "verify_tokens"
-	//TokenLengthKey is the key of the token length entry in serverconfig table
-	TokenLengthKey = "token_length"
 )
 
 //SecretFilePath location of the root key
@@ -285,6 +283,7 @@ func initializeIssuerTable() error {
 		name varchar(32) NOT NULL UNIQUE,
 		contact varchar(255) NOT NULL,
 		key varchar(128) NOT NULL UNIQUE,
+		token_length smallint NOT NULL,
 		enabled boolean DEFAULT '1',
 		PRIMARY KEY (id)
 	);`
@@ -324,7 +323,6 @@ func initializeSystemTable() error {
 		http_port integer NOT NULL,
 		deny_limit smallint NOT NULL,
 		verify_tokens bool DEFAULT false,
-		token_length smallint NOT NULL,
 		root_token varchar(64) NOT NULL,
 		PRIMARY KEY (id)
 	);`
@@ -361,9 +359,9 @@ func initializeStandardConfiguration() error {
 	}
 
 	insertQuery := `INSERT INTO serverconfig 
-	(http_port,deny_limit,verify_tokens,token_length,root_token) 
+	(http_port,deny_limit,verify_tokens,root_token) 
 	VALUES($1,$2,$3,$4,$5);`
-	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, config.TokenLength, string(hashedtoken))
+	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
 	if err != nil {
 		return err
 	}
@@ -382,7 +380,6 @@ func printSystemConfiguration(config structs.ServerConfig) {
 	log.Println("deny limit   ", config.DenyLimit)
 	log.Println("verify tokens", config.VerifyTokens)
 	log.Println("root token   ", config.RootToken)
-	log.Println("token length ", config.TokenLength)
 	log.Println("----------------------------------------------------------------")
 	log.Println()
 }
@@ -461,7 +458,7 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	queryKey := "SELECT http_port,deny_limit,verify_tokens,token_length,root_token FROM serverconfig"
+	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token FROM serverconfig"
 	res, err := db.Query(queryKey)
 	if err != nil {
 		return structs.ServerConfig{}, err
@@ -472,15 +469,13 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 		var httpPort uint16
 		var denyLimit uint8
 		var verifyTokens bool
-		var tokenLength uint8
 		var rootToken string
 
-		res.Scan(&httpPort, &denyLimit, &verifyTokens, &tokenLength, &rootToken)
+		res.Scan(&httpPort, &denyLimit, &verifyTokens, &rootToken)
 		config = structs.ServerConfig{
 			RouterPort:   httpPort,
 			DenyLimit:    denyLimit,
 			VerifyTokens: verifyTokens,
-			TokenLength:  tokenLength,
 			RootToken:    rootToken,
 		}
 	}
@@ -497,9 +492,8 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 					SET 
 					http_port=$1, 
 					deny_limit=$2,
-					verify_tokens=$3,
-					token_length=$4`
-	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, config.TokenLength)
+					verify_tokens=$3`
+	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
 	if err != nil {
 		return structs.ServerConfig{}, err
 	}
@@ -508,12 +502,12 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 }
 
 //GetTokenLength returns the length of the desired token
-func GetTokenLength() (uint8, error) {
+func GetTokenLength(issuer structs.Issuer) (uint8, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlSelect := `SELECT token_length from serverconfig;`
-	result, err := db.Query(sqlSelect)
+	sqlSelect := `SELECT token_length from issuer where id=$1;`
+	result, err := db.Query(sqlSelect, issuer.ID)
 	if err != nil {
 		return 99, err
 	}
@@ -692,7 +686,7 @@ func GetIssuers() ([]structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
 
-	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer`
+	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer`
 	rows, errorMessage := db.Query(sqlSelect)
 	if errorMessage != nil {
 		return issuers, errorMessage
@@ -705,10 +699,11 @@ func GetIssuers() ([]structs.Issuer, error) {
 		var name string
 		var contact string
 		var key string
+		var tokenLength uint8
 		var enabled bool
-		rows.Scan(&id, &name, &contact, &key, &enabled)
+		rows.Scan(&id, &name, &contact, &key, &tokenLength, &enabled)
 
-		issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, Enabled: enabled}
+		issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, TokenLength: tokenLength, Enabled: enabled}
 		issuers[loop] = issuerStruct
 		loop++
 	}
@@ -775,10 +770,10 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 	}
 	issuer.Key = cryptedKey
 
-	sqlInsert := `INSERT INTO issuer (id, name, contact, key, enabled)
-				VALUES ($1, $2, $3, $4, $5)
+	sqlInsert := `INSERT INTO issuer (id, name, contact, key, token_length, enabled)
+				VALUES ($1, $2, $3, $4, $5, $6)
 				RETURNING id`
-	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.Enabled)
+	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.TokenLength, issuer.Enabled)
 	if err != nil {
 		result["error"] = err
 		return result, err
@@ -807,7 +802,7 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 func GetIssuer(issuer string) (structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer where name=$1`
+	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer where name=$1`
 	res, err := db.Query(sqlSelect, issuer)
 	if err != nil {
 		return structs.Issuer{}, err
@@ -818,14 +813,15 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 	var name string
 	var contact string
 	var key string
+	var tokenLength uint8
 	var enabled bool
 	if res.Next() {
-		res.Scan(&id, &name, &contact, &key, &enabled)
+		res.Scan(&id, &name, &contact, &key, &tokenLength, &enabled)
 	} else {
 		return structs.Issuer{}, errors.New("issuer not found in db")
 	}
 
-	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, Enabled: enabled}
+	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, TokenLength: tokenLength, Enabled: enabled}
 	return issuerStruct, nil
 }
 
@@ -833,7 +829,7 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 	db := CreateConnection()
 	defer db.Close()
-	sqlSelect := `SELECT id, name, contact, key, enabled FROM issuer where id=$1`
+	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer where id=$1`
 	res, err := db.Query(sqlSelect, issuerID)
 	if err != nil {
 		return structs.Issuer{}, err
@@ -844,12 +840,13 @@ func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 	var name string
 	var contact string
 	var key string
+	var tokenLength uint8
 	var enabled bool
 	if res.Next() {
-		res.Scan(&id, &name, &contact, &key, &enabled)
+		res.Scan(&id, &name, &contact, &key, &tokenLength, &enabled)
 	}
 
-	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, Enabled: enabled}
+	issuerStruct := structs.Issuer{ID: id, Name: name, Contact: contact, Key: key, TokenLength: tokenLength, Enabled: enabled}
 	return issuerStruct, nil
 }
 
@@ -860,11 +857,12 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 
 	sqlUpdate := `UPDATE issuer 
 				  SET 
-				  	contact=$1, 
-				  	enabled=$2 
+					contact=$1,
+					token_length=$2, 
+				  	enabled=$3
 				  WHERE 
-				  	id=$3`
-	res, err := db.Exec(sqlUpdate, issuer.Contact, issuer.Enabled, issuer.ID)
+				  	id=$4`
+	res, err := db.Exec(sqlUpdate, issuer.Contact, issuer.TokenLength, issuer.Enabled, issuer.ID)
 	if err != nil {
 		return false, err
 	}

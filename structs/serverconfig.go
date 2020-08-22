@@ -8,7 +8,6 @@ type ServerConfig struct {
 	DenyLimit    uint8  `json:"deny_limit"`
 	RootToken    string `json:"root_token"`
 	VerifyTokens bool   `json:"verify_tokens"`
-	TokenLength  uint8  `json:"token_length"`
 }
 
 //StandardServerConfig returns a standard server configuration
@@ -18,7 +17,6 @@ func StandardServerConfig() ServerConfig {
 		DenyLimit:    5,
 		RootToken:    uuid.New().String(),
 		VerifyTokens: false,
-		TokenLength:  6,
 	}
 	return config
 }

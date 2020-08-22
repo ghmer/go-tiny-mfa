@@ -179,15 +179,6 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
 		configuration.VerifyTokens = val.(bool)
 	}
-	if val, ok := jsonMap[middleware.TokenLengthKey]; ok {
-		localval := val.(float64)
-		var castedval uint8
-		castedval = uint8(localval)
-		if localval < 5 || localval > 8 {
-			returnError(fmt.Errorf("%d is not a valid length for a token. try something between 5-8", castedval), 500, w)
-		}
-		configuration.TokenLength = castedval
-	}
 
 	configuration, err = middleware.UpdateSystemConfiguration(configuration)
 	if err != nil {
@@ -299,6 +290,16 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 
 	if val, ok := jsonMap["contact"]; ok {
 		issuerStruct.Contact = val.(string)
+	}
+
+	if val, ok := jsonMap["token_length"]; ok {
+		localval := val.(float64)
+		var castedval uint8
+		castedval = uint8(localval)
+		if localval < 5 || localval > 8 {
+			returnError(fmt.Errorf("%d is not a valid length for a token. try something between 5-8", castedval), 500, w)
+		}
+		issuerStruct.TokenLength = castedval
 	}
 
 	result, err := middleware.UpdateIssuer(issuerStruct)
@@ -681,7 +682,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenlength, err := middleware.GetTokenLength()
+	tokenlength, err := middleware.GetTokenLength(userStruct.Issuer)
 	if err != nil {
 		returnError(err, 500, w)
 		return
@@ -734,7 +735,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenlength, err := middleware.GetTokenLength()
+	tokenlength, err := middleware.GetTokenLength(userStruct.Issuer)
 	if err != nil {
 		returnError(err, 500, w)
 		return
