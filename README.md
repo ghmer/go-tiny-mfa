@@ -33,14 +33,12 @@ key|type|description
 --- | --- | ---
 http_port|integer|the port to run on. Requires a restart!
 deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
-token_length|integer|Length of the desired totp tokens
 veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
 
 ```
 {
     "http_port" : 57687,
     "deny_limit": 3,
-    "token_length": 6,
     "verify_tokens": true
 }
 ```
@@ -59,12 +57,14 @@ key|type|description
 --- | --- | ---
 name|string|the name of this issuer
 contact|string|a mail adress of the responsible person
+token_length|integer|Length of the desired totp tokens
 enabled|boolean|whether this issuer is active
 
 ```
 {
     "name": "issuer.local",
     "contact": "demo@issuer.local",
+    "token_length": 6,
     "enabled": true
 }
 ```
@@ -73,11 +73,13 @@ enabled|boolean|whether this issuer is active
 key|type|description
 --- | --- | ---
 contact|string|a mail adress of the responsible person
+token_length|integer|Length of the desired totp tokens
 enabled|boolean|whether this issuer is active
 
 ```
 {
     "contact": "demo@issuer.local",
+    "token_length": 8,
     "enabled": true
 }
 ```
@@ -202,6 +204,7 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer' \
 --data-raw '{
     "name": "issuer.local",
     "contact": "contact@issuer.local",
+    "token_length:" 6,
     "enabled": true
 }'
 ```
