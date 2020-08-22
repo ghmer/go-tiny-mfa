@@ -360,7 +360,7 @@ func initializeStandardConfiguration() error {
 
 	insertQuery := `INSERT INTO serverconfig 
 	(http_port,deny_limit,verify_tokens,root_token) 
-	VALUES($1,$2,$3,$4,$5);`
+	VALUES($1,$2,$3,$4);`
 	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
 	if err != nil {
 		return err
