@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "d0de9858-4898-4e84-ab94-97f8720b69a5",
-		"name": "tinymfa Copy",
+		"_postman_id": "51fdcf6e-f35c-4b45-9063-6832cb65f41d",
+		"name": "tinymfa Postman Collection",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -13,7 +13,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -41,12 +42,13 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"enabled\": true\n}",
+					"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -78,7 +80,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -107,12 +110,13 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"enabled\" : true\n}",
+					"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"token_length\": 8,\n    \"enabled\" : true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -132,7 +136,8 @@
 						"issuer",
 						"test"
 					]
-				}
+				},
+				"description": "ATTENTION: When updating the token_length, your registered users MUST rescan the QRCode!"
 			},
 			"response": []
 		},
@@ -144,7 +149,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -174,8 +180,9 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
-						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
-						"type": "text"
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -212,8 +219,9 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
-						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
-						"type": "text"
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -250,8 +258,9 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
-						"value": "9b51e6b6-7a0a-4945-ac52-a40c9d24946b",
-						"type": "text"
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -290,7 +299,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -319,7 +329,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -357,7 +368,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -387,7 +399,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -426,7 +439,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -456,7 +470,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -487,7 +502,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -533,8 +549,9 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
-						"value": "8d282fcb-611d-400f-aee8-23afd043ac4c",
-						"type": "text"
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -561,13 +578,14 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
-						"value": "57687mer-dead-c0de-babe-cafea13c8054",
-						"type": "text"
+						"value": "INSERT_TOKEN_HERE",
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"deny_limit\": 10,\n    \"token_length\": 8\n}",
+					"raw": "{\n    \"deny_limit\": 10\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -599,7 +617,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
@@ -626,8 +645,9 @@
 				"header": [
 					{
 						"key": "tiny-mfa-access-token",
+						"value": "INSERT_TOKEN_HERE",
 						"type": "text",
-						"value": "INSERT_TOKEN_HERE"
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"body": {
@@ -665,7 +685,8 @@
 					{
 						"key": "tiny-mfa-access-token",
 						"value": "INSERT_TOKEN_HERE",
-						"type": "text"
+						"type": "text",
+						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
 					}
 				],
 				"url": {
