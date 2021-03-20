@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "51fdcf6e-f35c-4b45-9063-6832cb65f41d",
+		"_postman_id": "b8e4aeef-091f-4a30-93bc-130da9e6553c",
 		"name": "tinymfa Postman Collection",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -9,14 +9,7 @@
 			"name": "List Issuers",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer",
 					"protocol": "http",
@@ -38,14 +31,7 @@
 			"name": "Create Issuer",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
@@ -76,14 +62,7 @@
 			"name": "Get Issuer",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test",
 					"protocol": "http",
@@ -106,14 +85,7 @@
 			"name": "Update Issuer",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"token_length\": 8,\n    \"enabled\" : true\n}",
@@ -145,14 +117,7 @@
 			"name": "Delete Issuer",
 			"request": {
 				"method": "DELETE",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test",
 					"protocol": "http",
@@ -172,28 +137,9 @@
 		},
 		{
 			"name": "Get Issuer Tokens",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/token",
 					"protocol": "http",
@@ -216,14 +162,7 @@
 			"name": "Create Issuer Token",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"description\" : \"my access token\"\n}",
@@ -255,23 +194,7 @@
 			"name": "Delete Issuer Token",
 			"request": {
 				"method": "DELETE",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/token/TOKEN_ID",
 					"protocol": "http",
@@ -295,14 +218,7 @@
 			"name": "List Users",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/users",
 					"protocol": "http",
@@ -325,17 +241,10 @@
 			"name": "Create User",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@tinymfa.parzival.link\",\n    \"enabled\": true\n}",
+					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -364,14 +273,7 @@
 			"name": "Get User",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
 					"protocol": "http",
@@ -395,17 +297,10 @@
 			"name": "Update User",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\" : \"mario@issuer.net\"\n}",
+					"raw": "{\n    \"email\" : \"demo@issuer.net\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -435,14 +330,7 @@
 			"name": "Delete User",
 			"request": {
 				"method": "DELETE",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
 					"protocol": "http",
@@ -466,14 +354,7 @@
 			"name": "Get User QRCode",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo/totp",
 					"protocol": "http",
@@ -498,17 +379,10 @@
 			"name": "Validate Token",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"token\" : \"95869179\"\n}",
+					"raw": "{\n    \"token\" : \"7574352\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -546,14 +420,7 @@
 			"name": "Get System Configuration",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/system/configuration",
 					"protocol": "http",
@@ -575,14 +442,7 @@
 			"name": "Update System Configuration",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"deny_limit\": 10\n}",
@@ -613,14 +473,7 @@
 			"name": "Get Audit",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:57687/api/v1/system/audit",
 					"protocol": "http",
@@ -637,77 +490,47 @@
 				}
 			},
 			"response": []
-		},
-		{
-			"name": "Create Issuer Access Token",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"description\": \"another key\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/token",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"token"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete Issuer Access Token",
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "tiny-mfa-access-token",
-						"value": "INSERT_TOKEN_HERE",
-						"type": "text",
-						"description": "the token that was created upon issuer creation. Needed if token-verification has globally been turned on via the system configuration."
-					}
-				],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/token/INSERT_TOKEN_ID",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"token",
-						"INSERT_TOKEN_ID"
-					]
-				}
-			},
-			"response": []
 		}
 	],
-	"protocolProfileBehavior": {}
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "INSERT_TOKEN_HERE",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "tiny-mfa-access-token",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Token_Variable",
+			"value": "INSERT_TOKEN_HERE"
+		}
+	]
 }
