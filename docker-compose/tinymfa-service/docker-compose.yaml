@@ -26,6 +26,9 @@ services:
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=tinymfa
         restart: unless-stopped
+        depends_on:
+            - database
+
 volumes: 
     data:
     tinysecret:
