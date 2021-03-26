@@ -247,4 +247,5 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.loca
 ## Todo
  - authorization model
  - administrative UI
+ - think about generic middleware concept
  - ...
