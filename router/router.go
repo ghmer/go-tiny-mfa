@@ -25,9 +25,9 @@ const VerifyTokenHeaderKey string = "tiny-mfa-access-token"
 func Router() *mux.Router {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", Welcome).Methods("GET")
-
 	//API Endpoints
+	//Return health
+	router.HandleFunc("/api/v1/health", Healthcheck).Methods("GET")
 	//Return audit entries
 	router.HandleFunc("/api/v1/system/audit", GetAuditEntries).Methods("GET")
 	//Return current system configuration
@@ -71,8 +71,8 @@ func Router() *mux.Router {
 	return router
 }
 
-// Welcome will return a single Hello World
-func Welcome(w http.ResponseWriter, r *http.Request) {
+// Healthcheck will return a json object if tiny-mfa is alive
+func Healthcheck(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	// send the response
