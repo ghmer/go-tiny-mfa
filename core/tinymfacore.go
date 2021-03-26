@@ -186,7 +186,7 @@ func ValidateToken(token int, key []byte, unixTimestamp int64, tokenlength uint8
 	// the token could not be verified with a current timestamp, but maybe the
 	// user missed the timewindow for that token. Verifying it against a token
 	// that was valid up to 30 seconds ago
-	if result == false {
+	if !result {
 		generatedToken, err := GenerateValidToken(unixTimestamp, key, Past, tokenlength)
 		if err != nil {
 			return false, err
@@ -198,7 +198,7 @@ func ValidateToken(token int, key []byte, unixTimestamp int64, tokenlength uint8
 
 	// we still could not verify the token. Doing a last check against the token
 	// that becomes valid in the next window.
-	if result == false {
+	if !result {
 		generatedToken, err := GenerateValidToken(unixTimestamp, key, Future, tokenlength)
 		if err != nil {
 			return false, err
