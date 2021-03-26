@@ -781,7 +781,7 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		result["error"] = errors.New("Insert Operation was not successful")
+		result["error"] = errors.New("insert operation was not successful")
 		return result, err
 	}
 
@@ -869,7 +869,7 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return false, errors.New("Update Operation was not successful")
+		return false, errors.New("update operation was not successful")
 	}
 	return true, nil
 }
@@ -897,7 +897,7 @@ func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return false, fmt.Errorf("Operation affected %d rows", rows)
+		return false, fmt.Errorf("operation affected %d rows", rows)
 	}
 
 	return true, nil
@@ -975,7 +975,7 @@ func CreateUser(user structs.User) (structs.User, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return structs.User{}, errors.New("Insert Operation was not successful")
+		return structs.User{}, errors.New("insert operation was not successful")
 	}
 
 	return user, nil
@@ -1025,7 +1025,7 @@ func UpdateUser(user structs.User) (bool, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return false, errors.New("Update Operation was not successful")
+		return false, errors.New("update operation was not successful")
 	}
 	return true, nil
 }
@@ -1047,7 +1047,7 @@ func DeleteUser(user structs.User) (bool, error) {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return false, fmt.Errorf("Operation affected %d rows", rows)
+		return false, fmt.Errorf("operation affected %d rows", rows)
 	}
 
 	return true, nil
@@ -1069,7 +1069,7 @@ func InsertToken(token structs.Token) error {
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		return errors.New("Insert Operation was not successful")
+		return errors.New("insert operation was not successful")
 	}
 
 	return nil
