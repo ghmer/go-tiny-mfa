@@ -99,7 +99,7 @@ func GenerateMessage(timestamp int64, offsetType uint8) int64 {
 	timestamp = timestamp - (timestamp % 30)
 
 	// finally, generating the message by dividing the flattened timestamp by 30
-	message := math.Floor(float64(timestamp / 30))
+	message := math.Floor(float64(timestamp) / 30.0)
 
 	return int64(message)
 }
