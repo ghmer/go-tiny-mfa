@@ -1,6 +1,0 @@
-FROM alpine:latest
-EXPOSE 57687
-RUN mkdir -p /opt/go-tiny-mfa/bin
-RUN mkdir -p /opt/go-tiny-mfa/secrets
-COPY build/go-tiny-mfa-arm /opt/go-tiny-mfa/bin/tiny-mfa
-CMD ["/opt/go-tiny-mfa/bin/tiny-mfa"]
