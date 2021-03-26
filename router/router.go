@@ -652,7 +652,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//is either user or issuer disabled?
-	if !userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
+	if !userStruct.Enabled || !userStruct.Issuer.Enabled {
 		returnError(err, 500, w)
 		return
 	}
@@ -727,7 +727,7 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
+	if !userStruct.Enabled || !userStruct.Issuer.Enabled {
 		returnError(errors.New("issuer or user is disabled"), 500, w)
 		return
 	}
