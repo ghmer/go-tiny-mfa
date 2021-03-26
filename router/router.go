@@ -166,14 +166,12 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	//casting map values
 	if val, ok := jsonMap[middleware.RouterPortKey]; ok {
 		localval := val.(float64)
-		var castedval uint16
-		castedval = uint16(localval)
+		var castedval uint16 = uint16(localval)
 		configuration.RouterPort = castedval
 	}
 	if val, ok := jsonMap[middleware.DenyLimitKey]; ok {
 		localval := val.(float64)
-		var castedval uint8
-		castedval = uint8(localval)
+		var castedval uint8 = uint8(localval)
 		configuration.DenyLimit = castedval
 	}
 	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
@@ -294,8 +292,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 
 	if val, ok := jsonMap["token_length"]; ok {
 		localval := val.(float64)
-		var castedval uint8
-		castedval = uint8(localval)
+		var castedval uint8 = uint8(localval)
 		if localval < 5 || localval > 8 {
 			returnError(fmt.Errorf("%d is not a valid length for a token. try something between 5-8", castedval), 500, w)
 		}
@@ -655,7 +652,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//is either user or issuer disabled?
-	if userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
+	if !userStruct.Enabled == false || userStruct.Issuer.Enabled == false {
 		returnError(err, 500, w)
 		return
 	}
