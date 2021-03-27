@@ -34,7 +34,7 @@ const (
 const SecretFilePath string = "/opt/go-tiny-mfa/secrets/key"
 
 // CreateConnection creates a connection to a postgres DB
-func CreateConnection() *sql.DB {
+func CreateConnection() (*sql.DB, error) {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
 	dbhost := os.Getenv("POSTGRES_HOST")
@@ -44,15 +44,26 @@ func CreateConnection() *sql.DB {
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	// check the connection
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return db
+	return db, nil
+}
+
+//PingDatabase tries to establish a connection
+func PingDatabase() error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return db.Ping()
 }
 
 //InitializeSystem will initialize the database and the root key
@@ -98,7 +109,10 @@ func initializeDatabase() error {
 
 //initializes the user table in the database
 func initializeUserTable() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
 		id varchar(45) NOT NULL,
@@ -110,7 +124,7 @@ func initializeUserTable() error {
 		unique (username, email, issuer_id),
 		PRIMARY KEY (id)
 	);`
-	_, err := db.Exec(createstring)
+	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
 	}
@@ -119,7 +133,10 @@ func initializeUserTable() error {
 
 //initializes the audit table in the database
 func initializeAuditTable() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS audit (
 		id serial NOT NULL,
@@ -130,7 +147,7 @@ func initializeAuditTable() error {
 		validated_on timestamp NOT NULL,
 		PRIMARY KEY (id)
 	);`
-	_, err := db.Exec(createstring)
+	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
 	}
@@ -139,13 +156,16 @@ func initializeAuditTable() error {
 
 //CreateAuditEntry creates an audit in the database
 func CreateAuditEntry(user structs.User, validation structs.Validation) error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	insertString := `INSERT INTO audit(issuer, username, message, validated_on, success)
 					 VALUES($1, $2, $3, $4, $5)`
 
-	_, err := db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
+	_, err = db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
 	if err != nil {
 		return err
 	}
@@ -154,7 +174,10 @@ func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 
 //GetFailedValidationCount returns the number of times a user failed validation for a given message
 func GetFailedValidationCount(user structs.User, message int64) (int, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
 	defer db.Close()
 	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=$3 AND success=$4`
 	rows, err := db.Query(queryString, user.Issuer.Name, user.Name, message, false)
@@ -199,14 +222,16 @@ func createAuditQueryString(parameters structs.AuditQueryParameter) (string, int
 }
 
 func countAuditEntries(parameters structs.AuditQueryParameter) (int, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
 	defer db.Close()
 
 	parameters.BaseQuery = `SELECT COUNT(id) FROM audit`
 	sqlCountSelect, paramID, params := createAuditQueryString(parameters)
 
 	var res *sql.Rows
-	var err error
 	switch paramID {
 	case 0:
 		res, err = db.Query(sqlCountSelect)
@@ -237,7 +262,10 @@ func GetAuditEntries(parameters structs.AuditQueryParameter) ([]structs.AuditEnt
 	}
 	audits := make([]structs.AuditEntry, count)
 
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return nil, err
+	}
 	defer db.Close()
 	parameters.BaseQuery = `SELECT id, issuer, username, message, success, validated_on FROM audit`
 	sqlQuery, paramID, params := createAuditQueryString(parameters)
@@ -276,7 +304,10 @@ func GetAuditEntries(parameters structs.AuditQueryParameter) ([]structs.AuditEnt
 
 //initializes the issuer table in the database
 func initializeIssuerTable() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS issuer (
 		id varchar(45) NOT NULL,
@@ -287,7 +318,7 @@ func initializeIssuerTable() error {
 		enabled boolean DEFAULT '1',
 		PRIMARY KEY (id)
 	);`
-	_, err := db.Exec(createstring)
+	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
 	}
@@ -296,7 +327,10 @@ func initializeIssuerTable() error {
 
 //initializes the access_token table
 func initializeAccessTokenTable() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS access_tokens (
 		id varchar(45) NOT NULL,
@@ -307,7 +341,7 @@ func initializeAccessTokenTable() error {
 		last_access_time timestamp,
 		PRIMARY KEY (access_token)
 	);`
-	_, err := db.Exec(createstring)
+	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
 	}
@@ -316,7 +350,10 @@ func initializeAccessTokenTable() error {
 
 //initializes the system table in the database
 func initializeSystemTable() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS serverconfig (
 		id serial NOT NULL,
@@ -326,7 +363,7 @@ func initializeSystemTable() error {
 		root_token varchar(64) NOT NULL,
 		PRIMARY KEY (id)
 	);`
-	_, err := db.Exec(createstring)
+	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
 	}
@@ -349,7 +386,10 @@ func initializeSystemTable() error {
 
 //initialize standard configuration
 func initializeStandardConfiguration() error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	var config = structs.StandardServerConfig()
@@ -429,10 +469,13 @@ func escape(source string) string {
 
 //GetSystemProperty returns the value for the given key
 func GetSystemProperty(key string) (string, error) {
-	db := CreateConnection()
+	var value string
+	db, err := CreateConnection()
+	if err != nil {
+		return value, err
+	}
 	defer db.Close()
 
-	var value string
 	queryKey := fmt.Sprintf("SELECT %s FROM serverconfig;", escape(key))
 	res, err := db.Query(queryKey)
 	if err != nil {
@@ -449,7 +492,10 @@ func GetSystemProperty(key string) (string, error) {
 
 //GetSystemConfiguration returns the system config
 func GetSystemConfiguration() (structs.ServerConfig, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.ServerConfig{}, err
+	}
 	defer db.Close()
 
 	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token FROM serverconfig"
@@ -479,7 +525,10 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 
 //UpdateSystemConfiguration updates the system configuration
 func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfig, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.ServerConfig{}, err
+	}
 	defer db.Close()
 
 	sqlQuery := `UPDATE serverconfig 
@@ -487,7 +536,7 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 					http_port=$1, 
 					deny_limit=$2,
 					verify_tokens=$3`
-	_, err := db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
+	_, err = db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
 	if err != nil {
 		return structs.ServerConfig{}, err
 	}
@@ -497,7 +546,10 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 
 //GetTokenLength returns the length of the desired token
 func GetTokenLength(issuer structs.Issuer) (uint8, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return 99, err
+	}
 	defer db.Close()
 
 	sqlSelect := `SELECT token_length from issuer where id=$1;`
@@ -617,7 +669,10 @@ func checkCount(rows *sql.Rows) (int, error) {
 }
 
 func checkCountWithQuery(sqlQuery string) (int, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
 	defer db.Close()
 
 	res, err := db.Query(sqlQuery)
@@ -635,7 +690,10 @@ func checkCountWithQuery(sqlQuery string) (int, error) {
 }
 
 func countIssuers() (int, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
 	defer db.Close()
 	sqlCountSelect := `SELECT COUNT(name) FROM issuer;`
 	res, err := db.Query(sqlCountSelect)
@@ -653,7 +711,10 @@ func countIssuers() (int, error) {
 }
 
 func countIssuerAccessTokens(issuer structs.Issuer) (int, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return -1, err
+	}
 	defer db.Close()
 	sqlCountSelect := `SELECT COUNT(id) FROM access_tokens where ref_id_issuer=$1;`
 	res, err := db.Query(sqlCountSelect, issuer.ID)
@@ -677,7 +738,10 @@ func GetIssuers() ([]structs.Issuer, error) {
 		return nil, err
 	}
 	issuers := make([]structs.Issuer, count)
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return issuers, err
+	}
 	defer db.Close()
 
 	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer`
@@ -712,7 +776,10 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 		return nil, err
 	}
 	tokens := make([]map[string]string, count)
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return tokens, err
+	}
 	defer db.Close()
 
 	sqlSelect := `SELECT id, description, created_on, last_access_time FROM access_tokens where ref_id_issuer=$1`
@@ -745,10 +812,12 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 
 //CreateIssuer inserts a Issuer struct to the database
 func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
-	db := CreateConnection()
-	defer db.Close()
-
 	var result map[string]interface{} = make(map[string]interface{})
+	db, err := CreateConnection()
+	if err != nil {
+		return result, err
+	}
+	defer db.Close()
 
 	issuer.ID = uuid.New().String()
 	rootKey, err := GetRootKey()
@@ -794,7 +863,10 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 
 //GetIssuer returns the requested issuer from the database as Issuer struct
 func GetIssuer(issuer string) (structs.Issuer, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.Issuer{}, err
+	}
 	defer db.Close()
 	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer where name=$1`
 	res, err := db.Query(sqlSelect, issuer)
@@ -821,7 +893,10 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 
 //GetIssuerByID returns the requested issuer from the database as Issuer struct
 func GetIssuerByID(issuerID string) (structs.Issuer, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.Issuer{}, err
+	}
 	defer db.Close()
 	sqlSelect := `SELECT id, name, contact, key, token_length, enabled FROM issuer where id=$1`
 	res, err := db.Query(sqlSelect, issuerID)
@@ -846,7 +921,10 @@ func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 
 //UpdateIssuer updates an existing issuer
 func UpdateIssuer(issuer structs.Issuer) (bool, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return false, err
+	}
 	defer db.Close()
 
 	sqlUpdate := `UPDATE issuer 
@@ -870,7 +948,10 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 
 //DeleteIssuer deletes an issuer from the database
 func DeleteIssuer(issuer structs.Issuer) (bool, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return false, err
+	}
 	defer db.Close()
 
 	sqlDelete := `DELETE FROM issuer WHERE id=$1`
@@ -899,7 +980,10 @@ func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 
 //GetUsers returns all users for a given issuer
 func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return make([]structs.User, 0), err
+	}
 	defer db.Close()
 	sqlCountSelect := `SELECT COUNT(username) FROM accounts WHERE issuer_id=$1;`
 	res, err := db.Query(sqlCountSelect, issuer.ID)
@@ -957,7 +1041,10 @@ func CreateUser(user structs.User) (structs.User, error) {
 		user.Key = cryptedKey
 	}
 
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.User{}, err
+	}
 	defer db.Close()
 	sqlInsert := `INSERT INTO accounts (id, username, email, issuer_id, key, enabled)
 				VALUES ($1, $2, $3, $4, $5, $6)
@@ -977,7 +1064,10 @@ func CreateUser(user structs.User) (structs.User, error) {
 
 //GetUser returns a User struct from the database
 func GetUser(user string, issuer structs.Issuer) (structs.User, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.User{}, err
+	}
 	defer db.Close()
 	sqlSelect := `SELECT id, username, email, key, enabled FROM accounts where username=$1 and issuer_id=$2`
 	res, err := db.Query(sqlSelect, user, issuer.ID)
@@ -1003,7 +1093,10 @@ func GetUser(user string, issuer structs.Issuer) (structs.User, error) {
 
 //UpdateUser updates an existing user
 func UpdateUser(user structs.User) (bool, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return false, err
+	}
 	defer db.Close()
 
 	sqlUpdate := `UPDATE accounts 
@@ -1026,7 +1119,10 @@ func UpdateUser(user structs.User) (bool, error) {
 
 //DeleteUser deletes a user from the database
 func DeleteUser(user structs.User) (bool, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return false, err
+	}
 	defer db.Close()
 	sqlDelete := `DELETE FROM accounts WHERE id=$1 and issuer_id=$2`
 	res, err := db.Exec(sqlDelete, user.ID, user.Issuer.ID)
@@ -1049,7 +1145,10 @@ func DeleteUser(user structs.User) (bool, error) {
 
 //InsertToken inserts an access token to the database
 func InsertToken(token structs.Token) error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
@@ -1071,37 +1170,49 @@ func InsertToken(token structs.Token) error {
 
 //DeleteTokens deletes all tokens for a given issuer id
 func DeleteTokens(issuerid string) error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_issuer=$1`
-	_, err := db.Exec(sqlDelete, issuerid)
+	_, err = db.Exec(sqlDelete, issuerid)
 	return err
 }
 
 //DeleteToken deletes all tokens for a given issuer id
 func DeleteToken(issuerid, tokenid string) error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	sqlDelete := `DELETE FROM access_tokens WHERE ref_id_issuer=$1 and id=$2`
-	_, err := db.Exec(sqlDelete, issuerid, tokenid)
+	_, err = db.Exec(sqlDelete, issuerid, tokenid)
 	return err
 }
 
 //DeleteUsers deletes all tokens for a given object id
 func DeleteUsers(objectid string) error {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	sqlDelete := `DELETE FROM accounts WHERE issuer_id=$1`
-	_, err := db.Exec(sqlDelete, objectid)
+	_, err = db.Exec(sqlDelete, objectid)
 	return err
 }
 
 //ValidateToken returns true if a token could be looked up in the db
 func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
-	db := CreateConnection()
+	db, err := CreateConnection()
+	if err != nil {
+		return false, err
+	}
 	defer db.Close()
 
 	sqlCount := `SELECT COUNT(access_token) FROM access_tokens where ref_id_issuer=$1`
@@ -1139,18 +1250,22 @@ func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
 	for _, token := range tokens {
 		err = utils.BycrptVerify([]byte(token), []byte(submittedToken))
 		if err == nil {
-			updateTokenAccessTime(token)
-			return true, nil
+			err = updateTokenAccessTime(token)
+			return true, err
 		}
 	}
 
 	return false, errors.New("token not verified")
 }
 
-func updateTokenAccessTime(token string) {
-	db := CreateConnection()
+func updateTokenAccessTime(token string) error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	sqlCount := `UPDATE access_tokens SET last_access_time=$1 where access_token=$2`
 	db.Exec(sqlCount, time.Now(), token)
+	return nil
 }
