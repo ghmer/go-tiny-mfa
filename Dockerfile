@@ -7,4 +7,5 @@ RUN addgroup --gid 57687 tinymfa && adduser --no-create-home --disabled-password
 RUN chown -R tinymfa:tinymfa /opt/go-tiny-mfa
 WORKDIR /opt/go-tiny-mfa
 USER tinymfa
+HEALTHCHECK --interval=5s --timeout=5s --start-period=30s CMD /opt/go-tiny-mfa/bin/tiny-mfa --healthcheck
 CMD ["/opt/go-tiny-mfa/bin/tiny-mfa"]
