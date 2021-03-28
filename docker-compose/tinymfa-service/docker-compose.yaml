@@ -13,7 +13,7 @@ services:
         restart: unless-stopped
     
     tinymfa:
-        image: tinymfa/go-tiny-mfa
+        image: tinymfa/go-tiny-mfa:latest
         networks:
             - tiny-mfa-net
         ports:

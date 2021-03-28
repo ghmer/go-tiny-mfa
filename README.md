@@ -157,12 +157,12 @@ token|string|the token to validate
 ```
 
 ## docker-compose
-This will result in a working tiny-mfa instance:
+This should result in a working tiny-mfa instance:
 ```
 version: "3"
 services:
     database:
-        image: postgres:latest
+        image: postgres:12-alpine
         networks: 
             - tiny-mfa-net
         volumes:
@@ -171,9 +171,10 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=tinymfa
+        restart: unless-stopped
     
     tinymfa:
-        image: tinymfa/go-tiny-mfa
+        image: tinymfa/go-tiny-mfa:latest
         networks:
             - tiny-mfa-net
         ports:
@@ -186,12 +187,16 @@ services:
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=tinymfa
         restart: unless-stopped
+        depends_on:
+            - database
+
 volumes: 
     data:
     tinysecret:
 
 networks: 
     tiny-mfa-net:
+
 ```
 
 ## quickstart
