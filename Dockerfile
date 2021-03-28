@@ -1,11 +1,16 @@
 FROM alpine:latest
 EXPOSE 57687
+
 ARG ARCH=amd64
-RUN mkdir -p /opt/go-tiny-mfa/{bin,secrets}
+ARG USER_ID=57687
+ARG GROUP_ID=57687
+
+USER root
+RUN mkdir -p /opt/go-tiny-mfa/bin && mkdir -p /opt/go-tiny-mfa/secrets && touch /opt/go-tiny-mfa/secrets/.placeholder
 COPY build/go-tiny-mfa-${ARCH} /opt/go-tiny-mfa/bin/tiny-mfa
-RUN addgroup --gid 57687 tinymfa && adduser --no-create-home --disabled-password --ingroup tinymfa --shell /bin/bash --home /opt/go-tiny-mfa --uid 57687 tinymfa
-RUN chown -R tinymfa:tinymfa /opt/go-tiny-mfa
-WORKDIR /opt/go-tiny-mfa
+RUN addgroup --gid ${GROUP_ID} tinymfa && adduser --no-create-home --disabled-password --ingroup tinymfa --shell /bin/bash --home /opt/go-tiny-mfa --uid ${USER_ID} tinymfa
+RUN chown -R ${USER_ID}:${GROUP_ID} /opt/go-tiny-mfa
+
 USER tinymfa
 HEALTHCHECK --interval=5s --timeout=5s --start-period=30s CMD /opt/go-tiny-mfa/bin/tiny-mfa --healthcheck
 CMD ["/opt/go-tiny-mfa/bin/tiny-mfa"]
