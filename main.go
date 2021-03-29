@@ -27,30 +27,45 @@ func init() {
 	if !DoHealthcheck {
 		log.Println("initializing tinymfa")
 
-		// Check if needed environment variables have been set
+		// check if needed environment variables have been set
 		err := checkEnvironmentVariables()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Initialize System
-		err = middleware.InitializeSystem()
+		// check database connectivity
+		err = middleware.PingDatabase()
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		// check whether system was already initialized
+		version, err := middleware.GetSystemProperty(middleware.SchemaVersionKey)
+		if err != nil {
+			// initialize system
+			err = middleware.InitializeSystem()
+			if err != nil {
+				log.Fatal(err)
+			}
+			version, err = middleware.GetSystemProperty(middleware.SchemaVersionKey)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		log.Println("connected to database schema version", version)
 		log.Println("initialization finished")
 	}
 }
 
 func main() {
-	// Either a healthcheck or a router
+	// either a healthcheck or a router
 	if DoHealthcheck {
 		returncode := Healthcheck()
 		os.Exit(returncode)
 	}
 
-	// Create the router
+	// create the router
 	r := router.Router()
 	config, err := middleware.GetSystemConfiguration()
 	if err != nil {
