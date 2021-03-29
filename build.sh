@@ -1,7 +1,8 @@
 #!/bin/bash
 
 DOCKER=$(which docker)
-REVISION=$(git rev-parse --short master)
+COMMIT=$(git rev-parse --short master)
+REVISION=$(git rev-parse --all --count)
 
 #sanity checks
 if [ -z ${DOCKER} ]; then
@@ -40,18 +41,18 @@ ${DOCKER} system prune --volumes --all -f
 #create docker image for linux/amd64
 ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:amd64 \
     --platform=linux/amd64  --build-arg ARCH=amd64 \
-    --label version=${VERSION} --label revision=${REVISION} \
-    --file Dockerfile .
+    --label version=${VERSION} --label commit=${COMMIT} \
+    --label revision=${REVISION} --file Dockerfile .
 #create docker image for linux/arm64
 ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:arm64 \
     --platform=linux/arm64  --build-arg ARCH=arm64 \
-    --label version=${VERSION} --label revision=${REVISION} \
-    --file Dockerfile .
+    --label version=${VERSION} --label commit=${COMMIT} \
+    --label revision=${REVISION} --file Dockerfile .
 #create docker image for linux/arm
 ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:arm   \
     --platform=linux/arm/v6 --build-arg ARCH=arm   \
-    --label version=${VERSION} --label revision=${REVISION} \
-    --file Dockerfile .
+    --label version=${VERSION} --label commit=${COMMIT} \
+    --label revision=${REVISION} --file Dockerfile .
 
 #push images to registry
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:arm
