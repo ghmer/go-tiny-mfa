@@ -2,7 +2,7 @@
 
 DOCKER=$(which docker)
 COMMIT=$(git rev-parse --short master)
-REVISION=$(git rev-parse --all --count)
+REVISION=$(git rev-list --all --count)
 
 #sanity checks
 if [ -z ${DOCKER} ]; then
