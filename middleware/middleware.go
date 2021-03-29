@@ -28,6 +28,12 @@ const (
 	RootTokenKey = "root_token"
 	//VerifyTokenKey is the key of the verify token entry in serverconfig table
 	VerifyTokenKey = "verify_tokens"
+	//SchemaVersionKey is the key of the schema version entry in serverconfig table
+	SchemaVersionKey = "schema_version"
+	//QrCodeBgColorKey is the key of the schema version entry in serverconfig table
+	QrCodeBgColorKey = "qrcode_bgcolor"
+	//QrCodeFgColorKey is the key of the schema version entry in serverconfig table
+	QrCodeFgColorKey = "qrcode_fgcolor"
 )
 
 //SecretFilePath location of the root key
@@ -368,6 +374,9 @@ func initializeSystemTable() error {
 		deny_limit smallint NOT NULL,
 		verify_tokens bool DEFAULT false,
 		root_token varchar(64) NOT NULL,
+		schema_version smallint NOT NULL,
+		qrcode_bgcolor varchar(30) NOT NULL,
+		qrcode_fgcolor varchar(30) NOT NULL,
 		PRIMARY KEY (id)
 	);`
 	_, err = db.Exec(createstring)
@@ -393,9 +402,18 @@ func initializeStandardConfiguration() (structs.ServerConfig, error) {
 	}
 
 	insertQuery := `INSERT INTO serverconfig 
-	(http_port,deny_limit,verify_tokens,root_token) 
-	VALUES($1,$2,$3,$4);`
-	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
+	(http_port,deny_limit,verify_tokens,root_token, schema_version, qrcode_bgcolor, qrcode_fgcolor) 
+	VALUES($1,$2,$3,$4,$5,$6,$7);`
+	_, err = db.Exec(
+		insertQuery,
+		config.RouterPort,
+		config.DenyLimit,
+		config.VerifyTokens,
+		string(hashedtoken),
+		config.SchemaVersion,
+		config.QrCodeBgColor.ToString(),
+		config.QrCodeFgColor.ToString())
+
 	if err != nil {
 		return structs.ServerConfig{}, err
 	}
@@ -497,7 +515,7 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 	}
 	defer db.Close()
 
-	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token FROM serverconfig"
+	queryKey := "SELECT http_port,deny_limit,verify_tokens,root_token,schema_version,qrcode_bgcolor,qrcode_fgcolor FROM serverconfig"
 	res, err := db.Query(queryKey)
 	if err != nil {
 		return structs.ServerConfig{}, err
@@ -509,17 +527,51 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 		var denyLimit uint8
 		var verifyTokens bool
 		var rootToken string
+		var schemaVersion uint8
+		var bgcolor string
+		var fgcolor string
 
-		res.Scan(&httpPort, &denyLimit, &verifyTokens, &rootToken)
+		res.Scan(&httpPort, &denyLimit, &verifyTokens, &rootToken, &schemaVersion, &bgcolor, &fgcolor)
 		config = structs.ServerConfig{
-			RouterPort:   httpPort,
-			DenyLimit:    denyLimit,
-			VerifyTokens: verifyTokens,
-			RootToken:    rootToken,
+			RouterPort:    httpPort,
+			DenyLimit:     denyLimit,
+			VerifyTokens:  verifyTokens,
+			RootToken:     rootToken,
+			SchemaVersion: schemaVersion,
+			QrCodeBgColor: structs.ColorSettingFromString(bgcolor),
+			QrCodeFgColor: structs.ColorSettingFromString(fgcolor),
 		}
 	}
 
 	return config, nil
+}
+
+//GetSystemConfiguration returns the system config
+func GetQrCodeColors() (structs.ColorSetting, structs.ColorSetting, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.ColorSetting{}, structs.ColorSetting{}, err
+	}
+	defer db.Close()
+
+	queryKey := "SELECT qrcode_bgcolor,qrcode_fgcolor FROM serverconfig"
+	res, err := db.Query(queryKey)
+	if err != nil {
+		return structs.ColorSetting{}, structs.ColorSetting{}, err
+	}
+	defer res.Close()
+	var bgcolorStruct, fgcolorStruct structs.ColorSetting
+	if res.Next() {
+		var bgcolor string
+		var fgcolor string
+
+		res.Scan(&bgcolor, &fgcolor)
+
+		bgcolorStruct = structs.ColorSettingFromString(bgcolor)
+		fgcolorStruct = structs.ColorSettingFromString(fgcolor)
+	}
+
+	return bgcolorStruct, fgcolorStruct, nil
 }
 
 //UpdateSystemConfiguration updates the system configuration
@@ -534,8 +586,17 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 					SET 
 					http_port=$1, 
 					deny_limit=$2,
-					verify_tokens=$3`
-	_, err = db.Exec(sqlQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens)
+					verify_tokens=$3,
+					schema_version=$4,
+					qrcode_bgcolor=$5,
+					qrcode_fgcolor=$6`
+	_, err = db.Exec(sqlQuery,
+		config.RouterPort,
+		config.DenyLimit,
+		config.VerifyTokens,
+		config.SchemaVersion,
+		config.QrCodeBgColor.ToString(),
+		config.QrCodeFgColor.ToString())
 	if err != nil {
 		return structs.ServerConfig{}, err
 	}
