@@ -591,8 +591,6 @@ func initializeRootKey() (bool, error) {
 			if err != nil {
 				return keycreated, err
 			}
-			log.Println("root key was created at this location:", SecretFilePath)
-			log.Println("it is advised to create a backup of this file.")
 			defer os.Chmod(SecretFilePath, 0400)
 
 			keycreated = true
