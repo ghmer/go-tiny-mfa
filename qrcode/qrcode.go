@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/structs"
+	"image/color"
 	"strings"
 
 	qrcode "github.com/skip2/go-qrcode"
@@ -20,7 +21,15 @@ func GenerateQrCode(user structs.User, digits uint8) ([]byte, error) {
 		return nil, err
 	}
 	otpauthURL := buildPayload(user.Issuer.Name, user.Name, secret, digits)
-	png, err = qrcode.Encode(otpauthURL, qrcode.Medium, 256)
+	code, err := qrcode.New(otpauthURL, qrcode.Medium)
+	if err != nil {
+		return nil, err
+	}
+
+	code.BackgroundColor = color.Transparent
+	code.ForegroundColor = color.Black
+
+	png, err = code.PNG(256)
 
 	return png, err
 }
