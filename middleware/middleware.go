@@ -68,43 +68,50 @@ func PingDatabase() error {
 
 //InitializeSystem will initialize the database and the root key
 func InitializeSystem() error {
-	err := initializeDatabase()
+	config, err := initializeDatabase()
 	if err != nil {
 		return err
 	}
 
-	err = initializeRootKey()
+	keycreated, err := initializeRootKey()
 	if err != nil {
 		return err
 	}
+
+	printSystemConfiguration(config, keycreated)
 
 	return nil
 }
 
 //initializeDatabase will create the issuer and user tables
-func initializeDatabase() error {
+func initializeDatabase() (structs.ServerConfig, error) {
 	err := initializeSystemTable()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 	err = initializeIssuerTable()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 	err = initializeUserTable()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 	err = initializeAuditTable()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 	err = initializeAccessTokenTable()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 
-	return nil
+	config, err := initializeStandardConfiguration()
+	if err != nil {
+		return structs.ServerConfig{}, err
+	}
+
+	return config, nil
 }
 
 //initializes the user table in the database
@@ -368,34 +375,21 @@ func initializeSystemTable() error {
 		return err
 	}
 
-	queryKey := "SELECT COUNT(id) FROM serverconfig"
-	count, err := checkCountWithQuery(queryKey)
-	if err != nil {
-		return err
-	}
-
-	if count < 1 {
-		err = initializeStandardConfiguration()
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
 //initialize standard configuration
-func initializeStandardConfiguration() error {
+func initializeStandardConfiguration() (structs.ServerConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 	defer db.Close()
 
 	var config = structs.StandardServerConfig()
 	hashedtoken, err := utils.BcryptHash([]byte(config.RootToken))
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 
 	insertQuery := `INSERT INTO serverconfig 
@@ -403,15 +397,13 @@ func initializeStandardConfiguration() error {
 	VALUES($1,$2,$3,$4);`
 	_, err = db.Exec(insertQuery, config.RouterPort, config.DenyLimit, config.VerifyTokens, string(hashedtoken))
 	if err != nil {
-		return err
+		return structs.ServerConfig{}, err
 	}
 
-	printSystemConfiguration(config)
-
-	return nil
+	return config, nil
 }
 
-func printSystemConfiguration(config structs.ServerConfig) {
+func printSystemConfiguration(config structs.ServerConfig, addKeyMessage bool) {
 	log.Println()
 	log.Println("----------------------------------------------------------------")
 	log.Println("tiny-mfa configuration")
@@ -421,7 +413,14 @@ func printSystemConfiguration(config structs.ServerConfig) {
 	log.Println("verify tokens", config.VerifyTokens)
 	log.Println("root token   ", config.RootToken)
 	log.Println("----------------------------------------------------------------")
-	log.Println()
+	if addKeyMessage {
+		log.Println("Attention:", "a new root encryption key has been generated.")
+		log.Println("It is advised to create a backup as soon as possible.")
+		log.Println()
+		log.Println("root key location", SecretFilePath)
+		log.Println("----------------------------------------------------------------")
+		log.Println()
+	}
 }
 
 func escape(source string) string {
@@ -568,19 +567,19 @@ func GetTokenLength(issuer structs.Issuer) (uint8, error) {
 
 //checks whether the root key exists on the file system
 //will create it if this is not the case
-func initializeRootKey() error {
+func initializeRootKey() (bool, error) {
+	var keycreated bool = false
 	_, err := os.Stat(SecretFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// key does not exist
-			log.Println("Warning: No root key found. A new one is being generated")
 			base32RootKey, err := utils.GenerateExtendedKeyBase32()
 			if err != nil {
-				return err
+				return keycreated, err
 			}
 			file, err := os.Create(SecretFilePath)
 			if err != nil {
-				return err
+				return keycreated, err
 			}
 
 			// Defer is used for purposes of cleanup like
@@ -590,16 +589,18 @@ func initializeRootKey() error {
 			defer file.Close()
 			_, err = file.WriteString(base32RootKey)
 			if err != nil {
-				return err
+				return keycreated, err
 			}
-
+			log.Println("root key was created at this location:", SecretFilePath)
+			log.Println("it is advised to create a backup of this file.")
 			defer os.Chmod(SecretFilePath, 0400)
 
-			return nil
+			keycreated = true
+			return keycreated, err
 		}
 	}
 
-	return err
+	return keycreated, err
 }
 
 //GetRootKey retrieves the key generated on system initialization
@@ -665,27 +666,6 @@ func checkCount(rows *sql.Rows) (int, error) {
 			return -1, err
 		}
 	}
-	return count, nil
-}
-
-func checkCountWithQuery(sqlQuery string) (int, error) {
-	db, err := CreateConnection()
-	if err != nil {
-		return -1, err
-	}
-	defer db.Close()
-
-	res, err := db.Query(sqlQuery)
-	if err != nil {
-		return -1, err
-	}
-	defer res.Close()
-
-	count, err := checkCount(res)
-	if err != nil {
-		return -1, err
-	}
-
 	return count, nil
 }
 
