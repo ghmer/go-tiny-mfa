@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOCKER=$(which docker)
-REVISION=$(git rev-parse --short=12 master)
+REVISION=$(git rev-parse --short master)
 
 #sanity checks
 if [ -z ${DOCKER} ]; then
