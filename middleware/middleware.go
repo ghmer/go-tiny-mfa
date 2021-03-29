@@ -417,7 +417,7 @@ func printSystemConfiguration(config structs.ServerConfig, addKeyMessage bool) {
 		log.Println("Attention:", "a new root encryption key has been generated.")
 		log.Println("It is advised to create a backup as soon as possible.")
 		log.Println()
-		log.Println("root key location", SecretFilePath)
+		log.Println("root key location:", SecretFilePath)
 		log.Println("----------------------------------------------------------------")
 		log.Println()
 	}
