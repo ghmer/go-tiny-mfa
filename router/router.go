@@ -738,7 +738,13 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	png, err := qrcode.GenerateQrCode(userStruct, tokenlength)
+	bgcolor, fgcolor, err := middleware.GetQrCodeColors()
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	png, err := qrcode.GenerateQrCode(userStruct, bgcolor, fgcolor, tokenlength)
 	if err != nil {
 		returnError(err, 500, w)
 		return

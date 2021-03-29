@@ -14,7 +14,7 @@ import (
 const FormatString string = "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=%d&issuer=%s&period=30&secret=%s"
 
 // GenerateQrCode Generates a QRCode of the totp url
-func GenerateQrCode(user structs.User, digits uint8) ([]byte, error) {
+func GenerateQrCode(user structs.User, bgcolor, fgcolor structs.ColorSetting, digits uint8) ([]byte, error) {
 	var png []byte
 	secret, err := middleware.GetUserKeyBase32(user)
 	if err != nil {
@@ -26,12 +26,21 @@ func GenerateQrCode(user structs.User, digits uint8) ([]byte, error) {
 		return nil, err
 	}
 
-	code.BackgroundColor = color.Transparent
-	code.ForegroundColor = color.Black
+	code.BackgroundColor = convertColorSetting(bgcolor)
+	code.ForegroundColor = convertColorSetting(fgcolor)
 
 	png, err = code.PNG(256)
 
 	return png, err
+}
+
+func convertColorSetting(setting structs.ColorSetting) color.Color {
+	return color.RGBA{
+		R: setting.Red,
+		G: setting.Green,
+		B: setting.Blue,
+		A: setting.Alpha,
+	}
 }
 
 // WriteQrCodeImage writes a png to the filesystem
