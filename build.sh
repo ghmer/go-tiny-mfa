@@ -1,14 +1,27 @@
 #!/bin/bash
 
-DOCKER=`which docker`
+DOCKER=$(which docker)
+REVISION=$(git rev-parse --short=12 master)
+
+#sanity checks
+if [ -z ${DOCKER} ]; then
+    echo "docker not found!"
+    exit 99
+fi
+
+if [ -z ${REVISION} ]; then
+    echo "no revision environment variable 'REVISION' set"
+    exit 99
+fi
+
 if [ -z ${VERSION} ]; then
     echo "no version environment variable 'VERSION' set"
-    exit 0
+    exit 99
 fi
 
 if [ -z ${REPOSITORY} ]; then
     echo "no repository variable 'REPOSITORY' set"
-    exit 0
+    exit 99
 fi
 
 #build for linux/amd64
@@ -25,11 +38,20 @@ ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:${VERSION}
 ${DOCKER} system prune --volumes --all -f
 
 #create docker image for linux/amd64
-${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:amd64 --platform=linux/amd64  --build-arg ARCH=amd64 -f Dockerfile .
+${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:amd64 \
+    --platform=linux/amd64  --build-arg ARCH=amd64 \
+    --label version=${VERSION} --label revision=${REVISION} \
+    --file Dockerfile .
 #create docker image for linux/arm64
-${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm64 --platform=linux/arm64  --build-arg ARCH=arm64 -f Dockerfile .
+${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:arm64 \
+    --platform=linux/arm64  --build-arg ARCH=arm64 \
+    --label version=${VERSION} --label revision=${REVISION} \
+    --file Dockerfile .
 #create docker image for linux/arm
-${DOCKER} buildx build --load -t ${REPOSITORY}/go-tiny-mfa:arm   --platform=linux/arm/v6 --build-arg ARCH=arm   -f Dockerfile .
+${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:arm   \
+    --platform=linux/arm/v6 --build-arg ARCH=arm   \
+    --label version=${VERSION} --label revision=${REVISION} \
+    --file Dockerfile .
 
 #push images to registry
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:arm
