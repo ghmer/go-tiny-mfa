@@ -25,7 +25,7 @@ func init() {
 
 	// initializing system
 	if !DoHealthcheck {
-		log.Println("initializing")
+		log.Println("initializing tinymfa")
 
 		// Check if needed environment variables have been set
 		err := checkEnvironmentVariables()
@@ -57,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Start serving on port", config.RouterPort)
+	log.Println("tinymfa starts serving on port", config.RouterPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.RouterPort), r))
 }
 
