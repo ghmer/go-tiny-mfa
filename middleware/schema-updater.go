@@ -1,6 +1,9 @@
 package middleware
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 const (
 	CurrentSchemaVersion uint8 = 1
@@ -16,20 +19,22 @@ func UpgradeSchema(version uint8) (uint8, error) {
 	switch version {
 	case 0:
 		{
-			var upgradequery []string = make([]string, 3)
+			var upgradequery []string = make([]string, 5)
 			upgradequery[0] = `ALTER TABLE serverconfig 
-								ADD COLUMN schema_version smallint, 
-								ADD COLUMN qrcode_bgcolor varchar(30), 
-								ADD COLUMN qrcode_fgcolor varchar(30);`
+								ADD COLUMN schema_version smallint;`
 			upgradequery[1] = `UPDATE serverconfig
-								SET schema_version = 1, 
-								qrcode_bgcolor = '0;0;0;0', 
-								qrcode_fgcolor = '0;0;0;255' 
+								SET schema_version = 1 
 								WHERE ID = 1;`
 			upgradequery[2] = `ALTER TABLE serverconfig
-								ALTER COLUMN schema_version SET NOT NULL,
-								ALTER COLUMN qrcode_bgcolor SET NOT NULL,
-								ALTER COLUMN qrcode_fgcolor SET NOT NULL;`
+								ALTER COLUMN schema_version SET NOT NULL;`
+			upgradequery[3] = `CREATE TABLE IF NOT EXISTS qr_code_config (
+								id serial NOT NULL,
+								qrcode_bgcolor varchar(30) NOT NULL,
+								qrcode_fgcolor varchar(30) NOT NULL,
+								PRIMARY KEY (id));`
+			upgradequery[4] = `INSERT INTO qr_code_config
+								(qrcode_bgcolor,qrcode_fgcolor) 
+								VALUES('255;255;255;255','0;0;0;255');`
 
 			err = upgradeSchema(upgradequery)
 			if err != nil {
@@ -56,13 +61,18 @@ func upgradeSchema(upgradeQueries []string) error {
 	for _, query := range upgradeQueries {
 		_, err := transaction.Exec(query)
 		if err != nil {
+			fmt.Println(err)
 			transactionbroke = true
 			break
 		}
 	}
 
 	if transactionbroke {
-		return transaction.Rollback()
+		err = transaction.Rollback()
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("transaction failed. database was rolled back")
 	} else {
 		return transaction.Commit()
 	}
