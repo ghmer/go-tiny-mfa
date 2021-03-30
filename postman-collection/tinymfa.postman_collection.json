@@ -1,495 +1,564 @@
 {
 	"info": {
-		"_postman_id": "b8e4aeef-091f-4a30-93bc-130da9e6553c",
+		"_postman_id": "8b731dcb-4ce7-4634-b304-2c58b3a6bd75",
 		"name": "tinymfa Postman Collection",
+		"description": "This is a postman collection for the tinymfa totp service (https://tinymfa.parzival.link)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "List Issuers",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer"
-					]
+			"name": "issuer handling",
+			"item": [
+				{
+					"name": "List Issuers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer"
+							]
+						},
+						"description": "List all Issuers"
+					},
+					"response": []
 				},
-				"description": "List all Issuers"
-			},
-			"response": []
-		},
-		{
-			"name": "Create Issuer",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Get Issuer",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test"
+							]
+						},
+						"description": "Gets an issuer"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Issuer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer"
+							]
+						},
+						"description": "Creates an Issuer"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Issuer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"token_length\": 8,\n    \"enabled\" : true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test"
+							]
+						},
+						"description": "ATTENTION: When updating the token_length, your registered users MUST rescan the QRCode!"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Issuer",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer"
-					]
-				},
-				"description": "Creates an Issuer"
-			},
-			"response": []
-		},
-		{
-			"name": "Get Issuer",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test"
-					]
-				},
-				"description": "Gets an issuer"
-			},
-			"response": []
-		},
-		{
-			"name": "Update Issuer",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"token_length\": 8,\n    \"enabled\" : true\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Get Issuer Tokens",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"token"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test"
-					]
-				},
-				"description": "ATTENTION: When updating the token_length, your registered users MUST rescan the QRCode!"
-			},
-			"response": []
-		},
-		{
-			"name": "Delete Issuer",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Issuer Tokens",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/token",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"token"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create Issuer Token",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"description\" : \"my access token\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Create Issuer Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\" : \"my access token\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"token"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/token",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"token"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete Issuer Token",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/token/TOKEN_ID",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"token",
-						"TOKEN_ID"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List Users",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create User",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Delete Issuer Token",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token/TOKEN_ID",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"token",
+								"TOKEN_ID"
+							]
 						}
-					}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user handling",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users"
+							]
+						}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get User",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users",
-						"demo"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update User",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\" : \"demo@issuer.net\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users",
+								"demo"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users",
-						"demo"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete User",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users",
-						"demo"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get User QRCode",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo/totp",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users",
-						"demo",
-						"totp"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Validate Token",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"token\" : \"7574352\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/issuer/test/users/demo/totp",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"issuer",
-						"test",
-						"users",
-						"demo",
-						"totp"
-					],
-					"query": [
-						{
-							"key": "",
-							"value": "",
-							"disabled": true
+				{
+					"name": "Update User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"demo@issuer.net\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users",
+								"demo"
+							]
 						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get System Configuration",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/system/configuration",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"system",
-						"configuration"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update System Configuration",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"deny_limit\": 10\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:57687/api/v1/system/configuration",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"system",
-						"configuration"
-					]
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users",
+								"demo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User QRCode",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo/totp",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users",
+								"demo",
+								"totp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\" : \"7574352\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo/totp",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"issuer",
+								"test",
+								"users",
+								"demo",
+								"totp"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "Get Audit",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:57687/api/v1/system/audit",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "57687",
-					"path": [
-						"api",
-						"v1",
-						"system",
-						"audit"
-					]
+			"name": "system handling",
+			"item": [
+				{
+					"name": "Get System Configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update System Configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deny_limit\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get QRCode Configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"qrcode"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update QRCode Configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"qrcode-bgcolor\": {\n        \"red\": 255,\n        \"green\": 255,\n        \"blue\": 255,\n        \"alpha\": 255\n    },\n    \"qrcode-fgcolor\": {\n        \"red\": 0,\n        \"green\": 0,\n        \"blue\": 0,\n        \"alpha\": 255\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"qrcode"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/audit",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"audit"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		}
 	],
 	"auth": {
@@ -529,8 +598,12 @@
 	],
 	"variable": [
 		{
-			"key": "Token_Variable",
-			"value": "INSERT_TOKEN_HERE"
+			"key": "tinymfa-host",
+			"value": "localhost"
+		},
+		{
+			"key": "tinymfa-port",
+			"value": "57687"
 		}
 	]
 }
