@@ -40,21 +40,38 @@ func init() {
 		}
 
 		// check whether system was already initialized
-		version, err := middleware.GetSystemProperty(middleware.SchemaVersionKey)
+		_, err = middleware.GetSystemProperty(middleware.RouterPortKey)
 		if err != nil {
 			// initialize system
 			err = middleware.InitializeSystem()
 			if err != nil {
 				log.Fatal(err)
 			}
-			version, err = middleware.GetSystemProperty(middleware.SchemaVersionKey)
+		}
+
+		// check schema version
+		version, err := middleware.GetSchemaVersion()
+		if err != nil {
+			//pre v1 era.
+			if err.Error() == "pq: column \"schema_version\" does not exist" {
+				version, err = middleware.UpgradeSchema(0)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				log.Fatal(err)
+			}
+		}
+
+		if middleware.CheckSchemaUpgrade(version) {
+			version, err = middleware.UpgradeSchema(version)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		log.Println("connected to database schema version", version)
 		log.Println("initialization finished")
+		log.Println("connected to database schema version", version)
 	}
 }
 
