@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go-tiny-mfa/core"
 	"go-tiny-mfa/middleware"
 	"go-tiny-mfa/qrcode"
 	"go-tiny-mfa/structs"
+	"go-tiny-mfa/tinymfa"
 	"go-tiny-mfa/utils"
 	"io"
 	"net/http"
@@ -711,7 +711,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//how many times did someone try to authenticate in this timeslot?
-	message := core.GenerateMessage(timestamp, core.Present)
+	message := tinymfa.GenerateMessage(timestamp, tinymfa.Present)
 	failedCount, err := middleware.GetFailedValidationCount(userStruct, message)
 	if err != nil {
 		returnError(err, 500, w)
@@ -739,7 +739,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//validate token against user key and current system time
-	validation := core.ValidateTokenWithTimestamp(tokenInt, plainkey, timestamp, tokenlength)
+	validation := tinymfa.ValidateTokenWithTimestamp(tokenInt, plainkey, timestamp, tokenlength)
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {

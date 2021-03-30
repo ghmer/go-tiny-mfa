@@ -6,8 +6,8 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
-	"go-tiny-mfa/core"
 	"go-tiny-mfa/structs"
+	"go-tiny-mfa/tinymfa"
 	"io"
 	"io/ioutil"
 	"os"
@@ -94,7 +94,7 @@ func createMd5Hash(key []byte) []byte {
 
 //GenerateCryptedKeyBase32 generates a new Key, encrypts it with the root key and encodes it to base32
 func GenerateCryptedKeyBase32(rootKey []byte) (string, error) {
-	issuerKey, err := core.GenerateExtendedSecretKey()
+	issuerKey, err := tinymfa.GenerateExtendedSecretKey()
 	if err != nil {
 		return "", err
 	}
@@ -106,7 +106,7 @@ func GenerateCryptedKeyBase32(rootKey []byte) (string, error) {
 
 //GenerateExtendedKeyBase32 returns a base32 encoded 256bit key
 func GenerateExtendedKeyBase32() (string, error) {
-	rootKey, err := core.GenerateExtendedSecretKey()
+	rootKey, err := tinymfa.GenerateExtendedSecretKey()
 	if err != nil {
 		return "", err
 	}
