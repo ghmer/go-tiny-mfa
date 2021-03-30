@@ -484,6 +484,28 @@ func escape(source string) string {
 	return string(desc[0:j])
 }
 
+func GetSchemaVersion() (uint8, error) {
+	var value uint8
+	db, err := CreateConnection()
+	if err != nil {
+		return value, err
+	}
+	defer db.Close()
+
+	query := "SELECT schema_version from serverconfig"
+	res, err := db.Query(query)
+	if err != nil {
+		return value, err
+	}
+	defer res.Close()
+
+	if res.Next() {
+		res.Scan(&value)
+	}
+
+	return value, nil
+}
+
 //GetSystemProperty returns the value for the given key
 func GetSystemProperty(key string) (string, error) {
 	var value string
