@@ -34,6 +34,10 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/system/configuration", GetSystemConfiguration).Methods("GET")
 	//Updates the system configuration
 	router.HandleFunc("/api/v1/system/configuration", UpdateSystemConfiguration).Methods("POST")
+	//Get the QRCode configuration
+	router.HandleFunc("/api/v1/system/qrcode", GetQrCodeConfiguration).Methods("GET")
+	//Updates th QRCode configuration
+	router.HandleFunc("/api/v1/system/qrcode", UpdateQrCodeConfiguration).Methods("POST")
 
 	//Return all registered issuers
 	router.HandleFunc("/api/v1/issuer", GetIssuers).Methods("GET")
@@ -187,6 +191,55 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(configuration)
+}
+
+//GetQrCodeConfiguration returns the qrcode configuration
+func GetQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+
+	err := verifyRootToken(r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	configuration, err := middleware.GetQrCodeConfiguration()
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	// send the response
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(configuration)
+}
+
+//UpdateQrCodeConfiguration updates the system configuration
+func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+	err := verifyRootToken(r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	var qrcodeconfig structs.QrCodeConfig
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&qrcodeconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	qrcodeconfig, err = middleware.UpdateQrCodeConfiguration(qrcodeconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	// send the response
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(qrcodeconfig)
 }
 
 //GetIssuers returns all issuers
@@ -738,13 +791,13 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bgcolor, fgcolor, err := middleware.GetQrCodeColors()
+	qrconfig, err := middleware.GetQrCodeConfiguration()
 	if err != nil {
 		returnError(err, 500, w)
 		return
 	}
 
-	png, err := qrcode.GenerateQrCode(userStruct, bgcolor, fgcolor, tokenlength)
+	png, err := qrcode.GenerateQrCode(userStruct, qrconfig.BgColor, qrconfig.FgColor, tokenlength)
 	if err != nil {
 		returnError(err, 500, w)
 		return
