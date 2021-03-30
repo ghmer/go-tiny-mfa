@@ -25,12 +25,19 @@ if [ -z ${REPOSITORY} ]; then
     exit 99
 fi
 
+#cleanup and prepare build directory
+if [ -d ./build ]; then
+    rm ./build/*
+else 
+    mkdir ./build
+fi
+
 #build for linux/amd64
-env GOOS=linux GOARCH=amd64 go build -o build/go-tiny-mfa-amd64
+env GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o build/go-tiny-mfa-amd64
 #build for linux/arm64
-env GOOS=linux GOARCH=arm64 GOARM=7 go build -o build/go-tiny-mfa-arm64
+env GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags "-s -w" -o build/go-tiny-mfa-arm64
 #build for linux/arm
-env GOOS=linux GOARCH=arm GOARM=6 go build -o build/go-tiny-mfa-arm
+env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-s -w" -o build/go-tiny-mfa-arm
 
 #purge old manifest
 ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa
