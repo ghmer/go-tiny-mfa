@@ -43,6 +43,30 @@ veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and 
 }
 ```
 
+### QR Code Look & Feel
+Endpoint|Method|Description
+--- | --- | ---
+/api/v1/system/qrcode|GET|Return current qrcode look & feel
+/api/v1/system/qrcode|POST|Update the qrcode look & feel
+
+#### payload: update qrcode look & feel
+```
+{
+    "qrcode-bgcolor": {
+        "red": 255,
+        "green": 255,
+        "blue": 255,
+        "alpha": 255
+    },
+    "qrcode-fgcolor": {
+        "red": 0,
+        "green": 0,
+        "blue": 0,
+        "alpha": 255
+    }
+}
+```
+
 ### Issuer handling
 Endpoint|Method|Description
 --- | --- | ---
