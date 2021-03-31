@@ -6,6 +6,6 @@ type User struct {
 	Name    string `json:"name"`
 	Email   string `json:"email"`
 	Issuer  Issuer `json:"issuer"`
-	Key     string `json:"key"`
+	Key     string `json:"-"`
 	Enabled bool   `json:"enabled"`
 }

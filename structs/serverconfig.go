@@ -6,7 +6,7 @@ import "github.com/google/uuid"
 type ServerConfig struct {
 	RouterPort    uint16 `json:"http_port"`
 	DenyLimit     uint8  `json:"deny_limit"`
-	RootToken     string `json:"root_token"`
+	RootToken     string `json:"-"`
 	VerifyTokens  bool   `json:"verify_tokens"`
 	SchemaVersion uint8  `json:"schema-version"`
 }
