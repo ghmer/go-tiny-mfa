@@ -40,6 +40,9 @@ const (
 //SecretFilePath location of the root key
 const SecretFilePath string = "/opt/go-tiny-mfa/secrets/key"
 
+//RootTokenFilePath location of the root-token export
+const RootTokenFilePath string = "/opt/go-tiny-mfa/secrets/root-token.readanddelete"
+
 // CreateConnection creates a connection to a postgres DB
 func CreateConnection() (*sql.DB, error) {
 	dbuser := os.Getenv("POSTGRES_USER")
@@ -85,7 +88,39 @@ func InitializeSystem() error {
 		return err
 	}
 
+	storeRootTokenToDisk(config)
+
 	printSystemConfiguration(config, keycreated)
+
+	return nil
+}
+
+func storeRootTokenToDisk(config structs.ServerConfig) error {
+	_, err := os.Stat(RootTokenFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// file does not exist
+			file, err := os.Create(RootTokenFilePath)
+			if err != nil {
+				return err
+			}
+
+			// Defer is used for purposes of cleanup like
+			// closing a running file after the file has
+			// been written and main //function has
+			// completed execution
+			defer file.Close()
+			_, err = file.WriteString(fmt.Sprintf("root-token: %s", config.RootToken))
+			if err != nil {
+				return err
+			}
+			defer os.Chmod(RootTokenFilePath, 0400)
+
+			return err
+		} else {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -462,7 +497,7 @@ func printSystemConfiguration(config structs.ServerConfig, addKeyMessage bool) {
 	log.Println("router port  ", config.RouterPort)
 	log.Println("deny limit   ", config.DenyLimit)
 	log.Println("verify tokens", config.VerifyTokens)
-	log.Println("root token   ", config.RootToken)
+	log.Println("root token   ", RootTokenFilePath)
 	log.Println("----------------------------------------------------------------")
 	if addKeyMessage {
 		log.Println("Attention:", "a new root encryption key has been generated.")
@@ -874,12 +909,12 @@ func GetIssuers() ([]structs.Issuer, error) {
 }
 
 //GetIssuerAccessTokens returns all access tokens for a given issuer from the database
-func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
+func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.TokenEntry, error) {
 	count, err := countIssuerAccessTokens(issuer)
 	if err != nil {
 		return nil, err
 	}
-	tokens := make([]map[string]string, count)
+	tokens := make([]structs.TokenEntry, count)
 	db, err := CreateConnection()
 	if err != nil {
 		return tokens, err
@@ -895,18 +930,8 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]map[string]string, error) {
 
 	loop := 0
 	for rows.Next() {
-		var id string
-		var description string
-		var createdOn string
-		var lastAccessTime string
-		rows.Scan(&id, &description, &createdOn, &lastAccessTime)
-
-		token := make(map[string]string, 4)
-		token["id"] = id
-		token["description"] = description
-		token["created_on"] = createdOn
-		token["last_access_time"] = lastAccessTime
-
+		var token structs.TokenEntry
+		rows.Scan(&token.Id, &token.Description, &token.CreatedOn, &token.LastAccessTime)
 		tokens[loop] = token
 		loop++
 	}
