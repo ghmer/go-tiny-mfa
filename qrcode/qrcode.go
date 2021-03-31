@@ -2,10 +2,11 @@ package qrcode
 
 import (
 	"fmt"
-	"go-tiny-mfa/middleware"
-	"go-tiny-mfa/structs"
 	"image/color"
 	"strings"
+
+	"github.com/ghmer/go-tiny-mfa/middleware"
+	"github.com/ghmer/go-tiny-mfa/structs"
 
 	qrcode "github.com/skip2/go-qrcode"
 )

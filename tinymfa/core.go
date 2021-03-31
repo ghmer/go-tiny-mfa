@@ -7,9 +7,10 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
-	"go-tiny-mfa/structs"
 	"math"
 	"time"
+
+	"github.com/ghmer/go-tiny-mfa/structs"
 )
 
 const (

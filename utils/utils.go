@@ -6,11 +6,12 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
-	"go-tiny-mfa/structs"
-	"go-tiny-mfa/tinymfa"
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/ghmer/go-tiny-mfa/structs"
+	"github.com/ghmer/go-tiny-mfa/tinymfa"
 
 	"golang.org/x/crypto/bcrypt"
 )

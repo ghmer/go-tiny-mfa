@@ -5,13 +5,14 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
-	"go-tiny-mfa/structs"
-	"go-tiny-mfa/utils"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/ghmer/go-tiny-mfa/structs"
+	"github.com/ghmer/go-tiny-mfa/utils"
 
 	"github.com/google/uuid"
 

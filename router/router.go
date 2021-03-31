@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go-tiny-mfa/middleware"
-	"go-tiny-mfa/qrcode"
-	"go-tiny-mfa/structs"
-	"go-tiny-mfa/tinymfa"
-	"go-tiny-mfa/utils"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ghmer/go-tiny-mfa/middleware"
+	"github.com/ghmer/go-tiny-mfa/qrcode"
+	"github.com/ghmer/go-tiny-mfa/structs"
+	"github.com/ghmer/go-tiny-mfa/tinymfa"
+	"github.com/ghmer/go-tiny-mfa/utils"
 
 	"github.com/gorilla/mux"
 )
