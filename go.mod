@@ -1,4 +1,4 @@
-module go-tiny-mfa
+module github.com/ghmer/go-tiny-mfa
 
 go 1.16
 
