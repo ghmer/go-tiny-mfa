@@ -76,15 +76,15 @@ func initializeUserTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS accounts (
-		id varchar(45) NOT NULL,
-		username varchar(32) NOT NULL,
-		email varchar(128) NOT NULL,
-		issuer_id varchar(45) NOT NULL,
-		key varchar(128) NOT NULL UNIQUE,
-		enabled boolean DEFAULT '1',
-		unique (username, email, issuer_id),
-		PRIMARY KEY (id)
-	);`
+        id varchar(45) NOT NULL,
+        username varchar(32) NOT NULL,
+        email varchar(128) NOT NULL,
+        issuer_id varchar(45) NOT NULL,
+        key varchar(128) NOT NULL UNIQUE,
+        enabled boolean DEFAULT '1',
+        unique (username, email, issuer_id),
+        PRIMARY KEY (id)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -100,14 +100,14 @@ func initializeAuditTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS audit (
-		id serial NOT NULL,
-		issuer varchar(32) NOT NULL,
-		username varchar(32) NOT NULL,
-		message varchar(16) NOT NULL,
-		success boolean DEFAULT '0',
-		validated_on timestamp NOT NULL,
-		PRIMARY KEY (id)
-	);`
+        id serial NOT NULL,
+        issuer varchar(32) NOT NULL,
+        username varchar(32) NOT NULL,
+        message varchar(16) NOT NULL,
+        success boolean DEFAULT '0',
+        validated_on timestamp NOT NULL,
+        PRIMARY KEY (id)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -123,14 +123,14 @@ func initializeIssuerTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS issuer (
-		id varchar(45) NOT NULL,
-		name varchar(32) NOT NULL UNIQUE,
-		contact varchar(255) NOT NULL,
-		key varchar(128) NOT NULL UNIQUE,
-		token_length smallint NOT NULL,
-		enabled boolean DEFAULT '1',
-		PRIMARY KEY (id)
-	);`
+        id varchar(45) NOT NULL,
+        name varchar(32) NOT NULL UNIQUE,
+        contact varchar(255) NOT NULL,
+        key varchar(128) NOT NULL UNIQUE,
+        token_length smallint NOT NULL,
+        enabled boolean DEFAULT '1',
+        PRIMARY KEY (id)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -146,14 +146,14 @@ func initializeAccessTokenTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS access_tokens (
-		id varchar(45) NOT NULL,
-		ref_id_issuer varchar(45),
-		access_token varchar(64) NOT NULL,
-		description varchar(255),
-		created_on timestamp NOT NULL,
-		last_access_time timestamp,
-		PRIMARY KEY (access_token)
-	);`
+        id varchar(45) NOT NULL,
+        ref_id_issuer varchar(45),
+        access_token varchar(64) NOT NULL,
+        description varchar(255),
+        created_on timestamp NOT NULL,
+        last_access_time timestamp,
+        PRIMARY KEY (access_token)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -169,14 +169,14 @@ func initializeSystemTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS serverconfig (
-		id serial NOT NULL,
-		http_port integer NOT NULL,
-		deny_limit smallint NOT NULL,
-		verify_tokens bool DEFAULT false,
-		root_token varchar(64) NOT NULL,
-		schema_version smallint NOT NULL,
-		PRIMARY KEY (id)
-	);`
+        id serial NOT NULL,
+        http_port integer NOT NULL,
+        deny_limit smallint NOT NULL,
+        verify_tokens bool DEFAULT false,
+        root_token varchar(64) NOT NULL,
+        schema_version smallint NOT NULL,
+        PRIMARY KEY (id)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -193,11 +193,11 @@ func initializeQrCodeConfigurationTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS qr_code_config (
-		id serial NOT NULL,
-		qrcode_bgcolor varchar(30) NOT NULL,
-		qrcode_fgcolor varchar(30) NOT NULL,
-		PRIMARY KEY (id)
-	);`
+        id serial NOT NULL,
+        qrcode_bgcolor varchar(30) NOT NULL,
+        qrcode_fgcolor varchar(30) NOT NULL,
+        PRIMARY KEY (id)
+    );`
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err
@@ -213,13 +213,13 @@ func initializeOidcConfigurationTable() error {
 	}
 	defer db.Close()
 	createstring := `CREATE TABLE IF NOT EXISTS oidc_config (
-		id serial NOT NULL,
-		enabled bool DEFAULT false,
-		client_id varchar(64),
-		client_secret varchar(64),
-		discovery_url varchar(255),
-		PRIMARY KEY (id)
-	);`
+        id serial NOT NULL,
+        enabled bool DEFAULT false,
+        client_id varchar(64),
+        client_secret varchar(64),
+        discovery_url varchar(255),
+        PRIMARY KEY (id)
+    );`
 
 	_, err = db.Exec(createstring)
 	if err != nil {
@@ -243,8 +243,8 @@ func initializeStandardConfiguration() (structs.ServerConfig, error) {
 	}
 
 	insertQuery := `INSERT INTO serverconfig 
-	(http_port,deny_limit,verify_tokens,root_token, schema_version) 
-	VALUES($1,$2,$3,$4,$5);`
+    (http_port,deny_limit,verify_tokens,root_token, schema_version) 
+    VALUES($1,$2,$3,$4,$5);`
 	_, err = db.Exec(
 		insertQuery,
 		config.RouterPort,
