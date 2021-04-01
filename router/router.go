@@ -35,6 +35,10 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/system/configuration", GetSystemConfiguration).Methods("GET")
 	//Updates the system configuration
 	router.HandleFunc("/api/v1/system/configuration", UpdateSystemConfiguration).Methods("POST")
+	//Get the OIDC configuration
+	router.HandleFunc("/api/v1/system/oidc", GetOidcConfiguration).Methods("GET")
+	//Updates th OIDC configuration
+	router.HandleFunc("/api/v1/system/oidc", UpdateOidcConfiguration).Methods("POST")
 	//Get the QRCode configuration
 	router.HandleFunc("/api/v1/system/qrcode", GetQrCodeConfiguration).Methods("GET")
 	//Updates th QRCode configuration
@@ -215,7 +219,7 @@ func GetQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(configuration)
 }
 
-//UpdateQrCodeConfiguration updates the system configuration
+//UpdateQrCodeConfiguration updates the qrcode configuration
 func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -241,6 +245,55 @@ func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(qrcodeconfig)
+}
+
+//GetOidcConfiguration returns the oidc configuration
+func GetOidcConfiguration(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+
+	err := verifyRootToken(r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	configuration, err := middleware.GetOidcConfiguration()
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	// send the response
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(configuration)
+}
+
+//UpdateOidcConfiguration updates the oidc configuration
+func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
+	writeStandardHeaders(w)
+	err := verifyRootToken(r)
+	if err != nil {
+		returnError(err, 401, w)
+		return
+	}
+
+	var oidcconfig structs.OidcConfig
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&oidcconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	oidcconfig, err = middleware.UpdateOidcConfiguration(oidcconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	// send the response
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(oidcconfig)
 }
 
 //GetIssuers returns all issuers
@@ -903,9 +956,7 @@ func verifyRootToken(r *http.Request) error {
 		}
 
 		token := tokens[0]
-
 		err = utils.BycrptVerify([]byte(rootToken), []byte(token))
-
 		if err != nil {
 			return errors.New("wrong access token provided")
 		}

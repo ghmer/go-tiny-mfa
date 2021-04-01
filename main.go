@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ghmer/go-tiny-mfa/middleware"
-	"github.com/ghmer/go-tiny-mfa/router"
-	"github.com/ghmer/go-tiny-mfa/structs"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/ghmer/go-tiny-mfa/middleware"
+	"github.com/ghmer/go-tiny-mfa/router"
+	"github.com/ghmer/go-tiny-mfa/structs"
 )
 
 // Healthcheck defines whether we run the router or a simple healthcheck

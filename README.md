@@ -43,6 +43,28 @@ veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and 
 }
 ```
 
+### OIDC Configuration
+Endpoint|Method|Description
+--- | --- | ---
+/api/v1/system/oidc|GET|Return current oidc configuration
+/api/v1/system/oidc|POST|Updates the oidc configuration
+
+#### payload: Update oidc configuration
+key|type|description
+--- | --- | ---
+enabled|boolean|whether to enable the oidc configuration
+client_id|string|the oidc client ID
+client_secret|string|the oidc client secret
+discovery_url|string|the oidc discovery url, omitting the /.well_known directory
+```
+{
+    "enabled" : true,
+    "client_id": "my-client-id",
+    "client_secret": "myClientSecret123!",
+    "discovery_url": "https://idp.tld/auth/realm"
+}
+```
+
 ### QR Code Look & Feel
 Endpoint|Method|Description
 --- | --- | ---

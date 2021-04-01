@@ -55,6 +55,11 @@ func initializeDatabase() (structs.ServerConfig, error) {
 		return structs.ServerConfig{}, err
 	}
 
+	err = initializeOidcConfigurationTable()
+	if err != nil {
+		return structs.ServerConfig{}, err
+	}
+
 	config, err := initializeStandardConfiguration()
 	if err != nil {
 		return structs.ServerConfig{}, err
@@ -193,6 +198,29 @@ func initializeQrCodeConfigurationTable() error {
 		qrcode_fgcolor varchar(30) NOT NULL,
 		PRIMARY KEY (id)
 	);`
+	_, err = db.Exec(createstring)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//initializes the oidc table
+func initializeOidcConfigurationTable() error {
+	db, err := CreateConnection()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	createstring := `CREATE TABLE IF NOT EXISTS oidc_config (
+		id serial NOT NULL,
+		enabled bool DEFAULT false,
+		client_id varchar(64),
+		client_secret varchar(64),
+		discovery_url varchar(255),
+		PRIMARY KEY (id)
+	);`
+
 	_, err = db.Exec(createstring)
 	if err != nil {
 		return err

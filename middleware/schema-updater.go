@@ -1,12 +1,12 @@
 package middleware
 
 import (
-	"fmt"
+	"errors"
 	"log"
 )
 
 const (
-	CurrentSchemaVersion uint8 = 1
+	CurrentSchemaVersion uint8 = 2
 )
 
 func CheckSchemaUpgrade(version uint8) bool {
@@ -41,6 +41,23 @@ func UpgradeSchema(version uint8) (uint8, error) {
 				return 0, err
 			}
 		}
+		fallthrough
+	case 1:
+		{
+			var upgradequery []string = make([]string, 1)
+			upgradequery[0] = `CREATE TABLE IF NOT EXISTS oidc_config (
+								id serial NOT NULL,
+								enabled bool DEFAULT false,
+								client_id varchar(64),
+								client_secret varchar(64),
+								discovery_url varchar(255),
+								PRIMARY KEY (id));`
+
+			err = upgradeSchema(upgradequery)
+			if err != nil {
+				return 1, err
+			}
+		}
 	}
 
 	return CurrentSchemaVersion, nil
@@ -61,7 +78,6 @@ func upgradeSchema(upgradeQueries []string) error {
 	for _, query := range upgradeQueries {
 		_, err := transaction.Exec(query)
 		if err != nil {
-			fmt.Println(err)
 			transactionbroke = true
 			break
 		}
@@ -72,7 +88,7 @@ func upgradeSchema(upgradeQueries []string) error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("transaction failed. database was rolled back")
+		return errors.New("transaction failed. database was rolled back")
 	} else {
 		return transaction.Commit()
 	}

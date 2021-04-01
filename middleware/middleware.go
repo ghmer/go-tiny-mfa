@@ -79,7 +79,7 @@ func CreateAuditEntry(user structs.User, validation structs.Validation) error {
 	defer db.Close()
 
 	insertString := `INSERT INTO audit(issuer, username, message, validated_on, success)
-					 VALUES($1, $2, $3, $4, $5)`
+                     VALUES($1, $2, $3, $4, $5)`
 
 	_, err = db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
 	if err != nil {
@@ -387,6 +387,46 @@ func UpdateQrCodeConfiguration(qrcodeconfig structs.QrCodeConfig) (structs.QrCod
 	return qrcodeconfig, nil
 }
 
+//GetOidcConfiguration returns the oidc configuration
+func GetOidcConfiguration() (structs.OidcConfig, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.OidcConfig{}, err
+	}
+	defer db.Close()
+
+	queryKey := "SELECT id,enabled,client_id,client_secret,discovery_url FROM oidc_config"
+	res, err := db.Query(queryKey)
+	if err != nil {
+		return structs.OidcConfig{}, err
+	}
+	defer res.Close()
+	var oidcconfig structs.OidcConfig
+	if res.Next() {
+		res.Scan(&oidcconfig.ID, &oidcconfig.Enabled, &oidcconfig.ClientID, &oidcconfig.ClientSecret, &oidcconfig.DiscoveryURL)
+	}
+
+	return oidcconfig, nil
+}
+
+//UpdateOidcConfiguration returns the oidc configuration
+func UpdateOidcConfiguration(oidcconfig structs.OidcConfig) (structs.OidcConfig, error) {
+	db, err := CreateConnection()
+	if err != nil {
+		return structs.OidcConfig{}, err
+	}
+	defer db.Close()
+
+	sqlQuery := "UPDATE oidc_config SET enabled=$1,client_id=$2,client_secret=$3,discovery_url=$4"
+	_, err = db.Exec(sqlQuery,
+		oidcconfig.Enabled, oidcconfig.ClientID, oidcconfig.ClientSecret, oidcconfig.DiscoveryURL)
+	if err != nil {
+		return structs.OidcConfig{}, err
+	}
+
+	return oidcconfig, nil
+}
+
 //UpdateSystemConfiguration updates the system configuration
 func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfig, error) {
 	db, err := CreateConnection()
@@ -396,11 +436,11 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 	defer db.Close()
 
 	sqlQuery := `UPDATE serverconfig 
-					SET 
-					http_port=$1, 
-					deny_limit=$2,
-					verify_tokens=$3,
-					schema_version=$4`
+                    SET 
+                    http_port=$1, 
+                    deny_limit=$2,
+                    verify_tokens=$3,
+                    schema_version=$4`
 	_, err = db.Exec(sqlQuery,
 		config.RouterPort,
 		config.DenyLimit,
@@ -636,8 +676,8 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 	issuer.Key = cryptedKey
 
 	sqlInsert := `INSERT INTO issuer (id, name, contact, key, token_length, enabled)
-				VALUES ($1, $2, $3, $4, $5, $6)
-				RETURNING id`
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.TokenLength, issuer.Enabled)
 	if err != nil {
 		result["error"] = err
@@ -730,12 +770,12 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 	defer db.Close()
 
 	sqlUpdate := `UPDATE issuer 
-				  SET 
-					contact=$1,
-					token_length=$2, 
-				  	enabled=$3
-				  WHERE 
-				  	id=$4`
+                  SET 
+                    contact=$1,
+                    token_length=$2, 
+                      enabled=$3
+                  WHERE 
+                      id=$4`
 	res, err := db.Exec(sqlUpdate, issuer.Contact, issuer.TokenLength, issuer.Enabled, issuer.ID)
 	if err != nil {
 		return false, err
@@ -849,8 +889,8 @@ func CreateUser(user structs.User) (structs.User, error) {
 	}
 	defer db.Close()
 	sqlInsert := `INSERT INTO accounts (id, username, email, issuer_id, key, enabled)
-				VALUES ($1, $2, $3, $4, $5, $6)
-				RETURNING id`
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id`
 	res, err := db.Exec(sqlInsert, user.ID, user.Name, user.Email, user.Issuer.ID, user.Key, user.Enabled)
 	if err != nil {
 		return structs.User{}, err
@@ -902,11 +942,11 @@ func UpdateUser(user structs.User) (bool, error) {
 	defer db.Close()
 
 	sqlUpdate := `UPDATE accounts 
-				  SET 
-				  	email=$1, 
-				  	enabled=$2 
-				  WHERE 
-				  	id=$3`
+                  SET 
+                      email=$1, 
+                      enabled=$2 
+                  WHERE 
+                      id=$3`
 	res, err := db.Exec(sqlUpdate, user.Email, user.Enabled, user.ID)
 	if err != nil {
 		return false, err
@@ -955,8 +995,8 @@ func InsertToken(token structs.Token) error {
 
 	hashedToken, _ := utils.BcryptHash([]byte(token.Token))
 	sqlInsert := `INSERT INTO access_tokens(id, ref_id_issuer, access_token, description, created_on)
-				VALUES ($1, $2, $3, $4, $5)
-				RETURNING id`
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id`
 	res, err := db.Exec(sqlInsert, token.ID, token.ObjectRefID, string(hashedToken), token.Description, time.Now())
 	if err != nil {
 		return err
