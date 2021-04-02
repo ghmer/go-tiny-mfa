@@ -24,6 +24,12 @@ func ColorSettingFromString(setting string) ColorSetting {
 
 	for index, value := range array {
 		intval, _ := strconv.Atoi(value)
+		if intval < 0 {
+			intval = 0
+		}
+		if intval > 255 {
+			intval = 255
+		}
 		intarray[index] = uint8(intval)
 	}
 
