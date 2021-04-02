@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "8b731dcb-4ce7-4634-b304-2c58b3a6bd75",
+		"_postman_id": "435fa050-854a-4bb4-a6c1-f5cd72b58d83",
 		"name": "tinymfa Postman Collection",
 		"description": "This is a postman collection for the tinymfa totp service (https://tinymfa.parzival.link)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -478,6 +478,59 @@
 								"v1",
 								"system",
 								"configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get OIDC Configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"oidc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update OIDC Configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deny_limit\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+							"protocol": "http",
+							"host": [
+								"{{tinymfa-host}}"
+							],
+							"port": "{{tinymfa-port}}",
+							"path": [
+								"api",
+								"v1",
+								"system",
+								"oidc"
 							]
 						}
 					},
