@@ -9,3 +9,8 @@ type Issuer struct {
 	Enabled     bool   `json:"enabled"`
 	TokenLength uint8  `json:"token_length"`
 }
+
+type IssuerCreation struct {
+	Issuer Issuer `json:"issuer"`
+	Token  Token  `json:"token"`
+}

@@ -265,7 +265,12 @@ func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qrcodeconfig, err = middleware.UpdateQrCodeConfiguration(qrcodeconfig)
+	_, err = middleware.UpdateQrCodeConfiguration(qrcodeconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+	result, err := middleware.GetQrCodeConfiguration()
 	if err != nil {
 		returnError(err, 500, w)
 		return
@@ -273,7 +278,7 @@ func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 
 	// send the response
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(qrcodeconfig)
+	json.NewEncoder(w).Encode(result)
 }
 
 //GetOidcConfiguration returns the oidc configuration
@@ -314,7 +319,13 @@ func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oidcconfig, err = middleware.UpdateOidcConfiguration(oidcconfig)
+	_, err = middleware.UpdateOidcConfiguration(oidcconfig)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
+	result, err := middleware.GetOidcConfiguration()
 	if err != nil {
 		returnError(err, 500, w)
 		return
@@ -322,7 +333,7 @@ func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 
 	// send the response
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(oidcconfig)
+	json.NewEncoder(w).Encode(result)
 }
 
 //GetIssuers returns all issuers
@@ -361,17 +372,17 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&issuer)
 
-	resultmap, err := middleware.CreateIssuer(issuer)
+	result, err := middleware.CreateIssuer(issuer)
 	if err != nil {
 		returnError(err, 405, w)
 		return
 	}
 
-	issuerStruct := resultmap["issuer"].(structs.Issuer)
+	issuerStruct := result.Issuer
 	defer utils.ScrubIssuerStruct(&issuerStruct)
 
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(resultmap)
+	json.NewEncoder(w).Encode(result)
 }
 
 //GetIssuer returns the issuer given in the URL

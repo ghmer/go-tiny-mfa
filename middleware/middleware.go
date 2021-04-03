@@ -653,11 +653,10 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.TokenEntry, error) 
 }
 
 //CreateIssuer inserts a Issuer struct to the database
-func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
-	var result map[string]interface{} = make(map[string]interface{})
+func CreateIssuer(issuer structs.Issuer) (structs.IssuerCreation, error) {
 	db, err := CreateConnection()
 	if err != nil {
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 	defer db.Close()
 
@@ -665,13 +664,11 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
 	rootKey, err := GetRootKey()
 
 	if err != nil {
-		result["error"] = err
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 	cryptedKey, err := utils.GenerateCryptedKeyBase32(rootKey)
 	if err != nil {
-		result["error"] = err
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 	issuer.Key = cryptedKey
 
@@ -680,25 +677,24 @@ func CreateIssuer(issuer structs.Issuer) (map[string]interface{}, error) {
                 RETURNING id`
 	res, err := db.Exec(sqlInsert, issuer.ID, issuer.Name, issuer.Contact, issuer.Key, issuer.TokenLength, issuer.Enabled)
 	if err != nil {
-		result["error"] = err
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 
 	rows, _ := res.RowsAffected()
 	if rows != 1 {
-		result["error"] = errors.New("insert operation was not successful")
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 
 	token := structs.NewAccessToken(issuer.ID)
 	err = InsertToken(token)
 	if err != nil {
-		result["error"] = err
-		return result, err
+		return structs.IssuerCreation{}, err
 	}
 
-	result["issuer"] = issuer
-	result["token"] = token
+	result := structs.IssuerCreation{
+		Issuer: issuer,
+		Token:  token,
+	}
 
 	return result, nil
 }
