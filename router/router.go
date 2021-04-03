@@ -672,11 +672,17 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&user)
 	user.Issuer = issuerStruct
 
-	userStruct, err := middleware.CreateUser(user)
+	_, err = middleware.CreateUser(user)
 	if err != nil {
 		returnError(err, 500, w)
 		return
 	}
+	userStruct, err := middleware.GetUser(user.Name, issuerStruct)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
+
 	defer utils.ScrubUserStruct(&userStruct)
 
 	w.WriteHeader(200)
