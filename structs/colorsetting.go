@@ -23,12 +23,20 @@ func ColorSettingFromString(setting string) ColorSetting {
 	intarray := make([]uint8, len(array))
 
 	for index, value := range array {
-		intval, _ := strconv.Atoi(value)
-		if intval < 0 {
-			intval = 0
-		}
-		if intval > 255 {
-			intval = 255
+		//trying to parse uint value
+		intval, err := strconv.ParseUint(value, 10, 8)
+		if err != nil {
+			failint, err := strconv.Atoi(value)
+			if err != nil {
+				intval = 0
+			} else {
+				if failint < 0 {
+					intval = 0
+				}
+				if failint > 255 {
+					intval = 255
+				}
+			}
 		}
 		intarray[index] = uint8(intval)
 	}
