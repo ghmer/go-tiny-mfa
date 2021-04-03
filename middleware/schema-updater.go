@@ -44,7 +44,7 @@ func UpgradeSchema(version uint8) (uint8, error) {
 		fallthrough
 	case 1:
 		{
-			var upgradequery []string = make([]string, 1)
+			var upgradequery []string = make([]string, 2)
 			upgradequery[0] = `CREATE TABLE IF NOT EXISTS oidc_config (
                                 id serial NOT NULL,
                                 enabled bool DEFAULT false,
