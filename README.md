@@ -1,12 +1,12 @@
 # go-tiny-mfa
-a tinymfa implementation written in go. See https://tinymfa.parzival.link for more information.
+[![CodeQL](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml)
+a tinymfa implementation written in Go. See https://tinymfa.parzival.link for more information.
 
 Our repository on github: https://github.com/ghmer/go-tiny-mfa.
 
 Find a docker repository at https://hub.docker.com/r/tinymfa/go-tiny-mfa
 
 Checkout our postman collection: https://tinymfa.parzival.link/tinymfa.postman_collection.json
-
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
