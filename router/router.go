@@ -184,7 +184,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for router-port is not a number"), 500, w)
 				return
 			}
 		}
@@ -199,7 +199,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for deny-limit is not a number"), 500, w)
 				return
 			}
 		}
@@ -424,7 +424,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 			issuerStruct.Enabled = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for enabled is not a boolean"), 500, w)
 				return
 			}
 		}
@@ -436,7 +436,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 			issuerStruct.Contact = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for contact is not a string"), 500, w)
 				return
 			}
 		}
@@ -453,7 +453,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 			issuerStruct.TokenLength = castedval
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for token_length is not a number"), 500, w)
 				return
 			}
 		}
@@ -555,7 +555,7 @@ func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 			issuerStruct.Contact = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for description is not a string"), 500, w)
 				return
 			}
 		}
@@ -733,7 +733,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			userStruct.Email = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for email is not a string"), 500, w)
 				return
 			}
 		}
@@ -745,7 +745,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			userStruct.Enabled = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for enabled is not a boolean"), 500, w)
 				return
 			}
 		}
@@ -812,7 +812,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 			token = val
 		default:
 			{
-				returnError(err, 500, w)
+				returnError(fmt.Errorf("supplied value for token is not a string"), 500, w)
 				return
 			}
 		}
