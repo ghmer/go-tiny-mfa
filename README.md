@@ -299,4 +299,5 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.loca
  - authorization model
  - administrative UI
  - think about generic middleware concept
+ - openid-connect
  - ...
