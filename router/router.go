@@ -477,7 +477,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	}
 
 	w.WriteHeader(200)
-	message := structs.Message{Success: result}
+	message := structs.Message{Success: result, Message: "issuer successfully updated"}
 	json.NewEncoder(w).Encode(message)
 }
 
@@ -505,7 +505,7 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	message := structs.Message{Success: result}
+	message := structs.Message{Success: result, Message: "issuer successfully deleted"}
 	json.NewEncoder(w).Encode(message)
 }
 
@@ -775,7 +775,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := structs.Message{Success: result}
+	message := structs.Message{Success: result, Message: "user successfully updated"}
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(message)
 }
@@ -804,7 +804,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := structs.Message{Success: result}
+	message := structs.Message{Success: result, Message: "user successfully deleted"}
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(message)
 }
