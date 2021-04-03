@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -174,17 +175,45 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 
 	//casting map values
 	if val, ok := jsonMap[middleware.RouterPortKey]; ok {
-		localval := val.(float64)
-		var castedval uint16 = uint16(localval)
-		configuration.RouterPort = castedval
+		switch val := val.(type) {
+		case float64:
+			localval := val
+			if localval >= 0 && localval <= math.MaxUint16 {
+				var castedval uint16 = uint16(localval)
+				configuration.RouterPort = castedval
+			}
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 	if val, ok := jsonMap[middleware.DenyLimitKey]; ok {
-		localval := val.(float64)
-		var castedval uint8 = uint8(localval)
-		configuration.DenyLimit = castedval
+		switch val := val.(type) {
+		case float64:
+			localval := val
+			if localval >= 0 && localval <= math.MaxUint16 {
+				var castedval uint8 = uint8(localval)
+				configuration.DenyLimit = castedval
+			}
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 	if val, ok := jsonMap[middleware.VerifyTokenKey]; ok {
-		configuration.VerifyTokens = val.(bool)
+		switch val := val.(type) {
+		case bool:
+			configuration.VerifyTokens = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 
 	configuration, err = middleware.UpdateSystemConfiguration(configuration)
@@ -390,20 +419,44 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	}
 
 	if val, ok := jsonMap["enabled"]; ok {
-		issuerStruct.Enabled = val.(bool)
+		switch val := val.(type) {
+		case bool:
+			issuerStruct.Enabled = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 
 	if val, ok := jsonMap["contact"]; ok {
-		issuerStruct.Contact = val.(string)
+		switch val := val.(type) {
+		case string:
+			issuerStruct.Contact = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 
 	if val, ok := jsonMap["token_length"]; ok {
-		localval := val.(float64)
-		var castedval uint8 = uint8(localval)
-		if localval < 5 || localval > 8 {
-			returnError(fmt.Errorf("%d is not a valid length for a token. try something between 5-8", castedval), 500, w)
+		switch val := val.(type) {
+		case float64:
+			localval := val
+			if localval < 5 || localval > 8 {
+				returnError(fmt.Errorf("%f is not a valid length for a token. try something between 5-8", localval), 500, w)
+			}
+			var castedval uint8 = uint8(localval)
+			issuerStruct.TokenLength = castedval
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
 		}
-		issuerStruct.TokenLength = castedval
 	}
 
 	result, err := middleware.UpdateIssuer(issuerStruct)
@@ -497,8 +550,16 @@ func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 
 	var description string
 	if val, ok := jsonMap["description"]; ok {
+		switch val := val.(type) {
+		case string:
+			issuerStruct.Contact = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 		description = val.(string)
-
 	}
 
 	if description == "" {
@@ -667,10 +728,28 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if val, ok := jsonMap["email"]; ok {
-		userStruct.Email = val.(string)
+		switch val := val.(type) {
+		case string:
+			userStruct.Email = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
+
 	}
 	if val, ok := jsonMap["enabled"]; ok {
-		userStruct.Enabled = val.(bool)
+		switch val := val.(type) {
+		case bool:
+			userStruct.Enabled = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
+
 	}
 
 	result, err := middleware.UpdateUser(userStruct)
@@ -728,7 +807,15 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	var token string
 	if val, ok := jsonMap["token"]; ok {
-		token = val.(string)
+		switch val := val.(type) {
+		case string:
+			token = val
+		default:
+			{
+				returnError(err, 500, w)
+				return
+			}
+		}
 	}
 
 	//No token provided?
