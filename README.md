@@ -1,5 +1,6 @@
 # go-tiny-mfa
 [![CodeQL](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml)
+
 a tinymfa implementation written in Go. See https://tinymfa.parzival.link for more information.
 
 Our repository on github: https://github.com/ghmer/go-tiny-mfa.
