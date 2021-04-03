@@ -52,6 +52,9 @@ func UpgradeSchema(version uint8) (uint8, error) {
                                 client_secret varchar(64),
                                 discovery_url varchar(255),
                                 PRIMARY KEY (id));`
+			upgradequery[1] = `UPDATE serverconfig
+                                SET schema_version = 2
+                                WHERE ID = 1;`
 
 			err = upgradeSchema(upgradequery)
 			if err != nil {
