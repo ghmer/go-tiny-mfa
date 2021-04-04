@@ -45,8 +45,6 @@ else
     mkdir ./build
 fi
 
-clear
-echo "building binaries"
 #build for linux/amd64
 env GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o build/go-tiny-mfa-amd64
 #build for linux/arm64
@@ -54,11 +52,9 @@ env GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags "${LDFLAGS}" -o build/go-t
 #build for linux/arm
 env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "${LDFLAGS}" -o build/go-tiny-mfa-arm
 
-echo "remove existing containers"
 #remove all containers
 ${DOCKER} system prune --volumes --all -f
 
-echo "build new container"
 #create docker image for linux/amd64
 ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:${AMD64TAG} \
     --platform=linux/amd64  --build-arg ARCH=amd64 \
@@ -75,15 +71,13 @@ ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:${ARMTAG}   \
     --label version=${VERSION} --label commit=${COMMIT} \
     --label revision=${REVISION} --file Dockerfile .
 
-echo "push containers to registry"
 #push images to registry
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:${ARMTAG}
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:${ARM64TAG}
 ${DOCKER} push ${REPOSITORY}/go-tiny-mfa:${AMD64TAG}
 
 #build for production?
-if [[ ${PRODUCTION} == "true" ]]; then 
-    echo "create production manifests";
+if [[ ${PRODUCTION} == "true" ]]; then
     #purge old manifest
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:${VERSION}
@@ -102,12 +96,10 @@ if [[ ${PRODUCTION} == "true" ]]; then
             ${REPOSITORY}/go-tiny-mfa:${ARM64TAG} \
             ${REPOSITORY}/go-tiny-mfa:${ARMTAG}
 
-    echo "push manifests to registry";
     #push manifest to registry
     ${DOCKER} manifest push ${REPOSITORY}/go-tiny-mfa
     ${DOCKER} manifest push ${REPOSITORY}/go-tiny-mfa:${VERSION}
-else 
-    echo "create development manifests";
+else
     #purge old manifest
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:development
 
@@ -116,12 +108,10 @@ else
                 ${REPOSITORY}/go-tiny-mfa:development \
                 ${REPOSITORY}/go-tiny-mfa:${AMD64TAG} \
                 ${REPOSITORY}/go-tiny-mfa:${ARM64TAG} \
-                ${REPOSITORY}/go-tiny-mfa:${ARMTAG} 
+                ${REPOSITORY}/go-tiny-mfa:${ARMTAG}
 
-    echo "push manifests to registry";
     #push manifest to registry
     ${DOCKER} manifest push ${REPOSITORY}/go-tiny-mfa:development
 fi
 
-echo "done"
 exit 0
