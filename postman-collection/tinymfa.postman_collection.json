@@ -15,8 +15,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -37,8 +37,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -47,7 +47,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test"
+								"{{tinymfa-issuer}}"
 							]
 						},
 						"description": "Gets an issuer"
@@ -61,7 +61,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"test\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
+							"raw": "{\n    \"name\": \"{{tinymfa-issuer}}\",\n    \"contact\": \"test@issuer.local\",\n    \"token_length\": 6,\n    \"enabled\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -69,8 +69,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -100,8 +100,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -110,7 +110,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test"
+								"{{tinymfa-issuer}}"
 							]
 						},
 						"description": "ATTENTION: When updating the token_length, your registered users MUST rescan the QRCode!"
@@ -123,8 +123,8 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -133,7 +133,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test"
+								"{{tinymfa-issuer}}"
 							]
 						}
 					},
@@ -145,8 +145,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -155,7 +155,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"token"
 							]
 						}
@@ -177,8 +177,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -187,7 +187,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"token"
 							]
 						}
@@ -200,8 +200,8 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/token/TOKEN_ID",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token/TOKEN_ID",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -210,7 +210,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"token",
 								"TOKEN_ID"
 							]
@@ -229,8 +229,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -239,7 +239,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users"
 							]
 						}
@@ -252,8 +252,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -262,9 +262,9 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users",
-								"demo"
+								"{{tinymfa-user}}"
 							]
 						}
 					},
@@ -277,7 +277,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\" : \"demo\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
+							"raw": "{\n    \"name\" : \"{{tinymfa-user}}\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -285,8 +285,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -295,7 +295,7 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users"
 							]
 						}
@@ -317,8 +317,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -327,9 +327,9 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users",
-								"demo"
+								"{{tinymfa-user}}"
 							]
 						}
 					},
@@ -341,8 +341,8 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -351,9 +351,9 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users",
-								"demo"
+								"{{tinymfa-user}}"
 							]
 						}
 					},
@@ -365,8 +365,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo/totp",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}/totp",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -375,9 +375,9 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users",
-								"demo",
+								"{{tinymfa-user}}",
 								"totp"
 							]
 						}
@@ -399,8 +399,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/test/users/demo/totp",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}/totp",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -409,9 +409,9 @@
 								"api",
 								"v1",
 								"issuer",
-								"test",
+								"{{tinymfa-issuer}}",
 								"users",
-								"demo",
+								"{{tinymfa-user}}",
 								"totp"
 							],
 							"query": [
@@ -436,8 +436,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -467,8 +467,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -489,8 +489,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -520,8 +520,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -542,8 +542,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -573,8 +573,8 @@
 							}
 						},
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -595,8 +595,8 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/audit",
-							"protocol": "http",
+							"raw": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/audit",
+							"protocol": "{{tinymfa-protocol}}",
 							"host": [
 								"{{tinymfa-host}}"
 							],
@@ -651,12 +651,24 @@
 	],
 	"variable": [
 		{
+			"key": "tinymfa-protocol",
+			"value": "http"
+		},
+		{
 			"key": "tinymfa-host",
 			"value": "localhost"
 		},
 		{
 			"key": "tinymfa-port",
 			"value": "57687"
+		},
+		{
+			"key": "tinymfa-issuer",
+			"value": "test"
+		},
+		{
+			"key": "tinymfa-user",
+			"value": "demo"
 		}
 	]
 }
