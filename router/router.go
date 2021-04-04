@@ -86,7 +86,7 @@ func Healthcheck(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
 	// send the response
-	message := structs.Message{Success: true, Message: "tiny-mfa alive!"}
+	message := structs.Message{Success: true, Message: "tiny-mfa is alive!"}
 	json.NewEncoder(w).Encode(message)
 }
 
