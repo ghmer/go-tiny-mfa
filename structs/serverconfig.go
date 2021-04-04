@@ -18,7 +18,7 @@ func StandardServerConfig() ServerConfig {
 		DenyLimit:     5,
 		RootToken:     uuid.New().String(),
 		VerifyTokens:  false,
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 	}
 	return config
 }
