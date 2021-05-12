@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ghmer/go-tiny-mfa/structs"
+	"github.com/ghmer/go-tiny-mfa/tinymfa"
 	"github.com/ghmer/go-tiny-mfa/utils"
 
 	"github.com/google/uuid"
@@ -76,7 +77,7 @@ func PingDatabase() error {
 }
 
 //CreateAuditEntry creates an audit in the database
-func CreateAuditEntry(user structs.User, validation structs.Validation) error {
+func CreateAuditEntry(user structs.User, validation tinymfa.Validation) error {
 	db, err := CreateConnection()
 	if err != nil {
 		return err

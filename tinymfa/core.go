@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/ghmer/go-tiny-mfa/structs"
 )
 
 const (
@@ -38,6 +36,13 @@ const (
 	// KeySizeExtended is the extended size of the SecretKey (256bit)
 	KeySizeExtended int8 = 32
 )
+
+//Validation is a struct used to return the result of a token validation
+type Validation struct {
+	Message int64
+	Success bool
+	Error   error
+}
 
 // GenerateStandardSecretKey returns 16bytes to be used as a secret key
 func GenerateStandardSecretKey() ([]byte, error) {
@@ -148,10 +153,10 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType, tokenlength
 }
 
 // ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func ValidateTokenCurrentTimestamp(token int, key []byte, tokenlength uint8) structs.Validation {
+func ValidateTokenCurrentTimestamp(token int, key []byte, tokenlength uint8) Validation {
 	currentTimestamp := time.Now().Unix()
 	result, err := ValidateToken(token, key, currentTimestamp, tokenlength)
-	var validation = structs.Validation{
+	var validation = Validation{
 		Message: GenerateMessage(currentTimestamp, Present),
 		Success: result,
 		Error:   err,
@@ -160,9 +165,9 @@ func ValidateTokenCurrentTimestamp(token int, key []byte, tokenlength uint8) str
 }
 
 // ValidateTokenWithTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64, tokenlength uint8) structs.Validation {
+func ValidateTokenWithTimestamp(token int, key []byte, timestamp int64, tokenlength uint8) Validation {
 	result, err := ValidateToken(token, key, timestamp, tokenlength)
-	var validation = structs.Validation{
+	var validation = Validation{
 		Message: GenerateMessage(timestamp, Present),
 		Success: result,
 		Error:   err,
