@@ -17,7 +17,9 @@ import (
 	"github.com/google/uuid"
 
 	// SQL Driver package
-	_ "github.com/lib/pq"
+
+	"github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v4"
 )
 
 const (
@@ -45,7 +47,6 @@ func CreateConnection() (*sql.DB, error) {
 	dbname := os.Getenv("POSTGRES_DB")
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbname)
-
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, err
@@ -61,6 +62,10 @@ func CreateConnection() (*sql.DB, error) {
 
 //PingDatabase tries to establish a connection
 func PingDatabase() error {
+	// hack - register pgx as postgres. As we only use
+	// the PingDatabase() function upon initialization,
+	// the driver is only registered once.
+	sql.Register("postgres", stdlib.GetDefaultDriver())
 	db, err := CreateConnection()
 	if err != nil {
 		return err
