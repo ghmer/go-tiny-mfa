@@ -209,7 +209,7 @@ This should result in a working tiny-mfa instance:
 version: "3"
 services:
     database:
-        image: postgres:12-alpine
+        image: postgres:13-alpine
         networks: 
             - tiny-mfa-net
         volumes:
