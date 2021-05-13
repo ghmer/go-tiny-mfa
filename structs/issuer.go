@@ -1,5 +1,7 @@
 package structs
 
+import "regexp"
+
 //Issuer is a struct
 type Issuer struct {
 	ID          string `json:"id"`
@@ -13,4 +15,19 @@ type Issuer struct {
 type IssuerCreation struct {
 	Issuer Issuer `json:"issuer"`
 	Token  Token  `json:"token"`
+}
+
+func (issuer Issuer) IsSafe() bool {
+	var mailregex string = `[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+`
+	var strregex string = `^[\w_-]*$`
+
+	if ok, _ := regexp.MatchString(strregex, issuer.Name); !ok {
+		return false
+	}
+
+	if ok, _ := regexp.MatchString(mailregex, issuer.Contact); !ok {
+		return false
+	}
+
+	return true
 }

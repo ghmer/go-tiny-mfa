@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -377,6 +378,11 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&issuer)
 
+	if !issuer.IsSafe() {
+		returnError(err, 405, w)
+		return
+	}
+
 	result, err := middleware.CreateIssuer(issuer)
 	if err != nil {
 		returnError(err, 405, w)
@@ -449,6 +455,12 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	if val, ok := jsonMap["contact"]; ok {
 		switch val := val.(type) {
 		case string:
+			var mailregex string = `[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+`
+			ok, _ := regexp.MatchString(mailregex, val)
+			if !ok {
+				returnError(fmt.Errorf("supplied value for contact is not a valid string"), 500, w)
+				return
+			}
 			issuerStruct.Contact = val
 		default:
 			{
