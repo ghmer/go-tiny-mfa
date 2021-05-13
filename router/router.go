@@ -321,7 +321,7 @@ func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !oidcconfig.IsSafe() {
-		returnError(err, 500, w)
+		returnError(errors.New("object not safe"), 500, w)
 		return
 	}
 
@@ -379,7 +379,7 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&issuer)
 
 	if !issuer.IsSafe() {
-		returnError(err, 405, w)
+		returnError(errors.New("object not safe"), 405, w)
 		return
 	}
 
@@ -458,7 +458,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 			var mailregex string = `[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+`
 			ok, _ := regexp.MatchString(mailregex, val)
 			if !ok {
-				returnError(fmt.Errorf("supplied value for contact is not a valid string"), 500, w)
+				returnError(fmt.Errorf("supplied value for contact is not a valid email address"), 500, w)
 				return
 			}
 			issuerStruct.Contact = val
@@ -707,7 +707,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user.Issuer = issuerStruct
 
 	if !user.IsSafe() {
-		returnError(err, 500, w)
+		returnError(errors.New("object not safe"), 500, w)
 		return
 	}
 
