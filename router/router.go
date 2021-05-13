@@ -319,6 +319,11 @@ func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !oidcconfig.IsSafe() {
+		returnError(err, 500, w)
+		return
+	}
+
 	_, err = middleware.UpdateOidcConfiguration(oidcconfig)
 	if err != nil {
 		returnError(err, 500, w)
