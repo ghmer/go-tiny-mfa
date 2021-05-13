@@ -700,6 +700,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&user)
 	user.Issuer = issuerStruct
 
+	if !user.IsSafe() {
+		returnError(err, 500, w)
+		return
+	}
+
 	_, err = middleware.CreateUser(user)
 	if err != nil {
 		returnError(err, 500, w)
@@ -764,6 +769,12 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if val, ok := jsonMap["email"]; ok {
 		switch val := val.(type) {
 		case string:
+			var mailregex string = `[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+`
+			ok, _ = regexp.MatchString(mailregex, val)
+			if !ok {
+				returnError(fmt.Errorf("supplied value for email is not valid"), 500, w)
+				return
+			}
 			userStruct.Email = val
 		default:
 			{
