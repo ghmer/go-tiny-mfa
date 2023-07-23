@@ -82,15 +82,18 @@ if [[ ${PRODUCTION} == "true" ]]; then
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:${VERSION}
 
+    ${DOCKER} manifest rm ${REPOSITORY}/go-tiny-mfa
+    ${DOCKER} manifest rm ${REPOSITORY}/go-tiny-mfa:${VERSION}
+
     #create new :latest manifest 
-    ${DOCKER} manifest create \
+    ${DOCKER} manifest create --amend \
             ${REPOSITORY}/go-tiny-mfa \
             ${REPOSITORY}/go-tiny-mfa:${AMD64TAG} \
             ${REPOSITORY}/go-tiny-mfa:${ARM64TAG} \
             ${REPOSITORY}/go-tiny-mfa:${ARMTAG}
 
     #create new :VERSION manifest 
-    ${DOCKER} manifest create \
+    ${DOCKER} manifest create --amend \
             ${REPOSITORY}/go-tiny-mfa:${VERSION} \
             ${REPOSITORY}/go-tiny-mfa:${AMD64TAG} \
             ${REPOSITORY}/go-tiny-mfa:${ARM64TAG} \
@@ -102,6 +105,7 @@ if [[ ${PRODUCTION} == "true" ]]; then
 else
     #purge old manifest
     ${DOCKER} manifest push --purge ${REPOSITORY}/go-tiny-mfa:development
+    ${DOCKER} manifest rm ${REPOSITORY}/go-tiny-mfa:development
 
     #create new :latest manifest 
     ${DOCKER} manifest create \
