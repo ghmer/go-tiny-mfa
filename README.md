@@ -1,17 +1,19 @@
 # go-tiny-mfa
+
 [![CodeQL](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml)
 
-a tinymfa implementation written in Go. See https://tinymfa.parzival.link for more information.
+a tinymfa implementation written in Go. See <https://tinymfa.parzival.link> for more information.
 
-Our repository on github: https://github.com/ghmer/go-tiny-mfa.
+Our repository on github: <https://github.com/ghmer/go-tiny-mfa>.
 
-Find a docker repository at https://hub.docker.com/r/tinymfa/go-tiny-mfa
+Find a docker repository at <https://hub.docker.com/r/tinymfa/go-tiny-mfa>
 
-Checkout our postman collection: https://tinymfa.parzival.link/tinymfa.postman_collection.json
+Checkout our postman collection: <https://tinymfa.parzival.link/tinymfa.postman_collection.json>
 
 **Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
 
 ## How it works
+
  1. tinymfa connects to a postgres database and creates the required table structures. Then, it generates a root encryption key and access token. The encryption key is stored on the filesystem.
  2. when creating an issuer, a new encryption key is generated, encrypted with the root encryption key and then stored to the database. Also, an access token unique to this issuer is generated as well.
  3. when creating a user below an issuer, a new secret key is generated and encrypted with the issuer encryption key.
@@ -19,10 +21,13 @@ Checkout our postman collection: https://tinymfa.parzival.link/tinymfa.postman_c
  5. The api offers an endpoint to validate a token. Send the token using a http post request to the api interface. The resulting json object contains the boolean result of the validation.
 
 ## Access tokens
+
 tinymfa can be configured to validate access to its resources. Once activated, tinymfa checks for presence of the http header key 'tiny-mfa-access-token'. This must be either the root token created on installation, or the issuer token presented upon issuer creation.
 
 ## API Endpoints
+
 ### System Configuration and Audit
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/system/audit|GET|Return audit entries
@@ -30,13 +35,14 @@ Endpoint|Method|Description
 /api/v1/system/configuration|POST|Updates the system configuration
 
 #### payload: Update system configuration
+
 key|type|description
 --- | --- | ---
 http_port|integer|the port to run on. Requires a restart!
 deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
 veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
 
-```
+```json
 {
     "http_port" : 57687,
     "deny_limit": 3,
@@ -45,19 +51,22 @@ veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and 
 ```
 
 ### OIDC Configuration
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/system/oidc|GET|Return current oidc configuration
 /api/v1/system/oidc|POST|Updates the oidc configuration
 
 #### payload: Update oidc configuration
+
 key|type|description
 --- | --- | ---
 enabled|boolean|whether to enable the oidc configuration
 client_id|string|the oidc client ID
 client_secret|string|the oidc client secret
 discovery_url|string|the oidc discovery url, omitting the /.well_known directory
-```
+
+```json
 {
     "enabled" : true,
     "client_id": "my-client-id",
@@ -67,13 +76,15 @@ discovery_url|string|the oidc discovery url, omitting the /.well_known directory
 ```
 
 ### QR Code Look & Feel
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/system/qrcode|GET|Return current qrcode look & feel
 /api/v1/system/qrcode|POST|Update the qrcode look & feel
 
 #### payload: update qrcode look & feel
-```
+
+```json
 {
     "qrcode-bgcolor": {
         "red": 255,
@@ -91,6 +102,7 @@ Endpoint|Method|Description
 ```
 
 ### Issuer handling
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/issuer|GET|Return all registered issuers
@@ -100,6 +112,7 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}|DELETE|Deletes a distinct issuer using a DELETE request
 
 #### payload: create a new issuer
+
 key|type|description
 --- | --- | ---
 name|string|the name of this issuer
@@ -107,7 +120,7 @@ contact|string|a mail adress of the responsible person
 token_length|integer|Length of the desired totp tokens
 enabled|boolean|whether this issuer is active
 
-```
+```json
 {
     "name": "issuer.local",
     "contact": "demo@issuer.local",
@@ -117,13 +130,14 @@ enabled|boolean|whether this issuer is active
 ```
 
 #### payload: update a new issuer
+
 key|type|description
 --- | --- | ---
 contact|string|a mail adress of the responsible person
 token_length|integer|Length of the desired totp tokens
 enabled|boolean|whether this issuer is active
 
-```
+```json
 {
     "contact": "demo@issuer.local",
     "token_length": 8,
@@ -132,6 +146,7 @@ enabled|boolean|whether this issuer is active
 ```
 
 ### Access token handling
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/issuer/{issuer}/token|GET|Return all registered access tokens for a given issuer
@@ -139,17 +154,19 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/token/{tokenid}|DELETE|Deletes a distinct access token in the scope of a distinct issuer
 
 #### payload: create a new issuer access token
+
 key|type|description
 --- | --- | ---
 description|string|a description for the new token
 
-```
+```json
 {
     "description" : "my access token"
 }
 ```
 
 ### User handling
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/issuer/{issuer}/users|GET|Return all users belonging to the scope of a distinct issuer
@@ -159,13 +176,14 @@ Endpoint|Method|Description
 /api/v1/issuer/{issuer}/users/{user}|DELETE|Deletes a distinct user in the scope of a distinct issuer
 
 #### payload: create a new user
+
 key|type|description
 --- | --- | ---
 name|string|the name this user
 email|string|a mail adress of the user
 enabled|boolean|whether this user is active
 
-```
+```json
 {
     "name" : "demo",
     "email": "demo@issuer.local",
@@ -174,12 +192,13 @@ enabled|boolean|whether this user is active
 ```
 
 #### payload: update an existing user
+
 key|type|description
 --- | --- | ---
 email|string|a mail adress of the user
 enabled|boolean|whether this user is active
 
-```
+```json
 {
     "email": "demo.address@issuer.local",
     "enabled": true
@@ -187,25 +206,29 @@ enabled|boolean|whether this user is active
 ```
 
 ### User token handling
+
 Endpoint|Method|Description
 --- | --- | ---
 /api/v1/issuer/{issuer}/users/{user}/totp|GET|Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
 /api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
 
 #### payload: validate a totp token
+
 key|type|description
 --- | --- | ---
 token|string|the token to validate
 
-```
+```json
 {
     "token": "123456"
 }
 ```
 
 ## docker-compose
+
 This should result in a working tiny-mfa instance:
-```
+
+```yaml
 version: "3"
 services:
     database:
@@ -247,10 +270,11 @@ networks:
 ```
 
 ## quickstart
-- create a tiny-mfa instance using the docker-compose script from above
-- create an issuer: 
 
-```
+- create a tiny-mfa instance using the docker-compose script from above
+- create an issuer:
+
+```bash
 curl --location --request POST 'http://localhost:57687/api/v1/issuer' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -261,9 +285,9 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer' \
 }'
 ```
 
-- create a user: 
+- create a user:
 
-```
+```bash
 curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.local/users' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -275,13 +299,13 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.loca
 
 - get the QRCode for the Authenticator App:
 
-```
+```bash
 curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp'
 ```
 
 - validate a token
 
-```
+```bash
 curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -290,15 +314,17 @@ curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.loca
 ```
 
 ## Already working
- - v1 api to CRUD issuers and users
- - validate tokens
- - limit validation attempts to defeat brute force attacks
- - generate QRCode png images
- - basic authorization via http header
+
+- v1 api to CRUD issuers and users
+- validate tokens
+- limit validation attempts to defeat brute force attacks
+- generate QRCode png images
+- basic authorization via http header
 
 ## Todo
- - authorization model
- - administrative UI
- - think about generic middleware concept
- - openid-connect
- - ...
+
+- authorization model
+- administrative UI
+- think about generic middleware concept
+- openid-connect
+- ...
