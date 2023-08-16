@@ -53,7 +53,7 @@ env GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags "${LDFLAGS}" -o build/go-t
 env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "${LDFLAGS}" -o build/go-tiny-mfa-arm
 
 #remove all containers
-${DOCKER} system prune --volumes --all -f
+#${DOCKER} system prune --volumes --all -f
 
 #create docker image for linux/amd64
 ${DOCKER} buildx build --load --tag ${REPOSITORY}/go-tiny-mfa:${AMD64TAG} \
