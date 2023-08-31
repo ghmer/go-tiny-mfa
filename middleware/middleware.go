@@ -5,7 +5,6 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -61,7 +60,7 @@ func CreateConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-//PingDatabase tries to establish a connection
+// PingDatabase tries to establish a connection
 func PingDatabase() error {
 	// hack - register pgx as postgres. As we only use
 	// the PingDatabase() function upon initialization,
@@ -76,7 +75,7 @@ func PingDatabase() error {
 	return db.Ping()
 }
 
-//CreateAuditEntry creates an audit in the database
+// CreateAuditEntry creates an audit in the database
 func CreateAuditEntry(user structs.User, validation tinymfa.Validation) error {
 	db, err := CreateConnection()
 	if err != nil {
@@ -94,7 +93,7 @@ func CreateAuditEntry(user structs.User, validation tinymfa.Validation) error {
 	return nil
 }
 
-//GetFailedValidationCount returns the number of times a user failed validation for a given message
+// GetFailedValidationCount returns the number of times a user failed validation for a given message
 func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -115,7 +114,7 @@ func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	return count, nil
 }
 
-//dynamically creates a query string based on the supplied audit query parameters
+// dynamically creates a query string based on the supplied audit query parameters
 func createAuditQueryString(parameters structs.AuditQueryParameter) (string, int, []time.Time) {
 	builder := strings.Builder{}
 	var params []time.Time = make([]time.Time, 2)
@@ -176,7 +175,7 @@ func countAuditEntries(parameters structs.AuditQueryParameter) (int, error) {
 	return count, nil
 }
 
-//GetAuditEntries returns all audit entries from the db
+// GetAuditEntries returns all audit entries from the db
 func GetAuditEntries(parameters structs.AuditQueryParameter) ([]structs.AuditEntry, error) {
 	count, err := countAuditEntries(parameters)
 	if err != nil {
@@ -289,7 +288,7 @@ func GetSchemaVersion() (uint8, error) {
 	return value, nil
 }
 
-//GetSystemProperty returns the value for the given key
+// GetSystemProperty returns the value for the given key
 func GetSystemProperty(key string) (string, error) {
 	var value string
 	db, err := CreateConnection()
@@ -312,7 +311,7 @@ func GetSystemProperty(key string) (string, error) {
 	return value, nil
 }
 
-//GetSystemConfiguration returns the system config
+// GetSystemConfiguration returns the system config
 func GetSystemConfiguration() (structs.ServerConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -347,7 +346,7 @@ func GetSystemConfiguration() (structs.ServerConfig, error) {
 	return config, nil
 }
 
-//GetQrCodeConfiguration returns the configured qr colors
+// GetQrCodeConfiguration returns the configured qr colors
 func GetQrCodeConfiguration() (structs.QrCodeConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -374,7 +373,7 @@ func GetQrCodeConfiguration() (structs.QrCodeConfig, error) {
 	return qrcodeconfig, nil
 }
 
-//UpdateQrCodeConfiguration returns the configured qr colors
+// UpdateQrCodeConfiguration returns the configured qr colors
 func UpdateQrCodeConfiguration(qrcodeconfig structs.QrCodeConfig) (structs.QrCodeConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -393,7 +392,7 @@ func UpdateQrCodeConfiguration(qrcodeconfig structs.QrCodeConfig) (structs.QrCod
 	return qrcodeconfig, nil
 }
 
-//GetOidcConfiguration returns the oidc configuration
+// GetOidcConfiguration returns the oidc configuration
 func GetOidcConfiguration() (structs.OidcConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -415,7 +414,7 @@ func GetOidcConfiguration() (structs.OidcConfig, error) {
 	return oidcconfig, nil
 }
 
-//UpdateOidcConfiguration returns the oidc configuration
+// UpdateOidcConfiguration returns the oidc configuration
 func UpdateOidcConfiguration(oidcconfig structs.OidcConfig) (structs.OidcConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -433,7 +432,7 @@ func UpdateOidcConfiguration(oidcconfig structs.OidcConfig) (structs.OidcConfig,
 	return oidcconfig, nil
 }
 
-//UpdateSystemConfiguration updates the system configuration
+// UpdateSystemConfiguration updates the system configuration
 func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfig, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -459,7 +458,7 @@ func UpdateSystemConfiguration(config structs.ServerConfig) (structs.ServerConfi
 	return GetSystemConfiguration()
 }
 
-//GetTokenLength returns the length of the desired token
+// GetTokenLength returns the length of the desired token
 func GetTokenLength(issuer structs.Issuer) (uint8, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -481,9 +480,9 @@ func GetTokenLength(issuer structs.Issuer) (uint8, error) {
 	return length, nil
 }
 
-//GetRootKey retrieves the key generated on system initialization
+// GetRootKey retrieves the key generated on system initialization
 func GetRootKey() ([]byte, error) {
-	encodedRootKey, err := ioutil.ReadFile(SecretFilePath)
+	encodedRootKey, err := os.ReadFile(SecretFilePath)
 	if err != nil {
 		log.Panicf("failed reading data from file: %s", err)
 	}
@@ -492,7 +491,7 @@ func GetRootKey() ([]byte, error) {
 	return rootKey, err
 }
 
-//GetIssuerKey returns the decrypted issuer key as byte array
+// GetIssuerKey returns the decrypted issuer key as byte array
 func GetIssuerKey(issuer structs.Issuer) ([]byte, error) {
 	cryptedKey, err := utils.DecodeBase32Key(issuer.Key)
 	if err != nil {
@@ -509,7 +508,7 @@ func GetIssuerKey(issuer structs.Issuer) ([]byte, error) {
 	return plainKey, nil
 }
 
-//GetUserKey returns the decrypted user key as byte array
+// GetUserKey returns the decrypted user key as byte array
 func GetUserKey(user structs.User) ([]byte, error) {
 	cryptedKey, err := utils.DecodeBase32Key(user.Key)
 	if err != nil {
@@ -526,7 +525,7 @@ func GetUserKey(user structs.User) ([]byte, error) {
 	return plainKey, nil
 }
 
-//GetUserKeyBase32 returns the decrypted user key in base32 encoding
+// GetUserKeyBase32 returns the decrypted user key in base32 encoding
 func GetUserKeyBase32(user structs.User) (string, error) {
 	plainKey, err := GetUserKey(user)
 	if err != nil {
@@ -589,7 +588,7 @@ func countIssuerAccessTokens(issuer structs.Issuer) (int, error) {
 	return count, err
 }
 
-//GetIssuers returns all Issuers from the database
+// GetIssuers returns all Issuers from the database
 func GetIssuers() ([]structs.Issuer, error) {
 	count, err := countIssuers()
 	if err != nil {
@@ -627,7 +626,7 @@ func GetIssuers() ([]structs.Issuer, error) {
 	return issuers, nil
 }
 
-//GetIssuerAccessTokens returns all access tokens for a given issuer from the database
+// GetIssuerAccessTokens returns all access tokens for a given issuer from the database
 func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.TokenEntry, error) {
 	count, err := countIssuerAccessTokens(issuer)
 	if err != nil {
@@ -658,7 +657,7 @@ func GetIssuerAccessTokens(issuer structs.Issuer) ([]structs.TokenEntry, error) 
 	return tokens, nil
 }
 
-//CreateIssuer inserts a Issuer struct to the database
+// CreateIssuer inserts a Issuer struct to the database
 func CreateIssuer(issuer structs.Issuer) (structs.IssuerCreation, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -705,7 +704,7 @@ func CreateIssuer(issuer structs.Issuer) (structs.IssuerCreation, error) {
 	return result, nil
 }
 
-//GetIssuer returns the requested issuer from the database as Issuer struct
+// GetIssuer returns the requested issuer from the database as Issuer struct
 func GetIssuer(issuer string) (structs.Issuer, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -735,7 +734,7 @@ func GetIssuer(issuer string) (structs.Issuer, error) {
 	return issuerStruct, nil
 }
 
-//GetIssuerByID returns the requested issuer from the database as Issuer struct
+// GetIssuerByID returns the requested issuer from the database as Issuer struct
 func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -763,7 +762,7 @@ func GetIssuerByID(issuerID string) (structs.Issuer, error) {
 	return issuerStruct, nil
 }
 
-//UpdateIssuer updates an existing issuer
+// UpdateIssuer updates an existing issuer
 func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -790,7 +789,7 @@ func UpdateIssuer(issuer structs.Issuer) (bool, error) {
 	return true, nil
 }
 
-//DeleteIssuer deletes an issuer from the database
+// DeleteIssuer deletes an issuer from the database
 func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -822,7 +821,7 @@ func DeleteIssuer(issuer structs.Issuer) (bool, error) {
 	return true, nil
 }
 
-//GetUsers returns all users for a given issuer
+// GetUsers returns all users for a given issuer
 func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -867,7 +866,7 @@ func GetUsers(issuer structs.Issuer) ([]structs.User, error) {
 	return users, nil
 }
 
-//CreateUser inserts a userstruct to the DB
+// CreateUser inserts a userstruct to the DB
 func CreateUser(user structs.User) (structs.User, error) {
 	if user.ID == "" {
 		user.ID = uuid.New().String()
@@ -906,7 +905,7 @@ func CreateUser(user structs.User) (structs.User, error) {
 	return user, nil
 }
 
-//GetUser returns a User struct from the database
+// GetUser returns a User struct from the database
 func GetUser(user string, issuer structs.Issuer) (structs.User, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -935,7 +934,7 @@ func GetUser(user string, issuer structs.Issuer) (structs.User, error) {
 	return userStruct, nil
 }
 
-//UpdateUser updates an existing user
+// UpdateUser updates an existing user
 func UpdateUser(user structs.User) (bool, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -961,7 +960,7 @@ func UpdateUser(user structs.User) (bool, error) {
 	return true, nil
 }
 
-//DeleteUser deletes a user from the database
+// DeleteUser deletes a user from the database
 func DeleteUser(user structs.User) (bool, error) {
 	db, err := CreateConnection()
 	if err != nil {
@@ -987,7 +986,7 @@ func DeleteUser(user structs.User) (bool, error) {
 	return true, nil
 }
 
-//InsertToken inserts an access token to the database
+// InsertToken inserts an access token to the database
 func InsertToken(token structs.Token) error {
 	db, err := CreateConnection()
 	if err != nil {
@@ -1012,7 +1011,7 @@ func InsertToken(token structs.Token) error {
 	return nil
 }
 
-//DeleteTokens deletes all tokens for a given issuer id
+// DeleteTokens deletes all tokens for a given issuer id
 func DeleteTokens(issuerid string) error {
 	db, err := CreateConnection()
 	if err != nil {
@@ -1025,7 +1024,7 @@ func DeleteTokens(issuerid string) error {
 	return err
 }
 
-//DeleteToken deletes all tokens for a given issuer id
+// DeleteToken deletes all tokens for a given issuer id
 func DeleteToken(issuerid, tokenid string) error {
 	db, err := CreateConnection()
 	if err != nil {
@@ -1038,7 +1037,7 @@ func DeleteToken(issuerid, tokenid string) error {
 	return err
 }
 
-//DeleteUsers deletes all tokens for a given object id
+// DeleteUsers deletes all tokens for a given object id
 func DeleteUsers(objectid string) error {
 	db, err := CreateConnection()
 	if err != nil {
@@ -1051,7 +1050,7 @@ func DeleteUsers(objectid string) error {
 	return err
 }
 
-//ValidateToken returns true if a token could be looked up in the db
+// ValidateToken returns true if a token could be looked up in the db
 func ValidateToken(issuer structs.Issuer, submittedToken string) (bool, error) {
 	db, err := CreateConnection()
 	if err != nil {
