@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	golang.org/x/crypto v0.18.0
+	golang.org/x/crypto v0.19.0
 )
 
 require (
@@ -17,6 +17,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgtype v1.14.1 // indirect
+	github.com/jackc/pgtype v1.14.2 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
