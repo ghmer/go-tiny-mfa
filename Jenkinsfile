@@ -9,10 +9,6 @@ pipeline {
         booleanParam(name: 'PRODUCTION', defaultValue: params.PRODUCTION ?:false, description: '')
     }
 
-    tools {
-        go "Golang"
-    }
-
     stages {
         stage('Build') {
             steps {
