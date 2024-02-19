@@ -17,25 +17,21 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh "env GOOS=linux GOARCH=amd64 go build -ldflags '${params.LDFLAGS}' -o build/go-tiny-mfa-amd64"                
-                sh "env GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags '${params.LDFLAGS}' -o build/go-tiny-mfa-arm64"
-                sh "env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags '${params.LDFLAGS}' -o build/go-tiny-mfa-arm"
-                
                 sh """
                     docker buildx build --load --tag ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG} \
-                        --platform=linux/amd64  --build-arg ARCH=amd64  --label version=${params.VERSION} \
+                        --platform=linux/amd64  --build-arg arch=amd64  --label version=${params.VERSION} \
                         --file Dockerfile .
                 """   
                
                 sh """
                     docker buildx build --load --tag ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG} \
-                        --platform=linux/amd64  --build-arg ARCH=arm64 --label version=${params.VERSION} \
+                        --platform=linux/amd64  --build-arg arch=arm64 --label version=${params.VERSION} \
                         --file Dockerfile .
                 """
                 
                 sh """
                     docker buildx build --load --tag ${params.REPOSITORY}/go-tiny-mfa:${params.ARMTAG} \
-                        --platform=linux/amd64  --build-arg ARCH=arm --label version=${params.VERSION} \
+                        --platform=linux/amd64  --build-arg arch=arm --label version=${params.VERSION} \
                         --file Dockerfile .
                 """
             }
