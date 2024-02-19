@@ -37,9 +37,9 @@ pipeline {
         }
         stage('Push to registry') {
             steps {
-                sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.ARMTAG}"
-                sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG}"
                 sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG}"
+                sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG}"
+                sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.ARMTAG}"
             }
         }
         stage('Create manifests') {
