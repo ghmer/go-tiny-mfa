@@ -2,8 +2,7 @@ pipeline {
     agent any
     parameters {
         string(name: 'REPOSITORY', defaultValue: params.REPOSITORY ?:'', description: '')
-        string(name: 'VERSION', defaultValue: params.VERSION ?:'', description: '')
-        string(name: 'LDFLAGS', defaultValue: params.LDFLAGS ?:'-s -w', description: '')
+        string(name: 'VERSION', defaultValue: params.VERSION ?:'v0.2.8', description: '')
         string(name: 'AMD64TAG', defaultValue: params.AMD64TAG ?:'amd64', description: '')
         string(name: 'ARM64TAG', defaultValue: params.ARM64TAG ?:'arm64', description: '')
         string(name: 'ARMTAG', defaultValue: params.ARMTAG ?:'arm', description: '')
