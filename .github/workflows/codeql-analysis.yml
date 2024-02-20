@@ -34,6 +34,11 @@ jobs:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
 
     steps:
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22.0' # The Go version to download (if necessary) and use.
+    
     - name: Checkout repository
       uses: actions/checkout@v2
 
