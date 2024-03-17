@@ -20,7 +20,7 @@ pipeline {
                
                 sh """
                     docker buildx build --load --tag ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG} \
-                        --platform=linux/arm64  --build-arg arch=arm64 --label version=${params.VERSION} \
+                        --platform=linux/arm64/v8  --build-arg arch=arm64 --label version=${params.VERSION} \
                         --file Dockerfile .
                 """
                 
