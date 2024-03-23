@@ -46,10 +46,6 @@ pipeline {
                             sh "docker manifest push --purge ${params.REPOSITORY}/go-tiny-mfa"
                             sh "docker manifest push --purge ${params.REPOSITORY}/go-tiny-mfa:${VERSION}"
                             
-                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa"
-                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa:${VERSION}"
-                            
-
                             sh """
                                 docker manifest create --amend \
                                     ${params.REPOSITORY}/go-tiny-mfa \
@@ -72,7 +68,6 @@ pipeline {
                     } else {
                         stage('Development') {
                             sh "docker manifest push --purge ${params.REPOSITORY}/go-tiny-mfa:development"
-                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa:development"
 
                             sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG}"
                             sh "docker push ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG}"
