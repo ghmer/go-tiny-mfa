@@ -84,7 +84,7 @@ func CreateAuditEntry(user structs.User, validation tinymfa.Validation) error {
 	defer db.Close()
 
 	insertString := `INSERT INTO audit(issuer, username, message, validated_on, success)
-                     VALUES($1, $2, $3, $4, $5)`
+                     VALUES($1, $2, ($3::int)::text, $4, $5)`
 
 	_, err = db.Exec(insertString, user.Issuer.Name, user.Name, validation.Message, time.Now(), validation.Success)
 	if err != nil {
@@ -98,14 +98,12 @@ func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 	log.Println("middleware", 98, user, message)
 	db, err := CreateConnection()
 	if err != nil {
-		log.Println("middleware", 100, err)
 		return -1, err
 	}
 	defer db.Close()
-	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=($1::int)::text AND success=$4`
+	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=($3::int)::text AND success=$4`
 	rows, err := db.Query(queryString, user.Issuer.Name, user.Name, message, false)
 	if err != nil {
-		log.Println("middleware", 108, err)
 		return -1, err
 	}
 

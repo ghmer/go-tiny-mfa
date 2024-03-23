@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"net/http"
 	"regexp"
@@ -853,7 +852,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
-		log.Println("856", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -865,7 +863,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 			token = val
 		default:
 			{
-				log.Println("868", err)
 				returnError(fmt.Errorf("supplied value for token is not a string"), 500, w)
 				return
 			}
@@ -874,7 +871,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	//No token provided?
 	if token == "" {
-		log.Println("877", err)
 		returnError(errors.New("no token provided"), 500, w)
 		return
 	}
@@ -882,7 +878,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//can the submitted token be converted to an integer?
 	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
-		log.Println("885", errors.New("no valid token provided"))
 		returnError(errors.New("no valid token provided"), 500, w)
 		return
 	}
@@ -890,7 +885,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//is there actually a user?
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
-		log.Println("893", err)
 		returnError(err, 404, w)
 		return
 	}
@@ -898,14 +892,12 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
-		log.Println("901", err)
 		returnError(err, 401, w)
 		return
 	}
 
 	//is either user or issuer disabled?
 	if !userStruct.Enabled || !userStruct.Issuer.Enabled {
-		log.Println("908", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -914,7 +906,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	message := tinymfa.GenerateMessage(timestamp, tinymfa.Present)
 	failedCount, err := middleware.GetFailedValidationCount(userStruct, message)
 	if err != nil {
-		log.Println("917", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -922,7 +913,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	denyCountStr, _ := middleware.GetSystemProperty(middleware.DenyLimitKey)
 	denyCount, _ := strconv.Atoi(denyCountStr)
 	if failedCount >= denyCount {
-		log.Println("925", errors.New("too many authentication attempts. Please wait 30 seconds"))
 		returnError(errors.New("too many authentication attempts. Please wait 30 seconds"), 401, w)
 		return
 	}
@@ -930,14 +920,12 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//primary checks green, decrypting user key
 	plainkey, err := middleware.GetUserKey(userStruct)
 	if err != nil {
-		log.Println("933", err)
 		returnError(err, 500, w)
 		return
 	}
 
 	tokenlength, err := middleware.GetTokenLength(userStruct.Issuer)
 	if err != nil {
-		log.Println("940", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -947,13 +935,16 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {
-		log.Println("950", err)
 		returnError(err, 500, w)
 		return
 	}
 
 	//audit validation
-	middleware.CreateAuditEntry(userStruct, validation)
+	err = middleware.CreateAuditEntry(userStruct, validation)
+	if err != nil {
+		returnError(err, 500, w)
+		return
+	}
 
 	//build result message
 	result := structs.Message{Success: validation.Success}
