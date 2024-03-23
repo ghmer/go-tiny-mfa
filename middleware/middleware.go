@@ -102,7 +102,7 @@ func GetFailedValidationCount(user structs.User, message int64) (int, error) {
 		return -1, err
 	}
 	defer db.Close()
-	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=$3 AND success=$4`
+	queryString := `SELECT COUNT(id) FROM audit WHERE issuer=$1 AND username=$2 AND message=($1::int)::text AND success=$4`
 	rows, err := db.Query(queryString, user.Issuer.Name, user.Name, message, false)
 	if err != nil {
 		log.Println("middleware", 108, err)
