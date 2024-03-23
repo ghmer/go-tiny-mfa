@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"regexp"
@@ -21,7 +22,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//VerifyTokenHeaderKey defines the header key to look for the access token
+// VerifyTokenHeaderKey defines the header key to look for the access token
 const VerifyTokenHeaderKey string = "tiny-mfa-access-token"
 
 // Router is exported and used in main.go
@@ -91,7 +92,7 @@ func Healthcheck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//GetAuditEntries returns all audit entries
+// GetAuditEntries returns all audit entries
 func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -132,7 +133,7 @@ func GetAuditEntries(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(audits)
 }
 
-//GetSystemConfiguration returns the system configuration
+// GetSystemConfiguration returns the system configuration
 func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -153,7 +154,7 @@ func GetSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(configuration)
 }
 
-//UpdateSystemConfiguration updates the system configuration
+// UpdateSystemConfiguration updates the system configuration
 func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -228,7 +229,7 @@ func UpdateSystemConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(configuration)
 }
 
-//GetQrCodeConfiguration returns the qrcode configuration
+// GetQrCodeConfiguration returns the qrcode configuration
 func GetQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -249,7 +250,7 @@ func GetQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(configuration)
 }
 
-//UpdateQrCodeConfiguration updates the qrcode configuration
+// UpdateQrCodeConfiguration updates the qrcode configuration
 func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -282,7 +283,7 @@ func UpdateQrCodeConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-//GetOidcConfiguration returns the oidc configuration
+// GetOidcConfiguration returns the oidc configuration
 func GetOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -303,7 +304,7 @@ func GetOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(configuration)
 }
 
-//UpdateOidcConfiguration updates the oidc configuration
+// UpdateOidcConfiguration updates the oidc configuration
 func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -342,7 +343,7 @@ func UpdateOidcConfiguration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-//GetIssuers returns all issuers
+// GetIssuers returns all issuers
 func GetIssuers(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -365,7 +366,7 @@ func GetIssuers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(issuers)
 }
 
-//CreateIssuer creates a new issuer
+// CreateIssuer creates a new issuer
 func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 	err := verifyRootToken(r)
@@ -396,7 +397,7 @@ func CreateIssuer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-//GetIssuer returns the issuer given in the URL
+// GetIssuer returns the issuer given in the URL
 func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -417,7 +418,7 @@ func GetIssuer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(issuerStruct)
 }
 
-//UpdateIssuer updates an existing issuer
+// UpdateIssuer updates an existing issuer
 func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!!!
 	writeStandardHeaders(w)
 
@@ -498,7 +499,7 @@ func UpdateIssuer(w http.ResponseWriter, r *http.Request) { //TODO: NOT CORRECT!
 	json.NewEncoder(w).Encode(message)
 }
 
-//DeleteIssuer deletes an existing issuer
+// DeleteIssuer deletes an existing issuer
 func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -526,7 +527,7 @@ func DeleteIssuer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//GetIssuerAccessTokens returns all access tokens for a given issuer
+// GetIssuerAccessTokens returns all access tokens for a given issuer
 func GetIssuerAccessTokens(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -553,7 +554,7 @@ func GetIssuerAccessTokens(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-//CreateIssuerAccessToken adds an access token to a distinct issuer
+// CreateIssuerAccessToken adds an access token to a distinct issuer
 func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -616,7 +617,7 @@ func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//DeleteIssuerAccessToken deletes a token from the database
+// DeleteIssuerAccessToken deletes a token from the database
 func DeleteIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tokenid := vars["tokenid"]
@@ -656,7 +657,7 @@ func DeleteIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//GetUsers returns all users for a given issuer
+// GetUsers returns all users for a given issuer
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -685,7 +686,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-//CreateUser creates a new user in the scope of the given issuer
+// CreateUser creates a new user in the scope of the given issuer
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -728,7 +729,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(userStruct)
 }
 
-//GetUser returns a distinct user in the scope of the given issuer
+// GetUser returns a distinct user in the scope of the given issuer
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -749,7 +750,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(userStruct)
 }
 
-//UpdateUser updates a user
+// UpdateUser updates a user
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -814,7 +815,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//DeleteUser deletes a user in the scope of the given issuer
+// DeleteUser deletes a user in the scope of the given issuer
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -843,7 +844,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-//ValidateUserToken validates a given token
+// ValidateUserToken validates a given token
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	writeStandardHeaders(w)
 
@@ -852,6 +853,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	jsonMap, err := mapJSON(r.Body)
 	if err != nil {
+		log.Println("856", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -863,6 +865,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 			token = val
 		default:
 			{
+				log.Println("868", err)
 				returnError(fmt.Errorf("supplied value for token is not a string"), 500, w)
 				return
 			}
@@ -871,6 +874,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	//No token provided?
 	if token == "" {
+		log.Println("877", err)
 		returnError(errors.New("no token provided"), 500, w)
 		return
 	}
@@ -878,6 +882,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//can the submitted token be converted to an integer?
 	tokenInt, err := strconv.Atoi(token)
 	if err != nil {
+		log.Println("885", errors.New("no valid token provided"))
 		returnError(errors.New("no valid token provided"), 500, w)
 		return
 	}
@@ -885,6 +890,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//is there actually a user?
 	userStruct, err := getUserStructByVars(r)
 	if err != nil {
+		log.Println("893", err)
 		returnError(err, 404, w)
 		return
 	}
@@ -892,12 +898,14 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 
 	err = verifyIssuerToken(userStruct.Issuer, r)
 	if err != nil {
+		log.Println("901", err)
 		returnError(err, 401, w)
 		return
 	}
 
 	//is either user or issuer disabled?
 	if !userStruct.Enabled || !userStruct.Issuer.Enabled {
+		log.Println("908", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -906,6 +914,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	message := tinymfa.GenerateMessage(timestamp, tinymfa.Present)
 	failedCount, err := middleware.GetFailedValidationCount(userStruct, message)
 	if err != nil {
+		log.Println("917", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -913,6 +922,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	denyCountStr, _ := middleware.GetSystemProperty(middleware.DenyLimitKey)
 	denyCount, _ := strconv.Atoi(denyCountStr)
 	if failedCount >= denyCount {
+		log.Println("925", errors.New("too many authentication attempts. Please wait 30 seconds"))
 		returnError(errors.New("too many authentication attempts. Please wait 30 seconds"), 401, w)
 		return
 	}
@@ -920,12 +930,14 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//primary checks green, decrypting user key
 	plainkey, err := middleware.GetUserKey(userStruct)
 	if err != nil {
+		log.Println("933", err)
 		returnError(err, 500, w)
 		return
 	}
 
 	tokenlength, err := middleware.GetTokenLength(userStruct.Issuer)
 	if err != nil {
+		log.Println("940", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -935,6 +947,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	//Scrubbing data, then further processing
 	defer utils.ScrubInformation(&userStruct, &plainkey)
 	if validation.Error != nil {
+		log.Println("950", err)
 		returnError(err, 500, w)
 		return
 	}
@@ -954,7 +967,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-//GenerateQrCode generates a QrCode
+// GenerateQrCode generates a QrCode
 func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -999,13 +1012,13 @@ func GenerateQrCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(png)
 }
 
-//writes some standard Headers. These accompany a returned json object
+// writes some standard Headers. These accompany a returned json object
 func writeStandardHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-//takes in variables of the url and tries to return the corresponding issuer struct
+// takes in variables of the url and tries to return the corresponding issuer struct
 func getIssuerStructByVars(r *http.Request) (structs.Issuer, error) {
 	vars := mux.Vars(r)
 	issuer := vars["issuer"]
@@ -1022,7 +1035,7 @@ func getIssuerStructByVars(r *http.Request) (structs.Issuer, error) {
 	return issuerStruct, nil
 }
 
-//takes in variables of the url and tries to return the corresponding user struct
+// takes in variables of the url and tries to return the corresponding user struct
 func getUserStructByVars(r *http.Request) (structs.User, error) {
 	issuerStruct, err := getIssuerStructByVars(r)
 	if err != nil {
@@ -1060,7 +1073,7 @@ func mapJSON(reader io.Reader) (map[string]interface{}, error) {
 	return m, nil
 }
 
-//returns true if the token verification has been enabled
+// returns true if the token verification has been enabled
 func verifyTokenEnabled() bool {
 	verifyTokenStr, err := middleware.GetSystemProperty(middleware.VerifyTokenKey)
 	if err != nil {
@@ -1078,7 +1091,7 @@ func verifyTokenEnabled() bool {
 	return verifyToken
 }
 
-//verify whether the root token was part of the request
+// verify whether the root token was part of the request
 func verifyRootToken(r *http.Request) error {
 	//check if token verification has been enabled.
 	verifyToken := verifyTokenEnabled()
@@ -1103,7 +1116,7 @@ func verifyRootToken(r *http.Request) error {
 	return nil
 }
 
-//verify whether a valid issuer token was part of the request
+// verify whether a valid issuer token was part of the request
 func verifyIssuerToken(issuer structs.Issuer, r *http.Request) error {
 	//check if token verification has been enabled.
 	verifyToken := verifyTokenEnabled()
@@ -1128,7 +1141,7 @@ func verifyIssuerToken(issuer structs.Issuer, r *http.Request) error {
 	return nil
 }
 
-//return the error via the http ResponseWriter
+// return the error via the http ResponseWriter
 func returnError(err error, statuscode int, w http.ResponseWriter) {
 	message := structs.Message{Success: false, Message: err.Error()}
 	w.WriteHeader(statuscode)
