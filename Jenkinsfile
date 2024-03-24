@@ -44,7 +44,7 @@ pipeline {
                     if(params.PRODUCTION) {
                         stage('Production') {
                             sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa"
-                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa${VERSION}"
+                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa:${VERSION}"
                             
                             sh """
                                 docker manifest create --amend \
