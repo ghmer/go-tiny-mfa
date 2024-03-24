@@ -580,7 +580,7 @@ func CreateIssuerAccessToken(w http.ResponseWriter, r *http.Request) {
 	if val, ok := jsonMap["description"]; ok {
 		switch val := val.(type) {
 		case string:
-			var strregex string = `^[\w]*$`
+			var strregex string = `^[\w\s]*$`
 			ok, _ = regexp.MatchString(strregex, val)
 			if !ok {
 				returnError(fmt.Errorf("supplied value for description is not valid"), 500, w)
