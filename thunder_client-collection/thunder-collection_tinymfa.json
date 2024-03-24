@@ -1,0 +1,377 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "tinymfa Thunder Client Collection",
+    "dateExported": "2024-03-24T01:40:04.088Z",
+    "version": "1.1",
+    "folders": [
+        {
+            "_id": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "issuer handling",
+            "containerId": "",
+            "created": "2024-03-23T23:36:43.438Z",
+            "sortNum": 10000
+        },
+        {
+            "_id": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "user handling",
+            "containerId": "",
+            "created": "2024-03-23T23:36:43.439Z",
+            "sortNum": 20000
+        },
+        {
+            "_id": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "system handling",
+            "containerId": "",
+            "created": "2024-03-23T23:36:43.440Z",
+            "sortNum": 30000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "c3cff825-698d-4bb9-9155-de5d0ffd3016",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "List Issuers",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-03-23T23:36:43.438Z",
+            "modified": "2024-03-23T23:36:43.438Z",
+            "headers": []
+        },
+        {
+            "_id": "9d879034-192b-4f50-9d49-5b2af7e79453",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Get Issuer",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-03-23T23:36:43.440Z",
+            "modified": "2024-03-23T23:45:11.125Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "405f57cf-6d4a-4990-aa1a-c18870fa763b",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Create Issuer",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2024-03-23T23:36:43.441Z",
+            "modified": "2024-03-23T23:40:06.129Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"demoissuer\",\n  \"contact\": \"test@issuer.local\",\n  \"token_length\": 6,\n  \"enabled\": true\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "1e77abf0-456b-435c-afcc-d13b7e8573e5",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Update Issuer",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-03-23T23:36:43.442Z",
+            "modified": "2024-03-23T23:42:38.908Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"contact\":\"test-address@issuer.local\",\n    \"token_length\": 8,\n    \"enabled\" : true\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "3b36b06d-bd70-473d-9d07-2b0907b8c55f",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Delete Issuer",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}",
+            "method": "DELETE",
+            "sortNum": 50000,
+            "created": "2024-03-23T23:36:43.443Z",
+            "modified": "2024-03-23T23:36:43.443Z",
+            "headers": []
+        },
+        {
+            "_id": "cb57b3d6-18e0-4c41-8ce9-93f496c7ab73",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Get Issuer Tokens",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2024-03-23T23:36:43.444Z",
+            "modified": "2024-03-23T23:36:43.444Z",
+            "headers": []
+        },
+        {
+            "_id": "cee47cc8-a918-43dd-8421-6940f1474ce0",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Create Issuer Token",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token",
+            "method": "POST",
+            "sortNum": 70000,
+            "created": "2024-03-23T23:36:43.445Z",
+            "modified": "2024-03-23T23:46:46.682Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"description\": \"my access token\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "fab3f8b7-2357-4fef-8677-b2c3d5ec07ff",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "d040204e-25ff-478c-b262-8c86fa0c1c9a",
+            "name": "Delete Issuer Token",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/token/TOKEN_ID",
+            "method": "DELETE",
+            "sortNum": 80000,
+            "created": "2024-03-23T23:36:43.446Z",
+            "modified": "2024-03-23T23:36:43.446Z",
+            "headers": []
+        },
+        {
+            "_id": "ea394b0e-bf91-4ad4-ba0d-4228245f8433",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "List Users",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users",
+            "method": "GET",
+            "sortNum": 90000,
+            "created": "2024-03-23T23:36:43.447Z",
+            "modified": "2024-03-23T23:36:43.447Z",
+            "headers": []
+        },
+        {
+            "_id": "35012005-a47e-49dc-b2fe-4cbb774dd1cb",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Get User",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+            "method": "GET",
+            "sortNum": 100000,
+            "created": "2024-03-23T23:36:43.448Z",
+            "modified": "2024-03-23T23:36:43.448Z",
+            "headers": []
+        },
+        {
+            "_id": "3ca31744-0442-42d5-ab75-7bca009eb42a",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Create User",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users",
+            "method": "POST",
+            "sortNum": 110000,
+            "created": "2024-03-23T23:36:43.449Z",
+            "modified": "2024-03-23T23:48:03.539Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"name\" : \"{{tinymfa-user}}\",\n    \"email\": \"demo@issuer.local\",\n    \"enabled\": true\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "6e30af9b-8e1d-480c-9c0a-40e0daf55530",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Update User",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+            "method": "POST",
+            "sortNum": 120000,
+            "created": "2024-03-23T23:36:43.450Z",
+            "modified": "2024-03-23T23:48:13.876Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"email\" : \"demo@issuer.net\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "5041a793-3549-49bb-aea0-410d6f7d3c34",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Delete User",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}",
+            "method": "DELETE",
+            "sortNum": 130000,
+            "created": "2024-03-23T23:36:43.451Z",
+            "modified": "2024-03-23T23:36:43.451Z",
+            "headers": []
+        },
+        {
+            "_id": "3473467a-2c9b-4b28-8252-36802fd553d8",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Get User QRCode",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}/totp",
+            "method": "GET",
+            "sortNum": 140000,
+            "created": "2024-03-23T23:36:43.452Z",
+            "modified": "2024-03-23T23:36:43.452Z",
+            "headers": []
+        },
+        {
+            "_id": "e16dd333-322c-424e-9e32-f6ba81030966",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "2a6036a5-7196-43a3-aeda-bc78764ba5ae",
+            "name": "Validate Token",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/issuer/{{tinymfa-issuer}}/users/{{tinymfa-user}}/totp",
+            "method": "POST",
+            "sortNum": 150000,
+            "created": "2024-03-23T23:36:43.453Z",
+            "modified": "2024-03-23T23:48:39.770Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"token\" : \"7574352\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "f4646ef2-f089-40c6-ad73-a4da4bece2e0",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Get System Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+            "method": "GET",
+            "sortNum": 160000,
+            "created": "2024-03-23T23:36:43.454Z",
+            "modified": "2024-03-23T23:36:43.454Z",
+            "headers": []
+        },
+        {
+            "_id": "5329a7a3-4d66-417e-ba1c-4069bca7763c",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Update System Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/configuration",
+            "method": "POST",
+            "sortNum": 170000,
+            "created": "2024-03-23T23:36:43.455Z",
+            "modified": "2024-03-23T23:38:20.352Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"deny_limit\": 10\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "d4b11798-b30c-40aa-98d4-80d8585946de",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Get OIDC Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+            "method": "GET",
+            "sortNum": 180000,
+            "created": "2024-03-23T23:36:43.456Z",
+            "modified": "2024-03-23T23:36:43.456Z",
+            "headers": []
+        },
+        {
+            "_id": "af0c3560-85b6-45f8-9c30-fb21940fc187",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Update OIDC Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/oidc",
+            "method": "POST",
+            "sortNum": 190000,
+            "created": "2024-03-23T23:36:43.457Z",
+            "modified": "2024-03-23T23:36:43.457Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"deny_limit\": 10\n}"
+            }
+        },
+        {
+            "_id": "cf984900-1dd7-4088-88d1-1c8fd16f824f",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Get QRCode Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+            "method": "GET",
+            "sortNum": 200000,
+            "created": "2024-03-23T23:36:43.458Z",
+            "modified": "2024-03-23T23:36:43.458Z",
+            "headers": []
+        },
+        {
+            "_id": "83875b56-0bd6-458b-968b-8d64483c8f47",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Update QRCode Configuration",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/qrcode",
+            "method": "POST",
+            "sortNum": 210000,
+            "created": "2024-03-23T23:36:43.459Z",
+            "modified": "2024-03-23T23:38:44.982Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"qrcode-bgcolor\": {\n        \"red\": 255,\n        \"green\": 255,\n        \"blue\": 255,\n        \"alpha\": 255\n    },\n    \"qrcode-fgcolor\": {\n        \"red\": 0,\n        \"green\": 0,\n        \"blue\": 0,\n        \"alpha\": 254\n    }\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "a00ad6e6-f12d-41a6-9125-2169eb6e169d",
+            "colId": "2ab9b690-9db1-400b-b9dd-1556518b26b7",
+            "containerId": "4006707f-61fa-4924-9aaa-7c6595e5ceb6",
+            "name": "Get Audit",
+            "url": "{{tinymfa-protocol}}://{{tinymfa-host}}:{{tinymfa-port}}/api/v1/system/audit",
+            "method": "GET",
+            "sortNum": 220000,
+            "created": "2024-03-23T23:36:43.460Z",
+            "modified": "2024-03-23T23:36:43.460Z",
+            "headers": []
+        }
+    ],
+    "settings": {
+        "preReq": {
+            "inlineScripts": [
+                {
+                    "script": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        "postReq": {
+            "inlineScripts": [
+                {
+                    "script": [
+                        ""
+                    ]
+                }
+            ]
+        }
+    }
+}
