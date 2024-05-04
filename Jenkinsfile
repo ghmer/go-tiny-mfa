@@ -44,11 +44,20 @@ pipeline {
                     if(params.PRODUCTION) {
                         stage('Production') {
                             sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa || true"
+                            sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa:latest || true"
                             sh "docker manifest rm ${params.REPOSITORY}/go-tiny-mfa:${VERSION} || true"
                             
                             sh """
                                 docker manifest create --amend \
                                     ${params.REPOSITORY}/go-tiny-mfa \
+                                    ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG} \
+                                    ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG} \
+                                    ${params.REPOSITORY}/go-tiny-mfa:${params.ARMTAG}
+                            """
+
+                            sh """
+                                docker manifest create --amend \
+                                    ${params.REPOSITORY}/go-tiny-mfa:latest \
                                     ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG} \
                                     ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG} \
                                     ${params.REPOSITORY}/go-tiny-mfa:${params.ARMTAG}
