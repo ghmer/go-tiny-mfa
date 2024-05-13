@@ -37,7 +37,7 @@ const (
 	KeySizeExtended int8 = 32
 )
 
-//Validation is a struct used to return the result of a token validation
+// Validation is a struct used to return the result of a token validation
 type Validation struct {
 	Message int64
 	Success bool
@@ -58,26 +58,20 @@ func GenerateExtendedSecretKey() ([]byte, error) {
 func generateSecretKey(size int8) ([]byte, error) {
 	key := make([]byte, size)
 	_, err := rand.Read(key)
-	if err != nil {
-		return nil, err
-	}
 
-	return key, nil
+	return key, err
 }
 
 // GenerateMessageBytes takes in a int64 number and turns it to a BigEndian byte array
 func GenerateMessageBytes(message int64) ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	err := binary.Write(buffer, binary.BigEndian, message)
-	if err != nil {
-		return nil, err
-	}
 
-	return buffer.Bytes(), nil
+	return buffer.Bytes(), err
 }
 
-// CalculateRFC2104HMAC calculates the hmac-sha1 value for a given message and key
-func CalculateRFC2104HMAC(message []byte, key []byte) []byte {
+// CalculateHMAC calculates the hmac-sha1 value for a given message and key (RFC2104)
+func CalculateHMAC(message []byte, key []byte) []byte {
 	mac := hmac.New(sha1.New, key)
 	mac.Write(message)
 
@@ -116,7 +110,7 @@ func GenerateValidToken(unixTimestamp int64, key []byte, offsetType, tokenlength
 	if err != nil {
 		return 0, err
 	}
-	rfc2104hmac := CalculateRFC2104HMAC(message, key)
+	rfc2104hmac := CalculateHMAC(message, key)
 
 	// the offset is the numerical representation of the last byte of the hmac-sha1 message.
 	// i.E if the last byte was 4 (in its decimal representation), we will derive the dynamic
