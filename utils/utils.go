@@ -22,7 +22,7 @@ func Encrypt(data, passphrase []byte) []byte {
 	// a passphrase must have a certain size (128/256bit)
 	// therefore, if this condition is not met, we are going to create
 	// a md5 hash of the passphrase that happens to be 128bit
-	if len(passphrase) != 16 || len(passphrase) != 32 {
+	if len(passphrase) != 16 && len(passphrase) != 32 {
 		passphrase = createMd5Hash(passphrase)
 	}
 	block, _ := aes.NewCipher(passphrase)
