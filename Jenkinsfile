@@ -44,7 +44,8 @@ pipeline {
                                     ${params.REPOSITORY}/go-tiny-mfa \
                                     ${params.REPOSITORY}/go-tiny-mfa:${params.AMD64TAG} \
                                     ${params.REPOSITORY}/go-tiny-mfa:${params.ARM64TAG}
-
+                            """
+                            
                             sh """
                                 docker manifest create --amend \
                                     ${params.REPOSITORY}/go-tiny-mfa:latest \
