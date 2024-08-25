@@ -1,4 +1,4 @@
-FROM golang:alpine AS build
+FROM golang:1.22-alpine AS build
 ARG arch=amd64
 ARG ldflags="-s -w"
 WORKDIR /app
