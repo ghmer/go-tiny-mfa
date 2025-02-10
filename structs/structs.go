@@ -6,6 +6,22 @@ import (
 	"strings"
 )
 
+// QrCodeConfig represents the configuration for a QR code.
+type QrCodeConfig struct {
+	BgColor ColorSetting `json:"qrcode-bgcolor"`
+	FgColor ColorSetting `json:"qrcode-fgcolor"`
+}
+
+// StandardQrCodeConfig returns a standard qrcode configuration
+func StandardQrCodeConfig() QrCodeConfig {
+	var config QrCodeConfig = QrCodeConfig{
+		BgColor: ColorSetting{Red: 255, Green: 255, Blue: 255, Alpha: 255},
+		FgColor: ColorSetting{Red: 0, Green: 0, Blue: 0, Alpha: 255},
+	}
+	return config
+}
+
+// ColorSetting represents a color setting with RGBA values.
 type ColorSetting struct {
 	Red   uint8 `json:"red"`
 	Green uint8 `json:"green"`
@@ -13,10 +29,12 @@ type ColorSetting struct {
 	Alpha uint8 `json:"alpha"`
 }
 
-func (setting ColorSetting) ToString() string {
+// ToString converts a ColorSetting struct to a string. The format is "red;green;blue;alpha".
+func (setting *ColorSetting) ToString() string {
 	return fmt.Sprintf("%d;%d;%d;%d", setting.Red, setting.Green, setting.Blue, setting.Alpha)
 }
 
+// ColorSettingFromString converts a string to a ColorSetting struct. The string should be in the format "red;green;blue;alpha".
 func ColorSettingFromString(setting string) ColorSetting {
 
 	array := strings.Split(setting, ";")

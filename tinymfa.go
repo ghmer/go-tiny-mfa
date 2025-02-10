@@ -24,9 +24,6 @@ const (
 	Future
 	// Past can be used as an Offset Type
 	Past
-
-	// FormatString is a predefined String that is used when generating a QR Code
-	FormatString = "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=%d&issuer=%s&period=30&secret=%s"
 )
 
 const (
@@ -93,6 +90,18 @@ type TinyMfaInterface interface {
 	// builds the payload for the QRCode. In detail, this takes the otpAuthURL Formatstring constant
 	// and formats it using the details provided in the method call.
 	BuildPayload(issuer, username string, secret *string, digits uint8) string
+
+	// SetFormatString sets the FormatString for the QRCode.
+	SetFormatString(formatstring string)
+
+	// GetFormatString returns the current FormatString for the QRCode.
+	GetFormatString() string
+
+	// SetQRCodeConfig sets the QRCodeConfig for the QRCode.
+	SetQRCodeConfig(qrcodeConfig structs.QrCodeConfig)
+
+	// GetQRCodeConfig returns the current QRCodeConfig for the QRCode.
+	GetQRCodeConfig() structs.QrCodeConfig
 }
 
 // Validation is a struct used to return the result of a token validation
@@ -104,11 +113,13 @@ type Validation struct {
 
 type TinyMfa struct {
 	QRCodeConfig structs.QrCodeConfig
+	FormatString string
 }
 
 func NewTinyMfa() TinyMfaInterface {
 	return &TinyMfa{
 		QRCodeConfig: structs.StandardQrCodeConfig(),
+		FormatString: "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=%d&issuer=%s&period=30&secret=%s",
 	}
 }
 
@@ -331,8 +342,28 @@ func (tinymfa *TinyMfa) BuildPayload(issuer, username string, secret *string, di
 	if index != -1 {
 		mySecret = strings.TrimSuffix(*secret, "=")
 	}
-	otpauthURL := fmt.Sprintf(FormatString, issuer, username, issuer, digits, issuer, mySecret)
+	otpauthURL := fmt.Sprintf(tinymfa.FormatString, issuer, username, issuer, digits, issuer, mySecret)
 	mySecret = ""
 
 	return otpauthURL
+}
+
+// GetFormatString returns the current FormatString for the QRCode.
+func (tinymfa *TinyMfa) GetFormatString() string {
+	return tinymfa.FormatString
+}
+
+// SetFormatString sets the FormatString for the QRCode.
+func (tinymfa *TinyMfa) SetFormatString(formatstring string) {
+	tinymfa.FormatString = formatstring
+}
+
+// GetQRCodeConfig returns the current QRCodeConfig for the QRCode.
+func (tinymfa *TinyMfa) GetQRCodeConfig() structs.QrCodeConfig {
+	return tinymfa.QRCodeConfig
+}
+
+// SetQRCodeConfig sets the QRCodeConfig for the QRCode.
+func (tinymfa *TinyMfa) SetQRCodeConfig(qrcodeConfig structs.QrCodeConfig) {
+	tinymfa.QRCodeConfig = qrcodeConfig
 }

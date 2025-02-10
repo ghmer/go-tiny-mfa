@@ -4,7 +4,9 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	tinymfa "github.com/ghmer/go-tiny-mfa"
 )
@@ -112,6 +114,36 @@ func TestGenerateValidToken(t *testing.T) {
 	if token != TokenPast {
 		t.Errorf("Incorrect token value. Expected %d, got %d", TokenPast, token)
 	}
+
+	token, _ = tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 5)
+	length := strconv.Itoa(token)
+	if len(length) != 5 {
+		t.Errorf("Incorrect token value. Expected %d, got %d", 5, len(length))
+	}
+
+	token, _ = tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 6)
+	length = strconv.Itoa(token)
+	if len(length) != 6 {
+		t.Errorf("Incorrect token value. Expected %d, got %d", 6, len(length))
+	}
+
+	token, _ = tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 7)
+	length = strconv.Itoa(token)
+	if len(length) != 7 {
+		t.Errorf("Incorrect token value. Expected %d, got %d", 7, len(length))
+	}
+
+	token, _ = tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 8)
+	length = strconv.Itoa(token)
+	if len(length) != 8 {
+		t.Errorf("Incorrect token value. Expected %d, got %d", 8, len(length))
+	}
+
+	_, err := tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 9)
+	if err == nil {
+		t.Errorf("Expected error when generating a token with size %d, got nil", 9)
+	}
+
 }
 
 func TestValidateToken(t *testing.T) {
@@ -127,6 +159,23 @@ func TestValidateToken(t *testing.T) {
 
 	valid, _ = tmfa.ValidateToken(TokenPast, &Key, TimeStamp, 6)
 	if !valid {
+		t.Errorf("Expected token to be valid")
+	}
+}
+
+func TestValidateTokenWithTimestamp(t *testing.T) {
+	token, _ := tmfa.GenerateValidToken(TimeStamp, &Key, tinymfa.Present, 6)
+	valid := tmfa.ValidateTokenWithTimestamp(token, &Key, TimeStamp, 6)
+	if !valid.Success {
+		t.Errorf("Expected token to be valid")
+	}
+}
+
+func TestValidateTokenCurrentTimestamp(t *testing.T) {
+	now := time.Now().Unix()
+	token, _ := tmfa.GenerateValidToken(now, &Key, tinymfa.Present, 6)
+	valid := tmfa.ValidateTokenCurrentTimestamp(token, &Key, 6)
+	if !valid.Success {
 		t.Errorf("Expected token to be valid")
 	}
 }
