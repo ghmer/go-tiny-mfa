@@ -1,330 +1,142 @@
-# go-tiny-mfa
+# Tiny MFA: A Go package for Time-Based One-Time Password (TOTP) generation and verification
 
-[![CodeQL](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ghmer/go-tiny-mfa/actions/workflows/codeql-analysis.yml)
+## Table of Contents
 
-a tinymfa implementation written in Go. See <https://tinymfa.parzival.link> for more information.
+* [Overview](#overview)
+* [Installation](#installation)
+* [Usage](#usage)
+  * [Generating TOTP Tokens](#generating-totp-tokens)
+  * [Verifying TOTP Tokens](#verifying-totp-tokens)
+  * [Generating QR Codes](#generating-qr-codes)
+  * [Encrypting and Decrypting Data](#encrypting-and-decrypting-data)
+* [API Documentation](#api-documentation)
+* [License](#license)
 
-Our repository on github: <https://github.com/ghmer/go-tiny-mfa>.
+## Overview
 
-Find a docker repository at <https://hub.docker.com/r/tinymfa/go-tiny-mfa>
+The Tiny MFA package is a Go library for generating and verifying Time-Based One-Time Passwords (TOTP) according to the TOTP algorithm specified in RFC 6238. It also includes functionality for encrypting and decrypting data using AES-256-CBC.
 
-Checkout our postman collection: <https://tinymfa.parzival.link/tinymfa.postman_collection.json>
+## Installation
 
-**Attention** This is a hobby project to get more used to go-programming. It is **not** intended to be used in a production environment without making further security related steps.
+To install the Tiny MFA package, run the following command:
 
-## How it works
-
- 1. tinymfa connects to a postgres database and creates the required table structures. Then, it generates a root encryption key and access token. The encryption key is stored on the filesystem.
- 2. when creating an issuer, a new encryption key is generated, encrypted with the root encryption key and then stored to the database. Also, an access token unique to this issuer is generated as well.
- 3. when creating a user below an issuer, a new secret key is generated and encrypted with the issuer encryption key.
- 4. The api offers an endpoint to generate a QRCode for a user. Use this to let the user register their secret key in an Authenticator App
- 5. The api offers an endpoint to validate a token. Send the token using a http post request to the api interface. The resulting json object contains the boolean result of the validation.
-
-## Access tokens
-
-tinymfa can be configured to validate access to its resources. Once activated, tinymfa checks for presence of the http header key 'tiny-mfa-access-token'. This must be either the root token created on installation, or the issuer token presented upon issuer creation.
-
-## API Endpoints
-
-### System Configuration and Audit
-
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/system/audit|GET|Return audit entries
-/api/v1/system/configuration|GET|Return current system configuration
-/api/v1/system/configuration|POST|Updates the system configuration
-
-#### payload: Update system configuration
-
-key|type|description
---- | --- | ---
-http_port|integer|the port to run on. Requires a restart!
-deny_limit|integer|how many times is a user allowed to input a wrong token before we don't allow validation for the given message. This is to defeat brute force attacks
-veriy_token|boolean|whether to verify if the *tiny-mfa-access-token* is set and contains a valid token
-
-```json
-{
-    "http_port" : 57687,
-    "deny_limit": 3,
-    "verify_tokens": true
-}
+```bash
+go get github.com/ghmer/go-tiny-mfa
 ```
 
-### OIDC Configuration
+## Usage
 
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/system/oidc|GET|Return current oidc configuration
-/api/v1/system/oidc|POST|Updates the oidc configuration
+### Generating TOTP Tokens
 
-#### payload: Update oidc configuration
+To generate a TOTP token, you can use the `GenerateValidToken` method of the `TinyMfa` struct. This method takes four arguments: the current Unix timestamp, the secret key, the offset type (either present, future, or past), and the desired token length.
 
-key|type|description
---- | --- | ---
-enabled|boolean|whether to enable the oidc configuration
-client_id|string|the oidc client ID
-client_secret|string|the oidc client secret
-discovery_url|string|the oidc discovery url, omitting the /.well_known directory
+```go
+package main
 
-```json
-{
-    "enabled" : true,
-    "client_id": "my-client-id",
-    "client_secret": "myClientSecret123!",
-    "discovery_url": "https://idp.tld/auth/realm"
-}
-```
+import (
+    "github.com/ghmer/go-tiny-mfa"
+)
 
-### QR Code Look & Feel
-
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/system/qrcode|GET|Return current qrcode look & feel
-/api/v1/system/qrcode|POST|Update the qrcode look & feel
-
-#### payload: update qrcode look & feel
-
-```json
-{
-    "qrcode-bgcolor": {
-        "red": 255,
-        "green": 255,
-        "blue": 255,
-        "alpha": 255
-    },
-    "qrcode-fgcolor": {
-        "red": 0,
-        "green": 0,
-        "blue": 0,
-        "alpha": 255
+func main() {
+    tinymfa := tinymfa.NewTinyMfa()
+    token, err := tinymfa.GenerateValidToken(1643723905, []byte("your_secret_key"), tinymfa.Present, 6)
+    if err != nil {
+        panic(err)
     }
+
+    fmt.Println(token)
 }
 ```
 
-### Issuer handling
+### Verifying TOTP Tokens
 
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/issuer|GET|Return all registered issuers
-/api/v1/issuer|POST|Create a new issuer using a POST request
-/api/v1/issuer/{issuer}|GET|Return a distinct issuer by its name
-/api/v1/issuer/{issuer}|POST|Updates a distinct issuer using a POST request
-/api/v1/issuer/{issuer}|DELETE|Deletes a distinct issuer using a DELETE request
+To verify a TOTP token, you can use the `ValidateToken` method of the `TinyMfa` struct. This method takes five arguments: the submitted token, the secret key, the current Unix timestamp, and the desired token length.
 
-#### payload: create a new issuer
+```go
+package main
 
-key|type|description
---- | --- | ---
-name|string|the name of this issuer
-contact|string|a mail adress of the responsible person
-token_length|integer|Length of the desired totp tokens
-enabled|boolean|whether this issuer is active
+import (
+    "github.com/ghmer/go-tiny-mfa"
+)
 
-```json
-{
-    "name": "issuer.local",
-    "contact": "demo@issuer.local",
-    "token_length": 6,
-    "enabled": true
+func main() {
+    tinymfa := tinymfa.NewTinyMfa()
+    valid, err := tinymfa.ValidateToken(123456, []byte("your_secret_key"), 1643723905, 6)
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(valid)
 }
 ```
 
-#### payload: update a new issuer
+### Generating QR Codes
 
-key|type|description
---- | --- | ---
-contact|string|a mail adress of the responsible person
-token_length|integer|Length of the desired totp tokens
-enabled|boolean|whether this issuer is active
+```go
 
-```json
-{
-    "contact": "demo@issuer.local",
-    "token_length": 8,
-    "enabled": true
+func main() {
+    var issuer string = "tinymfa.parzival.link"
+    var user string = "demo"
+    var key string = base32.StdEncoding.EncodeToString(Key)
+    var digits uint8 = 6
+
+    qrcode, err := tmfa.GenerateQrCode(issuer, user, key, digits)
+    if err != nil {
+        panic(err)
+    }
+    // write png to file
+    os.WriteFile("./qrcode1.png", qrcode, 0644)
+
+    // shorthand for the above
+    tmfa.WriteQrCodeImage(issuer, user, key, digits, "./qrcode2.png")
 }
 ```
 
-### Access token handling
+### Encrypting and Decrypting Data
 
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/issuer/{issuer}/token|GET|Return all registered access tokens for a given issuer
-/api/v1/issuer/{issuer}/token|POST|Creates a new access token for the given issuer using a PUT request
-/api/v1/issuer/{issuer}/token/{tokenid}|DELETE|Deletes a distinct access token in the scope of a distinct issuer
+To encrypt data using the `TinyMfa` package, you can use the `Encrypt` method. This method takes two arguments: the data to be encrypted and the passphrase used for encryption.
 
-#### payload: create a new issuer access token
+```go
+package main
 
-key|type|description
---- | --- | ---
-description|string|a description for the new token
+import (
+    "github.com/ghmer/go-tiny-mfa/utils"
+)
 
-```json
-{
-    "description" : "my access token"
+func main() {
+    data := []byte("Hello, World!")
+    passphrase := []byte("your_passphrase")
+    encryptedData := utils.Encrypt(data, passphrase)
+    fmt.Println(encryptedData)
 }
 ```
 
-### User handling
+To decrypt data using the `TinyMfa` package, you can use the `Decrypt` method. This method takes two arguments: the encrypted data and the passphrase used for decryption.
 
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/issuer/{issuer}/users|GET|Return all users belonging to the scope of a distinct issuer
-/api/v1/issuer/{issuer}/users|POST|Create a new user in the scope of a distinct issuer
-/api/v1/issuer/{issuer}/users/{user}|GET|Return a distinct user in the scope of a distinct issuer
-/api/v1/issuer/{issuer}/users/{user}|POST|Update a distinct user in the scope of a distinct issuer
-/api/v1/issuer/{issuer}/users/{user}|DELETE|Deletes a distinct user in the scope of a distinct issuer
+```go
+package main
 
-#### payload: create a new user
+import (
+    "github.com/ghmer/go-tiny-mfa/utils"
+)
 
-key|type|description
---- | --- | ---
-name|string|the name this user
-email|string|a mail adress of the user
-enabled|boolean|whether this user is active
-
-```json
-{
-    "name" : "demo",
-    "email": "demo@issuer.local",
-    "enabled": true
+func main() {
+    encryptedData := []byte("your_encrypted_data")
+    passphrase := []byte("your_passphrase")
+    decryptedData := utils.Decrypt(encryptedData, passphrase)
+    fmt.Println(decryptedData)
 }
 ```
 
-#### payload: update an existing user
+## API Documentation
 
-key|type|description
---- | --- | ---
-email|string|a mail adress of the user
-enabled|boolean|whether this user is active
+The `TinyMfa` package includes the following methods:
 
-```json
-{
-    "email": "demo.address@issuer.local",
-    "enabled": true
-}
-```
+* `GenerateValidToken`: Generates a TOTP token for the given timestamp and secret key.
+* `ValidateToken`: Verifies whether the submitted token is valid for the given timestamp and secret key.
+* `Encrypt`: Encrypts data using AES-256-CBC with the given passphrase.
+* `Decrypt`: Decrypts encrypted data using AES-256-CBC with the given passphrase.
 
-### User token handling
+## License
 
-Endpoint|Method|Description
---- | --- | ---
-/api/v1/issuer/{issuer}/users/{user}/totp|GET|Generates and returns a PNG image of a QRCode in the scope of a distinct user and issuer
-/api/v1/issuer/{issuer}/users/{user}/totp|POST|Validates a given token in the scope of a distinct user and issuer
-
-#### payload: validate a totp token
-
-key|type|description
---- | --- | ---
-token|string|the token to validate
-
-```json
-{
-    "token": "123456"
-}
-```
-
-## docker-compose
-
-This should result in a working tiny-mfa instance:
-
-```yaml
-version: "3"
-services:
-    database:
-        image: postgres:13-alpine
-        networks: 
-            - tiny-mfa-net
-        volumes:
-            - data:/var/lib/postgresql/data
-        environment: 
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-            - POSTGRES_DB=tinymfa
-        restart: unless-stopped
-    
-    tinymfa:
-        image: tinymfa/go-tiny-mfa:latest
-        networks:
-            - tiny-mfa-net
-        ports:
-            - "57687:57687"
-        volumes:
-            - tinysecret:/opt/go-tiny-mfa/secrets
-        environment:
-            - POSTGRES_HOST=database
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-            - POSTGRES_DB=tinymfa
-        restart: unless-stopped
-        depends_on:
-            - database
-
-volumes: 
-    data:
-    tinysecret:
-
-networks: 
-    tiny-mfa-net:
-
-```
-
-## quickstart
-
-- create a tiny-mfa instance using the docker-compose script from above
-- create an issuer:
-
-```bash
-curl --location --request POST 'http://localhost:57687/api/v1/issuer' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "name": "issuer.local",
-    "contact": "contact@issuer.local",
-    "token_length:" 6,
-    "enabled": true
-}'
-```
-
-- create a user:
-
-```bash
-curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.local/users' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "name" : "demo",
-    "email": "demo@issuer.local",
-    "enabled": true
-}'
-```
-
-- get the QRCode for the Authenticator App:
-
-```bash
-curl --location --request GET 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp'
-```
-
-- validate a token
-
-```bash
-curl --location --request POST 'http://localhost:57687/api/v1/issuer/issuer.local/users/demo/totp' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "token" : "123456"
-}'
-```
-
-## Already working
-
-- v1 api to CRUD issuers and users
-- validate tokens
-- limit validation attempts to defeat brute force attacks
-- generate QRCode png images
-- basic authorization via http header
-
-## Todo
-
-- authorization model
-- administrative UI
-- think about generic middleware concept
-- openid-connect
-- ...
+The Tiny MFA package is released under the MIT License. See [LICENSE](LICENSE) for details.

@@ -9,9 +9,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/ghmer/go-tiny-mfa/structs"
-	"github.com/ghmer/go-tiny-mfa/tinymfa"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -92,60 +89,10 @@ func createMd5Hash(key []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-// GenerateCryptedKeyBase32 generates a new Key, encrypts it with the root key and encodes it to base32
-func GenerateCryptedKeyBase32(rootKey []byte) (string, error) {
-	issuerKey, err := tinymfa.GenerateExtendedSecretKey()
-	if err != nil {
-		return "", err
-	}
-
-	cryptedKey := Encrypt(issuerKey, rootKey)
-
-	return base32.StdEncoding.EncodeToString(cryptedKey), nil
-}
-
-// GenerateExtendedKeyBase32 returns a base32 encoded 256bit key
-func GenerateExtendedKeyBase32() (string, error) {
-	rootKey, err := tinymfa.GenerateExtendedSecretKey()
-	if err != nil {
-		return "", err
-	}
-
-	encodedKey := base32.StdEncoding.EncodeToString(rootKey)
-
-	return encodedKey, nil
-}
-
 // DecodeBase32Key Decodes a base32 encoded key to a byte array
 func DecodeBase32Key(encodedKey string) ([]byte, error) {
 	key, err := base32.StdEncoding.DecodeString(encodedKey)
 	return key, err
-}
-
-// ScrubInformation crubs some sensitive information from the objects and nullifies the given byte array
-func ScrubInformation(user *structs.User, key *[]byte) {
-	ScrubKey(key)
-	ScrubUserStruct(user)
-}
-
-// ScrubKey nullifies a given byte array
-func ScrubKey(key *[]byte) {
-	if key != nil {
-		for i := 0; i < len(*key); i++ {
-			(*key)[i] = byte(0)
-		}
-	}
-}
-
-// ScrubUserStruct scrubs the key of the user and also the issuer key
-func ScrubUserStruct(user *structs.User) {
-	user.Key = ""
-	ScrubIssuerStruct(&user.Issuer)
-}
-
-// ScrubIssuerStruct scrubs the key of the issuer
-func ScrubIssuerStruct(issuer *structs.Issuer) {
-	issuer.Key = ""
 }
 
 // BcryptHash hashes a given byte array with bcrypt and a cost of 10
