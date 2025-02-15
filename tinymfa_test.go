@@ -2,13 +2,13 @@ package tinymfa_test
 
 import (
 	"crypto/sha1"
-	"encoding/base32"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	tinymfa "github.com/ghmer/go-tiny-mfa"
+	"github.com/ghmer/go-tiny-mfa/utils"
 )
 
 const (
@@ -17,7 +17,9 @@ const (
 )
 
 var Key = []byte{1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1}
+var EncodedKey = ""
 var tmfa = tinymfa.NewTinyMfa()
+var mfautil = utils.NewTinyMfaUtil()
 
 func TestGenerateStandardSecretKey(t *testing.T) {
 	key, err := tmfa.GenerateStandardSecretKey()
@@ -180,13 +182,26 @@ func TestValidateTokenCurrentTimestamp(t *testing.T) {
 	}
 }
 
+func TestUtilEncode(t *testing.T) {
+	EncodedKey = *mfautil.EncodeBase32Key(&Key)
+}
+
+func TestUtilDecode(t *testing.T) {
+	array, _ := mfautil.DecodeBase32Key(&EncodedKey)
+	for i, b := range *array {
+		if b != Key[i] {
+			t.Errorf("Expected decoded key to be equal to original key")
+		}
+	}
+}
+
 func TestGenerateQrCode(t *testing.T) {
 	var issuer string = "tinymfa.parzival.link"
 	var user string = "demo"
-	var key string = base32.StdEncoding.EncodeToString(Key)
+	//var key string = base32.StdEncoding.EncodeToString(Key)
 	var digits uint8 = 6
 
-	qrcode, err := tmfa.GenerateQrCode(issuer, user, &key, digits)
+	qrcode, err := tmfa.GenerateQrCode(issuer, user, &EncodedKey, digits)
 	if err != nil {
 		panic(err)
 	}
@@ -194,6 +209,6 @@ func TestGenerateQrCode(t *testing.T) {
 	os.WriteFile("./qrcode1.png", qrcode, 0644)
 
 	// shorthand for the above
-	tmfa.WriteQrCodeImage(issuer, user, &key, digits, "./qrcode2.png")
+	tmfa.WriteQrCodeImage(issuer, user, &EncodedKey, digits, "./qrcode2.png")
 
 }
