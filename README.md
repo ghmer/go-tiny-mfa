@@ -2,15 +2,17 @@
 
 ## Table of Contents
 
-* [Overview](#overview)
-* [Installation](#installation)
-* [Usage](#usage)
-  * [Generating TOTP Tokens](#generating-totp-tokens)
-  * [Verifying TOTP Tokens](#verifying-totp-tokens)
-  * [Generating QR Codes](#generating-qr-codes)
-  * [Encrypting and Decrypting Data](#encrypting-and-decrypting-data)
-* [API Documentation](#api-documentation)
-* [License](#license)
+- [Tiny MFA: A Go package for Time-Based One-Time Password (TOTP) generation and verification](#tiny-mfa-a-go-package-for-time-based-one-time-password-totp-generation-and-verification)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Generating TOTP Tokens](#generating-totp-tokens)
+    - [Verifying TOTP Tokens](#verifying-totp-tokens)
+    - [Generating QR Codes](#generating-qr-codes)
+    - [Encrypting and Decrypting Data](#encrypting-and-decrypting-data)
+  - [API Documentation](#api-documentation)
+  - [License](#license)
 
 ## Overview
 
@@ -39,7 +41,11 @@ import (
 
 func main() {
     tinymfa := tinymfa.NewTinyMfa()
-    token, err := tinymfa.GenerateValidToken(1643723905, []byte("your_secret_key"), tinymfa.Present, 6)
+    timeStamp := time.Now().Unix()
+    key := []byte("your_secret_key") // replace with your secret key
+    size := 6 // replace with the totp length
+
+    token, _ := tmfa.GenerateValidToken(timeStamp, &key, tinymfa.Present, size)
     if err != nil {
         panic(err)
     }
@@ -61,7 +67,14 @@ import (
 
 func main() {
     tinymfa := tinymfa.NewTinyMfa()
-    valid, err := tinymfa.ValidateToken(123456, []byte("your_secret_key"), 1643723905, 6)
+    
+    tokenNow := "123456" // replace with the submitted token
+    key := []byte("your_secret_key") // replace with your secret key
+    timeStamp := time.Now().Unix()
+    size := 6 // replace with the totp length
+
+
+    valid, _ := tmfa.ValidateToken(tokenNow, &key, timeStamp, 6)
     if err != nil {
         panic(err)
     }
@@ -80,7 +93,7 @@ func main() {
     var key string = base32.StdEncoding.EncodeToString(Key)
     var digits uint8 = 6
 
-    qrcode, err := tmfa.GenerateQrCode(issuer, user, key, digits)
+    qrcode, err := tmfa.GenerateQrCode(issuer, user, &key, digits)
     if err != nil {
         panic(err)
     }
@@ -88,7 +101,7 @@ func main() {
     os.WriteFile("./qrcode1.png", qrcode, 0644)
 
     // shorthand for the above
-    tmfa.WriteQrCodeImage(issuer, user, key, digits, "./qrcode2.png")
+    tmfa.WriteQrCodeImage(issuer, user, &key, digits, "./qrcode2.png")
 }
 ```
 
@@ -106,7 +119,10 @@ import (
 func main() {
     data := []byte("Hello, World!")
     passphrase := []byte("your_passphrase")
-    encryptedData := utils.Encrypt(data, passphrase)
+    encryptedData, err := util.Encrypt(&data, &passphrase)
+    if err != nil {
+        panic(err)
+    }
     fmt.Println(encryptedData)
 }
 ```
@@ -123,7 +139,10 @@ import (
 func main() {
     encryptedData := []byte("your_encrypted_data")
     passphrase := []byte("your_passphrase")
-    decryptedData := utils.Decrypt(encryptedData, passphrase)
+    decryptedData, err := util.Decrypt(encryptedData, &passphrase)
+    if err != nil {
+        panic(err)
+    }
     fmt.Println(decryptedData)
 }
 ```
