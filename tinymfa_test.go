@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tinymfa "github.com/ghmer/go-tiny-mfa"
+	"github.com/ghmer/go-tiny-mfa/structs"
 	"github.com/ghmer/go-tiny-mfa/utils"
 )
 
@@ -20,6 +21,21 @@ var Key = []byte{1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1}
 var EncodedKey = ""
 var tmfa = tinymfa.NewTinyMfa()
 var mfautil = utils.NewTinyMfaUtil()
+
+var NewQrCodeConfig = structs.QrCodeConfig{
+	BgColor: structs.ColorSetting{
+		Red:   255,
+		Green: 0,
+		Blue:  0,
+		Alpha: 128,
+	},
+	FgColor: structs.ColorSetting{
+		Red:   255,
+		Green: 0,
+		Blue:  0,
+		Alpha: 128,
+	},
+}
 
 func TestGenerateStandardSecretKey(t *testing.T) {
 	key, err := tmfa.GenerateStandardSecretKey()
@@ -211,4 +227,47 @@ func TestGenerateQrCode(t *testing.T) {
 	// shorthand for the above
 	tmfa.WriteQrCodeImage(issuer, user, &EncodedKey, digits, "./qrcode2.png")
 
+}
+
+func TestConvertColorSetting(t *testing.T) {
+	colorSetting := structs.ColorSetting{
+		Red:   255,
+		Green: 0,
+		Blue:  0,
+		Alpha: 128,
+	}
+	color := tmfa.ConvertColorSetting(colorSetting)
+	r, g, b, a := color.RGBA()
+	if r != 65535 || g != 0 || b != 0 || a != 32896 {
+		t.Errorf("Expected converted color to have values: (255, 0, 0, 128), got %d %d %d %d", r, g, b, a)
+	}
+}
+
+func TestSetFormatString(t *testing.T) {
+	newFormatString := "new format string"
+	tmfa.SetFormatString(newFormatString)
+	if tmfa.GetFormatString() != newFormatString {
+		t.Errorf("Expected set FormatString to be '%s'", newFormatString)
+	}
+}
+
+func TestGetFormatString(t *testing.T) {
+	expectedFormatString := "new format string"
+	if tmfa.GetFormatString() != expectedFormatString {
+		t.Errorf("Expected GetFormatString to return '%s'", expectedFormatString)
+	}
+}
+
+func TestSetQRCodeConfig(t *testing.T) {
+	tmfa.SetQRCodeConfig(NewQrCodeConfig)
+	if tmfa.GetQRCodeConfig().BgColor != NewQrCodeConfig.BgColor ||
+		tmfa.GetQRCodeConfig().FgColor != NewQrCodeConfig.FgColor {
+		t.Errorf("Expected set QRCodeConfig to have values: (255, 0, 0, 128)")
+	}
+}
+
+func TestGetQRCodeConfig(t *testing.T) {
+	if tmfa.GetQRCodeConfig() != NewQrCodeConfig {
+		t.Errorf("Expected GetQRCodeConfig to return '%v'", NewQrCodeConfig)
+	}
 }

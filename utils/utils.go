@@ -16,24 +16,24 @@ type TinyMfaUtilInterface interface {
 	// Encrypt takes in a byte array as data and another byte array as the passphrase,
 	// encrypts the data using the AES cipher and returns the encrypted data (also as byte array)
 	// please note that the nonce needed to encrypt the data using AES GCM is appended to the byte array
-	Encrypt(data, passphrase *[]byte) *[]byte
+	Encrypt(data, passphrase *[]byte) (*[]byte, error)
 
 	// EncryptFile takes a filePath as a string and a passphrase as a byte array.
 	// The file found at filePath is then Encrypted using the Encrypt Method
 	// and then wrote back to the original filePath
-	EncryptFile(filePath string, data, passphrase *[]byte)
+	EncryptFile(filePath string, data, passphrase *[]byte) error
 
 	// Decrypt takes in two byte arrays. The former one is the encrypted data,
 	// the second one is the passphrase that shall be used.
 	// The method returns the decrypted data in another byte array
 	// Attention: It is assumed that a nonce is appended to the encrypted
 	// byte array!
-	Decrypt(data, passphrase *[]byte) []byte
+	Decrypt(data, passphrase *[]byte) (*[]byte, error)
 
 	// DecryptFile takes a filePath as a string and a passphrase as a byte array.
 	// The file found at filePath is then decrypted using the Decrypt Method
 	// and then wrote back to the original filePath
-	DecryptFile(filePath string, passphrase *[]byte) []byte
+	DecryptFile(filePath string, passphrase *[]byte) (*[]byte, error)
 
 	// CreateMd5Hash creates an md5 hash of the input byte array pointer.
 	CreateMd5Hash(b *[]byte) *[]byte
@@ -60,7 +60,7 @@ func NewTinyMfaUtil() TinyMfaUtilInterface {
 // Encrypt takes in a byte array as data and another byte array as the passphrase,
 // encrypts the data using the AES cipher and returns the encrypted data (also as byte array)
 // please note that the nonce needed to encrypt the data using AES GCM is appended to the byte array
-func (util *TinyMfaUtil) Encrypt(data, passphrase *[]byte) *[]byte {
+func (util *TinyMfaUtil) Encrypt(data, passphrase *[]byte) (*[]byte, error) {
 	// a passphrase must have a certain size (128/256bit)
 	// therefore, if this condition is not met, we are going to create
 	// a md5 hash of the passphrase that happens to be 128bit
@@ -70,24 +70,32 @@ func (util *TinyMfaUtil) Encrypt(data, passphrase *[]byte) *[]byte {
 	block, _ := aes.NewCipher(*passphrase)
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	ciphertext := gcm.Seal(nonce, nonce, *data, nil)
-	return &ciphertext
+	return &ciphertext, nil
 }
 
 // EncryptFile takes a filePath as a string and a passphrase as a byte array.
 // The file found at filePath is then Encrypted using the Encrypt Method
 // and then wrote back to the original filePath
-func (util *TinyMfaUtil) EncryptFile(filePath string, data, passphrase *[]byte) {
+func (util *TinyMfaUtil) EncryptFile(filePath string, data, passphrase *[]byte) error {
 	f, _ := os.Create(filePath)
 	defer f.Close()
-	f.Write(*util.Encrypt(data, passphrase))
+
+	cdata, err := util.Encrypt(data, passphrase)
+	if err != nil {
+		return err
+	}
+
+	f.Write(*cdata)
+
+	return nil
 }
 
 // Decrypt takes in two byte arrays. The former one is the encrypted data,
@@ -95,20 +103,20 @@ func (util *TinyMfaUtil) EncryptFile(filePath string, data, passphrase *[]byte) 
 // The method returns the decrypted data in another byte array
 // Attention: It is assumed that a nonce is appended to the encrypted
 // byte array!
-func (util *TinyMfaUtil) Decrypt(data, passphrase *[]byte) []byte {
+func (util *TinyMfaUtil) Decrypt(data, passphrase *[]byte) (*[]byte, error) {
 	// a passphrase must have a certain size (128/256bit)
 	// therefore, if this condition is not met, we are going to create
 	// a md5 hash of the passphrase that happens to be 128bit
-	if len(*passphrase) != 16 || len(*passphrase) != 32 {
+	if len(*passphrase) != 16 && len(*passphrase) != 32 {
 		passphrase = util.CreateMd5Hash(passphrase)
 	}
 	block, err := aes.NewCipher(*passphrase)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	nonceSize := gcm.NonceSize()
 	dataslice := *data
@@ -116,20 +124,20 @@ func (util *TinyMfaUtil) Decrypt(data, passphrase *[]byte) []byte {
 	nonce, ciphertext := dataslice[:nonceSize], dataslice[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	for i := range dataslice {
 		dataslice[i] = 0 // clear the memory of the decrypted data for security reasons.
 	}
 
-	return plaintext
+	return &plaintext, nil
 }
 
 // DecryptFile takes a filePath as a string and a passphrase as a byte array.
 // The file found at filePath is then decrypted using the Decrypt Method
 // and then wrote back to the original filePath
-func (util *TinyMfaUtil) DecryptFile(filePath string, passphrase *[]byte) []byte {
+func (util *TinyMfaUtil) DecryptFile(filePath string, passphrase *[]byte) (*[]byte, error) {
 	data, _ := os.ReadFile(filePath)
 	return util.Decrypt(&data, passphrase)
 }
