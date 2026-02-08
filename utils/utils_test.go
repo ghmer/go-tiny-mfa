@@ -44,10 +44,10 @@ func TestEncryptFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to create temp dir: %v", err)
 	}
-	// Test with an invalid passphrase
+	// Test with an invalid passphrase (invalid AES key size)
 	err = util.EncryptFile(path.Join(tempDir, "test.txt"), &data, &invalidpassphrase)
-	if err != nil {
-		t.Errorf("Failed to create temp dir: %v", err)
+	if err == nil {
+		t.Errorf("Expected error when encrypting with invalid passphrase")
 	}
 }
 
@@ -96,14 +96,6 @@ func TestDecryptFile(t *testing.T) {
 	}
 }
 
-func TestCreateMd5Hash(t *testing.T) {
-
-	hash := util.CreateMd5Hash(&passphrase)
-	if len(*hash) != 16 {
-		t.Errorf("Expected md5 hash to be 16 bytes long")
-	}
-}
-
 func TestDecodeBase32Key(t *testing.T) {
 	decodedKey, err := util.DecodeBase32Key(&encodedstring)
 	if err != nil {
@@ -129,10 +121,10 @@ func TestEncodeBase32Key(t *testing.T) {
 	}
 
 	// Test with an empty passphrase
-	passphrase = []byte{}
-	encodedKey = util.EncodeBase32Key(&passphrase)
-	if len(*encodedKey) == 31 {
-		t.Errorf("Expected encoded key to be shorter than 31 bytes with empty passphrase")
+	emptyPassphrase := []byte{}
+	encodedKey = util.EncodeBase32Key(&emptyPassphrase)
+	if len(*encodedKey) != 0 {
+		t.Errorf("Expected encoded key to be empty with empty passphrase")
 	}
 }
 

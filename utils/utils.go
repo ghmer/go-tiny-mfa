@@ -3,9 +3,9 @@ package utils
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5"
 	"crypto/rand"
 	"encoding/base32"
+	"errors"
 	"io"
 	"os"
 
@@ -35,9 +35,6 @@ type TinyMfaUtilInterface interface {
 	// and then wrote back to the original filePath
 	DecryptFile(filePath string, passphrase *[]byte) (*[]byte, error)
 
-	// CreateMd5Hash creates an md5 hash of the input byte array pointer.
-	CreateMd5Hash(b *[]byte) *[]byte
-
 	// DecodeBase32Key Decodes a base32 encoded key to a byte array
 	DecodeBase32Key(encodedKey *string) (*[]byte, error)
 
@@ -61,11 +58,8 @@ func NewTinyMfaUtil() TinyMfaUtilInterface {
 // encrypts the data using the AES cipher and returns the encrypted data (also as byte array)
 // please note that the nonce needed to encrypt the data using AES GCM is appended to the byte array
 func (util *TinyMfaUtil) Encrypt(data, passphrase *[]byte) (*[]byte, error) {
-	// a passphrase must have a certain size (128/256bit)
-	// therefore, if this condition is not met, we are going to create
-	// a md5 hash of the passphrase that happens to be 128bit
 	if len(*passphrase) != 16 && len(*passphrase) != 32 {
-		passphrase = util.CreateMd5Hash(passphrase)
+		return nil, errors.New("keysize not supported")
 	}
 	block, _ := aes.NewCipher(*passphrase)
 	gcm, err := cipher.NewGCM(block)
@@ -104,11 +98,8 @@ func (util *TinyMfaUtil) EncryptFile(filePath string, data, passphrase *[]byte) 
 // Attention: It is assumed that a nonce is appended to the encrypted
 // byte array!
 func (util *TinyMfaUtil) Decrypt(data, passphrase *[]byte) (*[]byte, error) {
-	// a passphrase must have a certain size (128/256bit)
-	// therefore, if this condition is not met, we are going to create
-	// a md5 hash of the passphrase that happens to be 128bit
 	if len(*passphrase) != 16 && len(*passphrase) != 32 {
-		passphrase = util.CreateMd5Hash(passphrase)
+		return nil, errors.New("keysize not supported")
 	}
 	block, err := aes.NewCipher(*passphrase)
 	if err != nil {
@@ -140,15 +131,6 @@ func (util *TinyMfaUtil) Decrypt(data, passphrase *[]byte) (*[]byte, error) {
 func (util *TinyMfaUtil) DecryptFile(filePath string, passphrase *[]byte) (*[]byte, error) {
 	data, _ := os.ReadFile(filePath)
 	return util.Decrypt(&data, passphrase)
-}
-
-// CreateMd5Hash creates an md5 hash of the input byte array pointer.
-func (util *TinyMfaUtil) CreateMd5Hash(b *[]byte) *[]byte {
-	hasher := md5.New()
-	hasher.Write(*b)
-
-	result := hasher.Sum(nil)
-	return &result
 }
 
 // DecodeBase32Key Decodes a base32 encoded key to a byte array

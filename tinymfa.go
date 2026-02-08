@@ -5,9 +5,11 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/binary"
-	"errors"
 	"fmt"
+	"hash"
 	"image/color"
 	"math"
 	"strings"
@@ -26,76 +28,97 @@ const (
 	Past
 )
 
+// HashAlgorithm represents the hash algorithm used for HMAC computation.
+// RFC 6238 Section 1.2 defines SHA-1, SHA-256, and SHA-512 as valid algorithms.
+type HashAlgorithm uint8
+
 const (
-	// OffsetPresent is the offset to add when the OffsetTypePresent was used
-	OffsetPresent int8 = 0
+	// SHA1 selects HMAC-SHA-1 for TOTP computation (RFC 6238 Section 1.2).
+	SHA1 HashAlgorithm = iota
+	// SHA256 selects HMAC-SHA-256 for TOTP computation (RFC 6238 Section 1.2).
+	SHA256
+	// SHA512 selects HMAC-SHA-512 for TOTP computation (RFC 6238 Section 1.2).
+	SHA512
+)
 
-	// OffsetFuture is the offset to add when the OffsetTypeFuture was used
-	OffsetFuture int8 = 30
+const (
+	// KeySizeSHA1 is the recommended secret key size for SHA-1 (160 bits / 20 bytes).
+	// RFC 6238 Section 4 recommends keys be at least as long as the HMAC output.
+	KeySizeSHA1 int8 = 20
 
-	// OffsetPast is the offset to add when the OffsetTypePast was used
-	OffsetPast int8 = -30
+	// KeySizeSHA256 is the recommended secret key size for SHA-256 (256 bits / 32 bytes).
+	// RFC 6238 Section 4 recommends keys be at least as long as the HMAC output.
+	KeySizeSHA256 int8 = 32
 
-	// KeySizeStandard is the default size of the SecretKey (128bit)
-	KeySizeStandard int8 = 16
+	// KeySizeSHA512 is the recommended secret key size for SHA-512 (512 bits / 64 bytes).
+	// RFC 6238 Section 4 recommends keys be at least as long as the HMAC output.
+	KeySizeSHA512 int8 = 64
+)
 
-	// KeySizeExtended is the extended size of the SecretKey (256bit)
-	KeySizeExtended int8 = 32
+const (
+	// DefaultTimeStep is the default time step size in seconds (RFC 6238 Section 4.1).
+	DefaultTimeStep int64 = 30
+
+	// DefaultT0 is the default Unix epoch offset in seconds (RFC 6238 Section 4.1).
+	DefaultT0 int64 = 0
 )
 
 type TinyMfaInterface interface {
-	// GenerateStandardSecretKey returns 16bytes to be used as a secret key
+	// GenerateStandardSecretKey returns a 20-byte secret key (SHA-1 recommended size).
 	GenerateStandardSecretKey() (*[]byte, error)
 
-	// GenerateExtendedSecretKey returns 32bytes to be used as a secret key
+	// GenerateExtendedSecretKey returns a 32-byte secret key (SHA-256 recommended size).
 	GenerateExtendedSecretKey() (*[]byte, error)
 
-	// generateSecretKey returns size bytes to be used as a secret key
+	// GenerateSuperbSecretKey returns a 64-byte secret key (SHA-512 recommended size).
+	GenerateSuperbSecretKey() (*[]byte, error)
+
+	// GenerateSecretKey returns a secret key of the specified size.
+	// Valid sizes are KeySizeSHA1 (20), KeySizeSHA256 (32), and KeySizeSHA512 (64).
 	GenerateSecretKey(size int8) (*[]byte, error)
 
-	// GenerateMessageBytes takes in a int64 number and turns it to a BigEndian byte array
+	// GenerateSecretKeyForAlgorithm generates a secret key with the recommended size
+	// for the specified hash algorithm per RFC 6238 Section 4.
+	GenerateSecretKeyForAlgorithm(algorithm HashAlgorithm) (*[]byte, error)
+
+	// GenerateMessageBytes takes in a int64 number and turns it to a BigEndian byte array.
 	GenerateMessageBytes(message int64) ([]byte, error)
 
-	// CalculateHMAC calculates the hmac-sha1 value for a given message and key (RFC2104)
-	CalculateHMAC(message []byte, key *[]byte) []byte
+	// CalculateHMAC calculates the HMAC value for a given message and key
+	// using the specified hash algorithm (RFC 2104, RFC 6238 Section 1.2).
+	CalculateHMAC(message []byte, key *[]byte, algorithm HashAlgorithm) ([]byte, error)
 
-	// GenerateMessage takes in a Unix Timestamp and an offsetType of 0,1,2
-	// offsetTypes: 0=No Offset; 1=Future Offset; 2=Past Offset
-	GenerateMessage(timestamp int64, offsetType uint8) int64
+	// GenerateMessage computes the time counter T for TOTP using configurable
+	// parameters per RFC 6238 Section 4.2.
+	GenerateMessage(timestamp int64, offsetType uint8, timeStep int64, t0 int64) (int64, error)
 
-	// GenerateValidToken takes a Unix Timestamp and a secret key and calculates a valid TOTP token
-	GenerateValidToken(unixTimestamp int64, key *[]byte, offsetType, tokenlength uint8) (int, error)
+	// GenerateToken generates a TOTP token per RFC 6238 with configurable hash algorithm,
+	// time step, and epoch offset (RFC 6238 Section 4.2).
+	GenerateToken(unixTimestamp int64, key *[]byte, offsetType uint8, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) (int, error)
 
-	// ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-	ValidateTokenCurrentTimestamp(token int, key *[]byte, tokenlength uint8) Validation
+	// ValidateToken validates a submitted TOTP token with configurable algorithm
+	// and time parameters per RFC 6238 Section 5.2.
+	ValidateToken(token int, key *[]byte, unixTimestamp int64, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) (bool, error)
 
-	// ValidateTokenWithTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-	ValidateTokenWithTimestamp(token int, key *[]byte, timestamp int64, tokenlength uint8) Validation
+	// ValidateTokenCurrentTimestamp validates a TOTP token against the current
+	// Unix timestamp with configurable parameters (RFC 6238 Section 5.2).
+	ValidateTokenCurrentTimestamp(token int, key *[]byte, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) Validation
 
-	// ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid
-	ValidateToken(token int, key *[]byte, unixTimestamp int64, tokenlength uint8) (bool, error)
+	// ValidateTokenWithTimestamp validates a TOTP token against a provided
+	// Unix timestamp with configurable parameters (RFC 6238 Section 5.2).
+	ValidateTokenWithTimestamp(token int, key *[]byte, timestamp int64, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) Validation
 
-	// GenerateQrCode generates a QRCode for the provided issuer, user and secret. It takes in a color setting and number of digits for the TOTP token.
-	GenerateQrCode(issuer, user string, secret *string, digits uint8) ([]byte, error)
+	// GenerateQrCode generates a QRCode for the provided issuer, user and secret with specified algorithm and timeStep.
+	GenerateQrCode(issuer, user string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64) ([]byte, error)
 
-	// ConvertColorSetting converts the ColorSetting struct into a color.Color object. This is useful for QRCode generation.
+	// ConvertColorSetting converts the ColorSetting struct into a color.Color object.
 	ConvertColorSetting(setting structs.ColorSetting) color.Color
 
-	// WriteQrCodeImage writes a png to the filesystem
-	WriteQrCodeImage(issuer, user string, secret *string, digits uint8, filepath string) error
+	// WriteQrCodeImage writes a QR code PNG to the filesystem with specified algorithm and timeStep.
+	WriteQrCodeImage(issuer, user string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64, filepath string) error
 
-	// writeQrCodeImage writes a QRCode to the filesystem.
-	writeQrCodeImage(issuer, username string, secret *string, digits uint8, filePath string) error
-
-	// builds the payload for the QRCode. In detail, this takes the otpAuthURL Formatstring constant
-	// and formats it using the details provided in the method call.
-	BuildPayload(issuer, username string, secret *string, digits uint8) string
-
-	// SetFormatString sets the FormatString for the QRCode.
-	SetFormatString(formatstring string)
-
-	// GetFormatString returns the current FormatString for the QRCode.
-	GetFormatString() string
+	// BuildPayload builds the otpauth:// URL payload for QR code generation with specified algorithm and timeStep.
+	BuildPayload(issuer, username string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64) string
 
 	// SetQRCodeConfig sets the QRCodeConfig for the QRCode.
 	SetQRCodeConfig(qrcodeConfig structs.QrCodeConfig)
@@ -113,35 +136,59 @@ type Validation struct {
 
 type TinyMfa struct {
 	QRCodeConfig structs.QrCodeConfig
-	FormatString string
 }
 
 func NewTinyMfa() TinyMfaInterface {
 	return &TinyMfa{
 		QRCodeConfig: structs.StandardQrCodeConfig(),
-		FormatString: "otpauth://totp/%s:%s@%s?algorithm=SHA1&digits=%d&issuer=%s&period=30&secret=%s",
 	}
 }
 
-// GenerateStandardSecretKey returns 16bytes to be used as a secret key
+// GenerateStandardSecretKey returns a 20-byte secret key (SHA-1 recommended size).
 func (tinymfa *TinyMfa) GenerateStandardSecretKey() (*[]byte, error) {
-	return tinymfa.GenerateSecretKey(KeySizeStandard)
+	return tinymfa.GenerateSecretKey(KeySizeSHA1)
 }
 
-// GenerateExtendedSecretKey returns 32bytes to be used as a secret key
+// GenerateExtendedSecretKey returns a 32-byte secret key (SHA-256 recommended size).
 func (tinymfa *TinyMfa) GenerateExtendedSecretKey() (*[]byte, error) {
-	return tinymfa.GenerateSecretKey(KeySizeExtended)
+	return tinymfa.GenerateSecretKey(KeySizeSHA256)
 }
 
-// generateSecretKey returns size bytes to be used as a secret key
+// GenerateSuperbSecretKey returns a 64-byte secret key (SHA-512 recommended size).
+func (tinymfa *TinyMfa) GenerateSuperbSecretKey() (*[]byte, error) {
+	return tinymfa.GenerateSecretKey(KeySizeSHA512)
+}
+
+// GenerateSecretKey returns a secret key of the specified size.
+// Valid sizes are KeySizeSHA1 (20), KeySizeSHA256 (32), and KeySizeSHA512 (64).
 func (tinymfa *TinyMfa) GenerateSecretKey(size int8) (*[]byte, error) {
-	if size != KeySizeStandard && size != KeySizeExtended {
-		return nil, errors.New("invalid secret key size")
+	if size != KeySizeSHA1 && size != KeySizeSHA256 && size != KeySizeSHA512 {
+		return nil, fmt.Errorf("invalid secret key size: %d (valid sizes: %d, %d, %d)", size, KeySizeSHA1, KeySizeSHA256, KeySizeSHA512)
 	}
 	key := make([]byte, size)
 	_, err := rand.Read(key)
 
 	return &key, err
+}
+
+// GenerateSecretKeyForAlgorithm generates a cryptographically random secret key with the
+// recommended size for the specified hash algorithm. Key sizes follow the recommendation
+// in RFC 6238 Section 4, which states that keys SHOULD be of the length of the HMAC output
+// to facilitate interoperability.
+//   - SHA-1:   20 bytes (160 bits)
+//   - SHA-256: 32 bytes (256 bits)
+//   - SHA-512: 64 bytes (512 bits)
+func (tinymfa *TinyMfa) GenerateSecretKeyForAlgorithm(algorithm HashAlgorithm) (*[]byte, error) {
+	switch algorithm {
+	case SHA1:
+		return tinymfa.GenerateSecretKey(KeySizeSHA1)
+	case SHA256:
+		return tinymfa.GenerateSecretKey(KeySizeSHA256)
+	case SHA512:
+		return tinymfa.GenerateSecretKey(KeySizeSHA512)
+	default:
+		return nil, fmt.Errorf("unsupported hash algorithm: %d", algorithm)
+	}
 }
 
 // GenerateMessageBytes takes in a int64 number and turns it to a BigEndian byte array
@@ -152,64 +199,103 @@ func (tinymfa *TinyMfa) GenerateMessageBytes(message int64) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-// CalculateHMAC calculates the hmac-sha1 value for a given message and key (RFC2104)
-func (tinymfa *TinyMfa) CalculateHMAC(message []byte, key *[]byte) []byte {
-	mac := hmac.New(sha1.New, *key)
+// hashFuncForAlgorithm returns the hash.Hash constructor for the given HashAlgorithm.
+// RFC 6238 Section 1.2 specifies SHA-1, SHA-256, and SHA-512 as valid hash functions.
+func hashFuncForAlgorithm(algorithm HashAlgorithm) (func() hash.Hash, error) {
+	switch algorithm {
+	case SHA1:
+		return sha1.New, nil
+	case SHA256:
+		return sha256.New, nil
+	case SHA512:
+		return sha512.New, nil
+	default:
+		return nil, fmt.Errorf("unsupported hash algorithm: %d", algorithm)
+	}
+}
+
+// CalculateHMAC calculates the HMAC value for a given message and key
+// using the specified hash algorithm. Supported algorithms are SHA-1, SHA-256, and SHA-512.
+// RFC 2104 defines the HMAC construction. RFC 6238 Section 1.2 specifies the supported
+// hash functions for TOTP.
+func (tinymfa *TinyMfa) CalculateHMAC(message []byte, key *[]byte, algorithm HashAlgorithm) ([]byte, error) {
+	hashFunc, err := hashFuncForAlgorithm(algorithm)
+	if err != nil {
+		return nil, err
+	}
+	mac := hmac.New(hashFunc, *key)
 	mac.Write(message)
 
-	return mac.Sum(nil)
+	return mac.Sum(nil), nil
 }
 
-// GenerateMessage takes in a Unix Timestamp and an offsetType of 0,1,2
-// offsetTypes: 0=No Offset; 1=Future Offset; 2=Past Offset
-func (tinymfa *TinyMfa) GenerateMessage(timestamp int64, offsetType uint8) int64 {
-	var offset int8
-
-	// based on offsetType, we are applying different offsets to the timestamp
-	switch offsetType {
-	case Present: // standard case, no offset is added to the timestamp
-		offset = OffsetPresent
-	case Future: // setting an offset of 30 seconds into the future
-		offset = OffsetFuture
-	case Past: // removing an offset of 30 seconds
-		offset = OffsetPast
+// GenerateMessage computes the time counter T for TOTP using configurable
+// time step and epoch offset parameters. The counter is calculated as:
+//
+//	T = floor((unixTime + offset - t0) / timeStep)
+//
+// where offset is determined by offsetType: Present=0, Future=+timeStep, Past=-timeStep.
+// RFC 6238 Section 4.2 defines the time counter computation.
+// RFC 6238 Section 5.2 defines the time step size X (default 30s) and epoch T0 (default 0).
+func (tinymfa *TinyMfa) GenerateMessage(timestamp int64, offsetType uint8, timeStep int64, t0 int64) (int64, error) {
+	if timeStep <= 0 {
+		return 0, fmt.Errorf("timeStep must be greater than 0, got %d", timeStep)
 	}
 
-	// apply the chosen offset
-	timestamp = timestamp + int64(offset)
-	// flatten the timestamp by removing the overlapping seconds
-	timestamp = timestamp - (timestamp % 30)
+	var offset int64
+	switch offsetType {
+	case Present:
+		offset = 0
+	case Future:
+		offset = timeStep
+	case Past:
+		offset = -timeStep
+	}
 
-	// finally, generating the message by dividing the flattened timestamp by 30
-	message := math.Floor(float64(timestamp) / 30.0)
+	adjusted := timestamp + offset - t0
+	message := int64(math.Floor(float64(adjusted) / float64(timeStep)))
 
-	return int64(message)
+	return message, nil
 }
 
-// GenerateValidToken takes a Unix Timestamp and a secret key and calculates a valid TOTP token
-func (tinymfa *TinyMfa) GenerateValidToken(unixTimestamp int64, key *[]byte, offsetType, tokenlength uint8) (int, error) {
-	message, err := tinymfa.GenerateMessageBytes(tinymfa.GenerateMessage(unixTimestamp, offsetType))
+// GenerateToken generates a TOTP token per RFC 6238 with configurable hash algorithm,
+// time step, and epoch offset. This function implements the full TOTP generation pipeline:
+//  1. Compute time counter T (RFC 6238 Section 4.2)
+//  2. Convert T to 8-byte big-endian representation
+//  3. Compute HMAC using the selected algorithm (RFC 2104)
+//  4. Apply dynamic truncation (RFC 4226 Section 5.3)
+//  5. Reduce to the requested number of digits (RFC 4226 Section 5.4)
+//
+// Supported token lengths are 5-8 digits. Supported algorithms are SHA1, SHA256, SHA512.
+// RFC 6238 Section 4.2 recommends SHA-256 or SHA-512 for new deployments.
+func (tinymfa *TinyMfa) GenerateToken(unixTimestamp int64, key *[]byte, offsetType uint8, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) (int, error) {
+	counter, err := tinymfa.GenerateMessage(unixTimestamp, offsetType, timeStep, t0)
 	if err != nil {
 		return 0, err
 	}
-	rfc2104hmac := tinymfa.CalculateHMAC(message, key)
 
-	// the offset is the numerical representation of the last byte of the hmac-sha1 message.
-	// i.E if the last byte was 4 (in its decimal representation), we will derive the dynamic
-	// trunacted result, starting at the 4th index of the byte array
+	message, err := tinymfa.GenerateMessageBytes(counter)
+	if err != nil {
+		return 0, err
+	}
+
+	rfc2104hmac, err := tinymfa.CalculateHMAC(message, key, algorithm)
+	if err != nil {
+		return 0, err
+	}
+
+	// Dynamic truncation per RFC 4226 Section 5.3
+	// The offset is the low-order 4 bits of the last byte of the HMAC result
 	var offset int = int(rfc2104hmac[(len(rfc2104hmac)-1)] & 0xF)
-	// probably a huge number. Making room for it
 	var truncResult int64
 	for i := 0; i < 4; i++ {
-		// shift 8bit to the left to make room for the next byte
 		truncResult <<= 8
-		// perform a bitwise inclusive OR on the next offset
-		// this adds the next digit to the truncated result
 		truncResult |= int64(rfc2104hmac[offset+i] & 0xFF)
 	}
-	// setting the most significant bit to 0
+	// Clear the most significant bit to avoid signed/unsigned issues (RFC 4226 Section 5.3)
 	truncResult &= 0x7FFFFFFF
-	// making sure we get the right amount of numbers
+
+	// Compute TOTP value with the requested digit count (RFC 4226 Section 5.4)
 	switch tokenlength {
 	case 5:
 		truncResult %= 100000
@@ -223,82 +309,75 @@ func (tinymfa *TinyMfa) GenerateValidToken(unixTimestamp int64, key *[]byte, off
 		return 0, fmt.Errorf("%d is not a valid length for a token. try something between 5-8", tokenlength)
 	}
 
-	token := int(truncResult)
-
-	return token, nil
+	return int(truncResult), nil
 }
 
-// ValidateTokenCurrentTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func (tinymfa *TinyMfa) ValidateTokenCurrentTimestamp(token int, key *[]byte, tokenlength uint8) Validation {
-	currentTimestamp := time.Now().Unix()
-	result, err := tinymfa.ValidateToken(token, key, currentTimestamp, tokenlength)
-	var validation = Validation{
-		Message: tinymfa.GenerateMessage(currentTimestamp, Present),
-		Success: result,
-		Error:   err,
-	}
-	return validation
-}
-
-// ValidateTokenWithTimestamp takes a submitted token and a secret key and validates against the current Unix Timestamp whether the token is valid
-func (tinymfa *TinyMfa) ValidateTokenWithTimestamp(token int, key *[]byte, timestamp int64, tokenlength uint8) Validation {
-	result, err := tinymfa.ValidateToken(token, key, timestamp, tokenlength)
-	var validation = Validation{
-		Message: tinymfa.GenerateMessage(timestamp, Present),
-		Success: result,
-		Error:   err,
-	}
-	return validation
-}
-
-// ValidateToken takes a submitted token, a secret key and a Unix Timestamp and validates whether the token is valid
-func (tinymfa *TinyMfa) ValidateToken(token int, key *[]byte, unixTimestamp int64, tokenlength uint8) (bool, error) {
-	var result bool = false
-	// validating against a token that was generated with a current timestamp
-	// usually, the clocks of server and client should be synchronized, so this
-	// should be the most common case
-	generatedToken, err := tinymfa.GenerateValidToken(unixTimestamp, key, Present, tokenlength)
+// ValidateToken validates a submitted TOTP token against present, past, and future
+// time windows using the specified hash algorithm and time parameters. The validation
+// checks three consecutive time steps to account for clock drift between client and server.
+// RFC 6238 Section 5.2 recommends validation across a window of time steps.
+func (tinymfa *TinyMfa) ValidateToken(token int, key *[]byte, unixTimestamp int64, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) (bool, error) {
+	// Check present window
+	generatedToken, err := tinymfa.GenerateToken(unixTimestamp, key, Present, tokenlength, algorithm, timeStep, t0)
 	if err != nil {
 		return false, err
 	}
 	if generatedToken == token {
-		result = true
+		return true, nil
 	}
 
-	// the token could not be verified with a current timestamp, but maybe the
-	// user missed the timewindow for that token. Verifying it against a token
-	// that was valid up to 30 seconds ago
-	if !result {
-		generatedToken, err := tinymfa.GenerateValidToken(unixTimestamp, key, Past, tokenlength)
-		if err != nil {
-			return false, err
-		}
-		if generatedToken == token {
-			result = true
-		}
+	// Check past window
+	generatedToken, err = tinymfa.GenerateToken(unixTimestamp, key, Past, tokenlength, algorithm, timeStep, t0)
+	if err != nil {
+		return false, err
+	}
+	if generatedToken == token {
+		return true, nil
 	}
 
-	// we still could not verify the token. Doing a last check against the token
-	// that becomes valid in the next window.
-	if !result {
-		generatedToken, err := tinymfa.GenerateValidToken(unixTimestamp, key, Future, tokenlength)
-		if err != nil {
-			return false, err
-		}
-		if generatedToken == token {
-			result = true
-		}
+	// Check future window
+	generatedToken, err = tinymfa.GenerateToken(unixTimestamp, key, Future, tokenlength, algorithm, timeStep, t0)
+	if err != nil {
+		return false, err
+	}
+	if generatedToken == token {
+		return true, nil
 	}
 
-	// returning the outcome of our checks
-	return result, nil
+	return false, nil
 }
 
-// GenerateQrCode Generates a QRCode of the totp url
-func (tinymfa *TinyMfa) GenerateQrCode(issuer, user string, secret *string, digits uint8) ([]byte, error) {
+// ValidateTokenCurrentTimestamp validates a submitted TOTP token against the current
+// Unix timestamp using the specified algorithm and time parameters. This is a convenience
+// wrapper around ValidateToken that captures the current system time.
+// RFC 6238 Section 5.2 defines the validation procedure.
+func (tinymfa *TinyMfa) ValidateTokenCurrentTimestamp(token int, key *[]byte, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) Validation {
+	currentTimestamp := time.Now().Unix()
+	return tinymfa.ValidateTokenWithTimestamp(token, key, currentTimestamp, tokenlength, algorithm, timeStep, t0)
+}
+
+// ValidateTokenWithTimestamp validates a submitted TOTP token against a provided
+// Unix timestamp using the specified algorithm and time parameters. This is a convenience
+// wrapper around ValidateToken that returns a Validation struct.
+// RFC 6238 Section 5.2 defines the validation procedure.
+func (tinymfa *TinyMfa) ValidateTokenWithTimestamp(token int, key *[]byte, timestamp int64, tokenlength uint8, algorithm HashAlgorithm, timeStep int64, t0 int64) Validation {
+	result, err := tinymfa.ValidateToken(token, key, timestamp, tokenlength, algorithm, timeStep, t0)
+	counter, counterErr := tinymfa.GenerateMessage(timestamp, Present, timeStep, t0)
+	if counterErr != nil && err == nil {
+		err = counterErr
+	}
+	return Validation{
+		Message: counter,
+		Success: result,
+		Error:   err,
+	}
+}
+
+// GenerateQrCode Generates a QRCode of the totp url with specified algorithm and timeStep
+func (tinymfa *TinyMfa) GenerateQrCode(issuer, user string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64) ([]byte, error) {
 	var png []byte
 
-	otpauthURL := tinymfa.BuildPayload(issuer, user, secret, digits)
+	otpauthURL := tinymfa.BuildPayload(issuer, user, secret, digits, algorithm, timeStep)
 	code, err := qrcode.New(otpauthURL, qrcode.Medium)
 	if err != nil {
 		return nil, err
@@ -321,41 +400,39 @@ func (tinymfa *TinyMfa) ConvertColorSetting(setting structs.ColorSetting) color.
 	}
 }
 
-// WriteQrCodeImage writes a png to the filesystem
-func (tinymfa *TinyMfa) WriteQrCodeImage(issuer, user string, secret *string, digits uint8, filePath string) error {
-	return tinymfa.writeQrCodeImage(issuer, user, secret, digits, filePath)
-}
-
-// writes a QRCode to the filesystem.
-func (tinymfa *TinyMfa) writeQrCodeImage(issuer, username string, secret *string, digits uint8, filePath string) error {
-	otpauthURL := tinymfa.BuildPayload(issuer, username, secret, digits)
+// WriteQrCodeImage writes a png to the filesystem with specified algorithm and timeStep
+func (tinymfa *TinyMfa) WriteQrCodeImage(issuer, user string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64, filePath string) error {
+	otpauthURL := tinymfa.BuildPayload(issuer, user, secret, digits, algorithm, timeStep)
 	err := qrcode.WriteFile(otpauthURL, qrcode.Medium, 256, filePath)
-
 	return err
 }
 
-// builds the payload for the QRCode. In detail, this takes the otpAuthURL Formatstring constant
-// and formats it using the details provided in the method call.
-func (tinymfa *TinyMfa) BuildPayload(issuer, username string, secret *string, digits uint8) string {
+// BuildPayload builds the otpauth:// URL payload for QR code generation with specified algorithm and timeStep.
+func (tinymfa *TinyMfa) BuildPayload(issuer, username string, secret *string, digits uint8, algorithm HashAlgorithm, timeStep int64) string {
 	index := strings.Index(*secret, "=")
 	mySecret := *secret
 	if index != -1 {
 		mySecret = strings.TrimSuffix(*secret, "=")
 	}
-	otpauthURL := fmt.Sprintf(tinymfa.FormatString, issuer, username, issuer, digits, issuer, mySecret)
+
+	// Determine algorithm string for the URL
+	var algoStr string
+	switch algorithm {
+	case SHA1:
+		algoStr = "SHA1"
+	case SHA256:
+		algoStr = "SHA256"
+	case SHA512:
+		algoStr = "SHA512"
+	default:
+		algoStr = "SHA1"
+	}
+
+	formatString := "otpauth://totp/%s:%s@%s?algorithm=%s&digits=%d&issuer=%s&period=%d&secret=%s"
+	otpauthURL := fmt.Sprintf(formatString, issuer, username, issuer, algoStr, digits, issuer, timeStep, mySecret)
 	mySecret = ""
 
 	return otpauthURL
-}
-
-// GetFormatString returns the current FormatString for the QRCode.
-func (tinymfa *TinyMfa) GetFormatString() string {
-	return tinymfa.FormatString
-}
-
-// SetFormatString sets the FormatString for the QRCode.
-func (tinymfa *TinyMfa) SetFormatString(formatstring string) {
-	tinymfa.FormatString = formatstring
 }
 
 // GetQRCodeConfig returns the current QRCodeConfig for the QRCode.
